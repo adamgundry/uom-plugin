@@ -44,8 +44,10 @@ import TcPluginExtras
 
 
 tcPlugin :: TcPlugin
-tcPlugin = tracePlugin "uom-plugin" $ simplePlugin unitsOfMeasureSolver
-
+tcPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = const $ lookupUnitDefs
+                                               , tcPluginSolve = unitsOfMeasureSolver
+                                               , tcPluginStop  = const $ return ()
+                                               }
 
 
 isUnitKind :: UnitDefs -> Type -> Bool
@@ -53,9 +55,8 @@ isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon
                   | otherwise                                = False
 
 
-unitsOfMeasureSolver :: [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
-unitsOfMeasureSolver givens deriveds wanteds = do
-    uds <- lookupUnitDefs
+unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
+unitsOfMeasureSolver uds givens deriveds wanteds = do
     (unit_wanteds, other_wanteds)  <- partitionEithers <$> mapM (toUnitEquality uds) wanteds
     case unit_wanteds of
       []                -> return $ TcPluginOk [] []
