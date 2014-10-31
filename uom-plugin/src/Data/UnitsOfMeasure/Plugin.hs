@@ -57,34 +57,43 @@ isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
 unitsOfMeasureSolver uds givens deriveds wanteds = do
+    (unit_givens , other_givens )  <- partitionEithers <$> mapM (toUnitEquality uds) givens
     (unit_wanteds, other_wanteds)  <- partitionEithers <$> mapM (toUnitEquality uds) wanteds
-    case unit_wanteds of
+    let unit_cts = unit_givens ++ unit_wanteds
+    case unit_cts of
       []                -> return $ TcPluginOk [] []
       ((my_ct, _, _):_) -> do
-        sr <- simplifyUnits uds unit_wanteds
+        sr <- simplifyUnits uds unit_cts
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk (filter (not . isCFunEqCan . snd) evs) <$> mapM (mkWanted uds my_ct) subst
+          Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs) <$> mapM (mkWanted uds my_ct) subst
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
-    -- Extract the wanted unit equality constraints
+    -- Extract the unit equality constraints
     toUnitEquality :: UnitDefs -> Ct -> TcPluginM (Either UnitEquality Ct)
     toUnitEquality uds ct = do
         ct' <- unsafeTcPluginTcM $ zonkCt ct -- TODO suspcious
-        let ev = ctEvidence ct'
-        return $ case classifyPredType $ ctEvPred ev of
+        return $ case classifyPredType $ ctEvPred $ ctEvidence ct' of
                           EqPred t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
                                        , Just u1 <- normaliseUnit uds t1
                                        , Just u2 <- normaliseUnit uds t2
-                                       , isWanted ev
                                        -> Left (ct, u1, u2)
                           _            -> Right ct
 
     fromUnitEquality :: UnitEquality -> Ct
     fromUnitEquality (ct, _, _) = ct
 
-    mkWanted uds my_ct (tv, u) = unsafeTcPluginTcM $ newFlatWanted HoleOrigin pred -- TODO stupid origin
-      where pred = mkEqPred (mkTyVarTy tv) (reifyUnit uds u)
+    mkWanted uds my_ct (tv, u, fl) = case fl of
+        Wanted -> unsafeTcPluginTcM $ newFlatWanted loc pred
+        Given  -> return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) (ctLoc my_ct)
+      where
+        pred = mkEqPred ty1 ty2
+        ty1  = mkTyVarTy tv
+        ty2  = reifyUnit uds u
+        loc  = HoleOrigin -- TODO stupid origin
+
+    -- plugins may give back only solutions to non-CFunEqCan wanted constraints
+    solvable (_, ct) = not (isCFunEqCan ct) && isWanted (ctEvidence ct)
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
@@ -101,12 +110,12 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
     simples :: [TyVar] -> TySubst -> [(EvTerm, Ct)] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
     simples tvs subst evs xs [] = return $ Simplified tvs subst evs xs
     simples tvs subst evs xs (eq@(ct, u, v):eqs) = do
-        ur <- unifyUnits uds (substsUnit subst u) (substsUnit subst v)
+        ur <- unifyUnits uds (ctFlavour ct) (substsUnit subst u) (substsUnit subst v)
         tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
-          Win tvs' subst'                    -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
-                                                    ((evByFiat "units" (getEqPredTys $ ctPred ct), ct):evs) [] (xs ++ eqs)
-          Lose                               -> return $ Impossible eq (xs ++ eqs)
+          Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
+                                  ((evByFiat "units" (getEqPredTys $ ctPred ct), ct):evs) [] (xs ++ eqs)
+          Lose             -> return $ Impossible eq (xs ++ eqs)
           Draw [] []       -> simples tvs subst evs (eq:xs) eqs
           Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') evs [eq] (xs ++ eqs)
 
@@ -118,13 +127,24 @@ instance Outputable UnifyResult where
   ppr (Draw tvs subst) = text "Draw" <+> ppr tvs <+> ppr subst
   ppr Lose             = text "Lose"
 
-type TySubst = [(TyVar, NormUnit)]
+type TySubst = [(TyVar, NormUnit, Flavour)]
 
-unifyUnits :: UnitDefs -> NormUnit -> NormUnit -> TcPluginM UnifyResult
-unifyUnits uds u0 v0 = tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0) >> unifyOne uds [] [] (u0 /: v0)
+data Flavour = Given | Wanted
+  deriving (Eq, Show)
 
-unifyOne :: UnitDefs -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
-unifyOne uds tvs subst u
+instance Outputable Flavour where
+  ppr = text . show
+
+ctFlavour :: Ct -> Flavour
+ctFlavour ct | isGiven (ctEvidence ct) = Given
+             | otherwise               = Wanted
+
+unifyUnits :: UnitDefs -> Flavour -> NormUnit -> NormUnit -> TcPluginM UnifyResult
+unifyUnits uds fl u0 v0 = do tcPluginTrace ("unifyUnits " ++ show fl) (ppr u0 $$ ppr v0)
+                             unifyOne uds fl [] [] (u0 /: v0)
+
+unifyOne :: UnitDefs -> Flavour -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
+unifyOne uds fl tvs subst u
       | isOne u           = return $ Win tvs subst
       | isConstant u      = return   Lose
       | otherwise         = tcPluginTrace "unifyOne" (ppr u) >> go [] (ascending u)
@@ -135,17 +155,17 @@ unifyOne uds tvs subst u
         go ls (at@(VarAtom a, i) : xs) =
             case () of
                 () | divisible i u -> let r = divideExponents (-i) $ leftover a u
-                                             in return $ Win tvs $ (a, r) : subst
+                                             in return $ Win tvs $ (a, r, fl) : subst
                    | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
                                                        let r = atom (VarAtom beta) *: divideExponents (-i) (leftover a u)
-                                                       unifyOne uds (beta:tvs) ((a, r):subst) $ substUnit (a, i) r u
+                                                       unifyOne uds fl (beta:tvs) ((a, r, fl):subst) $ substUnit (a, i) r u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
           mb <- matchFam f tys
           case mb of
             Just (co, ty)
-              | Just u <- normaliseUnit uds ty -> unifyOne uds tvs subst $ invariant (Map.fromList $ ls ++ xs) *: u ^: i
+              | Just u <- normaliseUnit uds ty -> unifyOne uds fl tvs subst $ invariant (Map.fromList $ ls ++ xs) *: u ^: i
               | otherwise                  -> error "help help help help" -- TODO
             Nothing                        -> go (at:ls) xs -- TODO: more we can do here?
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
@@ -229,12 +249,12 @@ substUnit (a, i) v u = (v ^: i) *: leftover a u
 
 substsUnit :: TySubst -> NormUnit -> NormUnit
 substsUnit [] u = u
-substsUnit ((a,v):s) u = case Map.lookup (VarAtom a) u of
-                           Nothing -> substsUnit s u
-                           Just i  -> substsUnit s (substUnit (a, i) v u)
+substsUnit ((a,v,_):s) u = case Map.lookup (VarAtom a) u of
+                             Nothing -> substsUnit s u
+                             Just i  -> substsUnit s (substUnit (a, i) v u)
 
 substsSubst :: TySubst -> TySubst -> TySubst
-substsSubst s = map (fmap (substsUnit s))
+substsSubst s = map $ \ (a, v, fl) -> (a, substsUnit s v, fl)
 
 
 cancel :: NormUnit -> NormUnit -> (NormUnit, NormUnit)
