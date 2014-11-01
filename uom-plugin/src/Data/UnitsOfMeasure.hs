@@ -1,10 +1,12 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -49,7 +51,7 @@ infixr 8 ^:
 
 type role Quantity representational nominal
 newtype Quantity a (u :: Unit) = MkQuantity { unQuantity :: a }
-  deriving (Eq, Ord, Show)
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
 zero :: Num a => Quantity a u
 zero = MkQuantity 0
@@ -83,17 +85,14 @@ sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 negate' :: Num a => Quantity a u -> Quantity a u
 negate' (MkQuantity x) = MkQuantity (negate x)
 
-instance (Num a, u ~ One) => Num (Quantity a u) where
-  MkQuantity x + MkQuantity y = MkQuantity (x * y)
-  MkQuantity x - MkQuantity y = MkQuantity (x - y)
-  MkQuantity x * MkQuantity y = MkQuantity (x * y)
-  abs    (MkQuantity x) = MkQuantity (abs x)
-  signum (MkQuantity x) = MkQuantity (signum x)
-  fromInteger = MkQuantity . fromInteger
 
-instance (Fractional a, u ~ One) => Fractional (Quantity a u) where
-  fromRational = MkQuantity . fromRational
-  MkQuantity x / MkQuantity y = MkQuantity (x / y)
+deriving instance (Floating   a, u ~ One) => Floating   (Quantity a u)
+deriving instance (Fractional a, u ~ One) => Fractional (Quantity a u)
+deriving instance (Integral   a, u ~ One) => Integral   (Quantity a u)
+deriving instance (Num        a, u ~ One) => Num        (Quantity a u)
+deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
+deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
+deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
 
 
 type family MkUnit (s :: Symbol) :: Unit
