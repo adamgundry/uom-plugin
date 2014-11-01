@@ -2,16 +2,23 @@ name:           units-parser
 version:        0.1.0.0
 cabal-version:  >= 1.10
 synopsis:       A parser for units of measure
-category:       Math
+category:       Text
 author:         Richard Eisenberg <eir@cis.upenn.edu>
+maintainer:     Richard Eisenberg <eir@cis.upenn.edu>, Adam Gundry <adam@well-typed.com>
+bug-reports:    https://github.com/adamgundry/units-parser/issues
 stability:      experimental
 license:        BSD3
+license-file:   LICENSE
 build-type:     Simple
 description:
 
     The @units-parser@ package provides a parser for unit expressions
     with F#-style syntax, to support the @units@ package and other
     packages providing type-level units of measure.
+
+source-repository head
+  type:     git
+  location: https://github.com/adamgundry/units-parser.git
 
 library
   ghc-options: -Wall
