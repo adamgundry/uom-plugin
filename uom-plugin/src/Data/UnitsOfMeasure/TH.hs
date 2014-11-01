@@ -9,7 +9,7 @@ module Data.UnitsOfMeasure.TH
 import GHC.Prim (Proxy#, proxy#)
 
 import Control.Applicative
-import Data.Metrology.ParseUnit
+import Text.Parse.Units
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote

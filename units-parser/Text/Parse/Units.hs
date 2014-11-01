@@ -31,7 +31,7 @@
 -- @am@, then @dam@ is ambiguous like this.
 -----------------------------------------------------------------------------
 
-module Data.Metrology.ParseUnit (
+module Text.Parse.Units (
   -- * Parsing units
   UnitExp(..), parseUnit,
 

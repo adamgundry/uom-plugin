@@ -21,6 +21,6 @@ library
                , containers >= 0.4
                , parsec >= 3
   exposed-modules:
-    Data.Metrology.ParseUnit
+    Text.Parse.Units
 
   default-language:   Haskell2010
