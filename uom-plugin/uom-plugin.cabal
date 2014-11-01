@@ -12,7 +12,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Data.UnitsOfMeasure, Data.UnitsOfMeasure.TH, Data.UnitsOfMeasure.Plugin
-  other-modules:       TcPluginExtras, Data.UnitsOfMeasure.Internal
+  other-modules:       TcPluginExtras
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.7 && <5, ghc-prim >= 0.3 && <0.4, ghc >= 7.9 && <7.11, template-haskell >=2.9 && <2.11, containers >=0.5 && <0.6, units-parser >=0.1 && <0.2
   hs-source-dirs:      src

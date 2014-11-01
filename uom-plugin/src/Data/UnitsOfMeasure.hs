@@ -9,7 +9,11 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Data.UnitsOfMeasure
-    ( Quantity(unQuantity) -- N.B. MkQuantity not exported!
+    ( Unit(..)
+    , type (*:)
+    , type (/:)
+    , type (^:)
+    , Quantity(unQuantity) -- N.B. MkQuantity not exported!
     , zero
     , mk
     , unit
@@ -21,13 +25,27 @@ module Data.UnitsOfMeasure
     , negate'
     , sqrt'
     , MkUnit
-    , module Data.UnitsOfMeasure.Internal
     ) where
 
 import GHC.Prim (Proxy#, proxy#)
 import GHC.TypeLits
 
-import Data.UnitsOfMeasure.Internal
+-- | (Kind) Units of measure
+data Unit = One | Base Symbol
+
+-- | Multiplication for units of measure
+type family (u :: Unit) *: (v :: Unit) :: Unit
+
+-- | Division for units of measure
+type family (u :: Unit) /: (v :: Unit) :: Unit
+
+-- | Exponentiation (to a positive power) for units of measure;
+-- negative exponents are not yet supported (they require an Integer kind)
+type family (u :: Unit) ^: (n :: Nat)  :: Unit
+
+infixl 7 *:, /:
+infixr 8 ^:
+
 
 type role Quantity representational nominal
 newtype Quantity a (u :: Unit) = MkQuantity { unQuantity :: a }
