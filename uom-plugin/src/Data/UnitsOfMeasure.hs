@@ -18,7 +18,6 @@ module Data.UnitsOfMeasure
     , Quantity(unQuantity) -- N.B. MkQuantity not exported!
     , zero
     , mk
-    , unit
     , (%)
     , (+:)
     , (-:)
@@ -59,11 +58,11 @@ zero = MkQuantity 0
 mk :: a -> Quantity a One
 mk = MkQuantity
 
-unit :: a -> Proxy# u -> Quantity a u
-unit x _ = MkQuantity x
-
+-- | Assign a unit to a quantity.
+-- This must always be applied to a concrete second argument
+-- (generalizing over @u@ allows the unit system to be broken)!
 (%) :: a -> Proxy# u -> Quantity a u
-(%) = unit
+x % _ = MkQuantity x
 
 (+:) :: Num a => Quantity a u -> Quantity a u -> Quantity a u
 MkQuantity x +: MkQuantity y = MkQuantity (x + y)

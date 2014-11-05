@@ -47,7 +47,7 @@ attract (m1 :: Quantity a [u|kg|]) (m2 :: Quantity a [u|kg|]) (r :: Quantity a [
 aTime :: Num a => Quantity a [u|s|]
 aTime = 10 % [u|s|]
 
-feetPerMetre = 3.28084 `unit` [u|ft/m|]
+feetPerMetre = 3.28084 % [u|ft/m|]
 
 speedOfImpactInFPS :: Quantity Double [u|ft/s|]
 speedOfImpactInFPS = speedOfImpact *: feetPerMetre
