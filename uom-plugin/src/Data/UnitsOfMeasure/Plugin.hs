@@ -60,9 +60,9 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
     (unit_givens , other_givens )  <- partitionEithers <$> mapM (toUnitEquality uds) givens
     (unit_wanteds, other_wanteds)  <- partitionEithers <$> mapM (toUnitEquality uds) wanteds
     let unit_cts = unit_givens ++ unit_wanteds
-    case unit_cts of
-      []                -> return $ TcPluginOk [] []
-      ((my_ct, _, _):_) -> do
+    case filter (not . isCFunEqCan . fromUnitEquality) unit_wanteds of
+      []    -> return $ TcPluginOk [] []
+      (_:_) -> do
         sr <- simplifyUnits uds unit_cts
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
