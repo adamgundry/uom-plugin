@@ -67,7 +67,7 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
           Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs)
-                                            <$> mapM (mkWanted uds my_ct) (filter substable subst)
+                                            <$> mapM (mkWanted uds) (filter substable subst)
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
     -- Extract the unit equality constraints
@@ -84,14 +84,14 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
     fromUnitEquality :: UnitEquality -> Ct
     fromUnitEquality (ct, _, _) = ct
 
-    mkWanted uds my_ct (tv, u, fl) = case fl of
-        Wanted -> unsafeTcPluginTcM $ newFlatWanted loc pred
-        Given  -> return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) (ctLoc my_ct)
+    mkWanted :: UnitDefs -> SubstItem -> TcPluginM Ct
+    mkWanted uds si = case siFlavour si of
+        Wanted -> unsafeTcPluginTcM $ newFlatWanted (ctLocOrigin (siLoc si)) pred
+        Given  -> return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) (siLoc si)
       where
         pred = mkEqPred ty1 ty2
-        ty1  = mkTyVarTy tv
-        ty2  = reifyUnit uds u
-        loc  = HoleOrigin -- TODO stupid origin
+        ty1  = mkTyVarTy (siVar si)
+        ty2  = reifyUnit uds (siUnit si)
 
     -- plugins may give back only solutions to non-CFunEqCan wanted constraints
     solvable (_, ct) = not (isCFunEqCan ct) && isWanted (ctEvidence ct)
@@ -100,7 +100,7 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
     -- throw away our solutions for flatten tyvars; this isn't sound
     -- in general (because our solution may be more restrictive than
     -- the result of unflattening)!
-    substable (a, _, _) = not $ isFlattenTyVar a
+    substable si = not $ isFlattenTyVar $ siVar si
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
@@ -117,7 +117,7 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
     simples :: [TyVar] -> TySubst -> [(EvTerm, Ct)] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
     simples tvs subst evs xs [] = return $ Simplified tvs subst evs xs
     simples tvs subst evs xs (eq@(ct, u, v):eqs) = do
-        ur <- unifyUnits uds (ctFlavour ct) (substsUnit subst u) (substsUnit subst v)
+        ur <- unifyUnits uds (ctFlavour ct) (ctLoc ct) (substsUnit subst u) (substsUnit subst v)
         tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
           Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
@@ -134,7 +134,16 @@ instance Outputable UnifyResult where
   ppr (Draw tvs subst) = text "Draw" <+> ppr tvs <+> ppr subst
   ppr Lose             = text "Lose"
 
-type TySubst = [(TyVar, NormUnit, Flavour)]
+type TySubst = [SubstItem]
+
+data SubstItem = SubstItem { siVar     :: TyVar
+                           , siUnit    :: NormUnit
+                           , siFlavour :: Flavour
+                           , siLoc     ::  CtLoc
+                           }
+
+instance Outputable SubstItem where
+  ppr si = ppr (siVar si) <+> text " := " <+> ppr (siUnit si)
 
 data Flavour = Given | Wanted
   deriving (Eq, Show)
@@ -146,12 +155,12 @@ ctFlavour :: Ct -> Flavour
 ctFlavour ct | isGiven (ctEvidence ct) = Given
              | otherwise               = Wanted
 
-unifyUnits :: UnitDefs -> Flavour -> NormUnit -> NormUnit -> TcPluginM UnifyResult
-unifyUnits uds fl u0 v0 = do tcPluginTrace ("unifyUnits " ++ show fl) (ppr u0 $$ ppr v0)
-                             unifyOne uds fl [] [] (u0 /: v0)
+unifyUnits :: UnitDefs -> Flavour -> CtLoc -> NormUnit -> NormUnit -> TcPluginM UnifyResult
+unifyUnits uds fl loc u0 v0 = do tcPluginTrace ("unifyUnits " ++ show fl) (ppr u0 $$ ppr v0)
+                                 unifyOne uds fl loc [] [] (u0 /: v0)
 
-unifyOne :: UnitDefs -> Flavour -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
-unifyOne uds fl tvs subst u
+unifyOne :: UnitDefs -> Flavour -> CtLoc -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
+unifyOne uds fl loc tvs subst u
       | isOne u           = return $ Win tvs subst
       | isConstant u      = return   Lose
       | otherwise         = tcPluginTrace "unifyOne" (ppr u) >> go [] (ascending u)
@@ -162,17 +171,17 @@ unifyOne uds fl tvs subst u
         go ls (at@(VarAtom a, i) : xs) =
             case () of
                 () | divisible i u -> let r = divideExponents (-i) $ leftover a u
-                                             in return $ Win tvs $ (a, r, fl) : subst
+                                             in return $ Win tvs $ SubstItem a r fl loc : subst
                    | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
                                                        let r = atom (VarAtom beta) *: divideExponents (-i) (leftover a u)
-                                                       unifyOne uds fl (beta:tvs) ((a, r, fl):subst) $ substUnit (a, i) r u
+                                                       unifyOne uds fl loc (beta:tvs) (SubstItem a r fl loc:subst) $ substUnit (a, i) r u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
           mb <- matchFam f tys
           case mb of
             Just (co, ty)
-              | Just u <- normaliseUnit uds ty -> unifyOne uds fl tvs subst $ invariant (Map.fromList $ ls ++ xs) *: u ^: i
+              | Just u <- normaliseUnit uds ty -> unifyOne uds fl loc tvs subst $ invariant (Map.fromList $ ls ++ xs) *: u ^: i
               | otherwise                  -> error "help help help help" -- TODO
             Nothing                        -> go (at:ls) xs -- TODO: more we can do here?
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
@@ -256,12 +265,12 @@ substUnit (a, i) v u = (v ^: i) *: leftover a u
 
 substsUnit :: TySubst -> NormUnit -> NormUnit
 substsUnit [] u = u
-substsUnit ((a,v,_):s) u = case Map.lookup (VarAtom a) u of
+substsUnit (si:s) u = case Map.lookup (VarAtom (siVar si)) u of
                              Nothing -> substsUnit s u
-                             Just i  -> substsUnit s (substUnit (a, i) v u)
+                             Just i  -> substsUnit s (substUnit (siVar si, i) (siUnit si) u)
 
 substsSubst :: TySubst -> TySubst -> TySubst
-substsSubst s = map $ \ (a, v, fl) -> (a, substsUnit s v, fl)
+substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
 
 
 cancel :: NormUnit -> NormUnit -> (NormUnit, NormUnit)
