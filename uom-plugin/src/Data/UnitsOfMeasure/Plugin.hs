@@ -66,7 +66,8 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
         sr <- simplifyUnits uds unit_cts
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs) <$> mapM (mkWanted uds my_ct) subst
+          Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs)
+                                            <$> mapM (mkWanted uds my_ct) (filter substable subst)
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
     -- Extract the unit equality constraints
@@ -94,6 +95,12 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
 
     -- plugins may give back only solutions to non-CFunEqCan wanted constraints
     solvable (_, ct) = not (isCFunEqCan ct) && isWanted (ctEvidence ct)
+
+    -- In what can only be described as a grotesque hack, we simply
+    -- throw away our solutions for flatten tyvars; this isn't sound
+    -- in general (because our solution may be more restrictive than
+    -- the result of unflattening)!
+    substable (a, _, _) = not $ isFlattenTyVar a
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
