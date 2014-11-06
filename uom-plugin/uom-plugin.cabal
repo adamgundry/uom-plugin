@@ -14,7 +14,8 @@ library
   exposed-modules:     Data.UnitsOfMeasure,
                        Data.UnitsOfMeasure.TH,
                        Data.UnitsOfMeasure.Plugin
-  other-modules:       Data.UnitsOfMeasure.Plugin.NormalForm,
+  other-modules:       Data.UnitsOfMeasure.Plugin.Convert,
+                       Data.UnitsOfMeasure.Plugin.NormalForm,
                        TcPluginExtras
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.7 && <5,

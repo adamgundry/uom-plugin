@@ -40,6 +40,7 @@ import Data.List ( sortBy )
 import Data.Maybe
 import Data.Ord
 
+import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import TcPluginExtras
 
@@ -49,11 +50,6 @@ tcPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = const $ lookupU
                                                , tcPluginSolve = unitsOfMeasureSolver
                                                , tcPluginStop  = const $ return ()
                                                }
-
-
-isUnitKind :: UnitDefs -> Type -> Bool
-isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon uds
-                  | otherwise                                = False
 
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
@@ -199,53 +195,6 @@ substsSubst :: TySubst -> TySubst -> TySubst
 substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
 
 
-
-normaliseUnit :: UnitDefs -> Type -> Maybe NormUnit
-normaliseUnit uds ty | Just ty1 <- tcView ty = normaliseUnit uds ty1
-normaliseUnit _   (TyVarTy v)                    = pure $ atom $ VarAtom v
-normaliseUnit uds (TyConApp tc tys)
-  | tc == promoteDataCon (unitOneDataCon uds)                 = pure Map.empty
-  | tc == promoteDataCon (unitBaseDataCon uds), [x]    <- tys = atom . BaseAtom <$> isStrLitTy x
-  | tc == mulTyCon uds,    [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
-  | tc == divTyCon uds,    [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
-  | tc == expTyCon uds,    [u, n] <- tys = (^:) <$> normaliseUnit uds u <*> isNumLitTy n
-  | isFamilyTyCon tc                             = pure $ atom $ FamAtom tc tys
-normaliseUnit _ ty = Nothing
-
-
-reifyUnit :: UnitDefs -> NormUnit -> Type
-reifyUnit uds u | null xs && null ys = oneTy
-                | null ys            = foldr1 times xs
-                | null xs            = oneTy `divide` foldr1 times ys
-                | otherwise          = foldr1 times xs `divide` foldr1 times ys
-  where
-    (pos, neg) = Map.partition (> 0) u
-    xs = map fromAtom $ Map.toList pos
-    ys = map fromAtom $ Map.toList $ Map.map negate neg
-
-    oneTy      = mkTyConApp (promoteDataCon $ unitOneDataCon uds) []
-    times  x y = mkTyConApp (mulTyCon uds) [x, y]
-    divide x y = mkTyConApp (divTyCon uds) [x, y]
-
-    fromAtom (a, n) = pow n (reifyAtom uds a)
-    pow 1 ty = ty
-    pow n ty = mkTyConApp (expTyCon uds) [ty, mkNumLitTy n]
-
-reifyAtom :: UnitDefs -> Atom -> Type
-reifyAtom uds (BaseAtom s)    = mkTyConApp (promoteDataCon (unitBaseDataCon uds)) [mkStrLitTy s]
-reifyAtom _   (VarAtom  v)    = mkTyVarTy  v
-reifyAtom _   (FamAtom f tys) = mkTyConApp f tys
-
-
-data UnitDefs = UnitDefs
-    { unitKind        :: Kind
-    , unitKindCon     :: TyCon
-    , unitOneDataCon  :: DataCon
-    , unitBaseDataCon :: DataCon
-    , mulTyCon        :: TyCon
-    , divTyCon        :: TyCon
-    , expTyCon        :: TyCon
-    }
 
 lookupUnitDefs :: TcPluginM UnitDefs
 lookupUnitDefs = do
