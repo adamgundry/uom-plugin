@@ -5,7 +5,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , isBase
   , one
   , atom
-  , invariant
+  , mkNormUnit
   , (*:)
   , (/:)
   , (^:)
@@ -56,65 +56,74 @@ instance Outputable Atom where
   ppr (FamAtom tc tys) = ppr tc <> text " " <> ppr tys
 
 type BaseUnit = FastString
-type NormUnit = Map.Map Atom Integer
+newtype NormUnit = NormUnit { _NormUnit :: Map.Map Atom Integer }
+
+instance Outputable NormUnit where
+    ppr = ppr . Map.map show . _NormUnit
+
 
 isBase :: Atom -> Bool
 isBase (BaseAtom _) = True
 isBase _            = False
 
 one :: NormUnit
-one = Map.empty
+one = NormUnit Map.empty
 
 atom :: Atom -> NormUnit
-atom a = Map.singleton a 1
+atom a = NormUnit $ Map.singleton a 1
+
+mkNormUnit :: [(Atom, Integer)] -> NormUnit
+mkNormUnit = invariant . NormUnit . Map.fromList
 
 invariant :: NormUnit -> NormUnit
-invariant = Map.filter (/= 0)
+invariant =  NormUnit . Map.filter (/= 0) . _NormUnit
 
 (*:) :: NormUnit -> NormUnit -> NormUnit
-u *: v = invariant $ Map.unionWith (+) u v
+u *: v = invariant $ NormUnit $ Map.unionWith (+) (_NormUnit u) (_NormUnit v)
 
 (/:) :: NormUnit -> NormUnit -> NormUnit
 u /: v = u *: invert v
 
 (^:) :: NormUnit -> Integer -> NormUnit
 _ ^: 0 = one
-u ^: n = Map.map (* n) u
+u ^: n = NormUnit $ Map.map (* n) $ _NormUnit u
 
 infixl 7 *:, /:
 infixr 8 ^:
 
 invert :: NormUnit -> NormUnit
-invert = Map.map negate
+invert = NormUnit . Map.map negate . _NormUnit
 
 isOne :: NormUnit -> Bool
-isOne = Map.null
+isOne = Map.null . _NormUnit
 
 isConstant :: NormUnit -> Bool
-isConstant = all isBase . Map.keys
+isConstant = all isBase . Map.keys . _NormUnit
 
 -- | View a unit as a list of atoms in order of ascending absolute exponent
 ascending :: NormUnit -> [(Atom, Integer)]
-ascending = sortBy (comparing (abs . snd)) . Map.toList
+ascending = sortBy (comparing (abs . snd)) . Map.toList . _NormUnit
 
 -- | Drop a variable from a unit
 leftover :: TyVar -> NormUnit -> NormUnit
-leftover a = Map.filterWithKey (\ b _ -> VarAtom a /= b)
+leftover a = NormUnit . Map.filterWithKey (\ b _ -> VarAtom a /= b) . _NormUnit
 
 divisible :: Integer -> NormUnit -> Bool
-divisible i = Foldable.all (\ j -> j `rem` i == 0)
+divisible i = Foldable.all (\ j -> j `rem` i == 0) . _NormUnit
 
 divideExponents :: Integer -> NormUnit -> NormUnit
-divideExponents i = invariant . Map.map (`quot` i)
+divideExponents i = invariant . NormUnit . Map.map (`quot` i) . _NormUnit
 
--- | Substitute v for a^i in u
-substUnit :: (TyVar, Integer) -> NormUnit -> NormUnit -> NormUnit
-substUnit (a, i) v u = (v ^: i) *: leftover a u
+-- | Substitute v for a in u
+substUnit :: TyVar -> NormUnit -> NormUnit -> NormUnit
+substUnit a v u = case Map.lookup (VarAtom a) $ _NormUnit u of
+                    Nothing -> u
+                    Just i  -> (v ^: i) *: leftover a u
 
 
 
 cancel :: NormUnit -> NormUnit -> (NormUnit, NormUnit)
-cancel u v = (u', v')
+cancel (NormUnit u) (NormUnit v) = (NormUnit u', NormUnit v')
   where
     ns = Map.elems (u `Map.union` v)
     g  = foldr1 gcd ns

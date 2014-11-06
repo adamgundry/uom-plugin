@@ -12,8 +12,6 @@ import TcRnTypes
 import Type
 import TypeRep
 
-import qualified Data.Map as Map
-
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import TcPluginExtras
@@ -66,18 +64,14 @@ unifyOne uds fl loc tvs subst u
                                              in return $ Win tvs $ SubstItem a r fl loc : subst
                    | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
                                                        let r = atom (VarAtom beta) *: divideExponents (-i) (leftover a u)
-                                                       unifyOne uds fl loc (beta:tvs) (SubstItem a r fl loc:subst) $ substUnit (a, i) r u
+                                                       unifyOne uds fl loc (beta:tvs) (SubstItem a r fl loc:subst) $ substUnit a r u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
           mb <- matchFam f tys
           case mb of
             Just (_, ty)
-              | Just v <- normaliseUnit uds ty -> unifyOne uds fl loc tvs subst $ invariant (Map.fromList $ ls ++ xs) *: v ^: i
+              | Just v <- normaliseUnit uds ty -> unifyOne uds fl loc tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
               | otherwise                  -> error "help help help help" -- TODO
             Nothing                        -> go (at:ls) xs -- TODO: more we can do here?
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
-
-
-instance Outputable Integer where
-    ppr = integer

@@ -12,7 +12,7 @@ import TypeRep
 import TcType
 
 import Control.Applicative
-import qualified Data.Map as Map
+import Data.List
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
@@ -26,7 +26,7 @@ normaliseUnit :: UnitDefs -> Type -> Maybe NormUnit
 normaliseUnit uds ty | Just ty1 <- tcView ty = normaliseUnit uds ty1
 normaliseUnit _   (TyVarTy v)                    = pure $ atom $ VarAtom v
 normaliseUnit uds (TyConApp tc tys)
-  | tc == promoteDataCon (unitOneDataCon uds)                 = pure Map.empty
+  | tc == promoteDataCon (unitOneDataCon uds)                 = pure one
   | tc == promoteDataCon (unitBaseDataCon uds), [x]    <- tys = atom . BaseAtom <$> isStrLitTy x
   | tc == mulTyCon uds,    [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == divTyCon uds,    [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
@@ -41,9 +41,9 @@ reifyUnit uds u | null xs && null ys = oneTy
                 | null xs            = oneTy `divide` foldr1 times ys
                 | otherwise          = foldr1 times xs `divide` foldr1 times ys
   where
-    (pos, neg) = Map.partition (> 0) u
-    xs = map fromAtom $ Map.toList pos
-    ys = map fromAtom $ Map.toList $ Map.map negate neg
+    (pos, neg) = partition ((> 0) . snd) $ ascending u
+    xs = map fromAtom            pos
+    ys = map (fromAtom . fmap negate) neg
 
     oneTy      = mkTyConApp (promoteDataCon $ unitOneDataCon uds) []
     times  x y = mkTyConApp (mulTyCon uds) [x, y]

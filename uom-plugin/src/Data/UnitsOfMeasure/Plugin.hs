@@ -111,10 +111,8 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
 
 
 substsUnit :: TySubst -> NormUnit -> NormUnit
-substsUnit [] u = u
-substsUnit (si:s) u = case Map.lookup (VarAtom (siVar si)) u of
-                             Nothing -> substsUnit s u
-                             Just i  -> substsUnit s (substUnit (siVar si, i) (siUnit si) u)
+substsUnit []     u = u
+substsUnit (si:s) u = substsUnit s (substUnit (siVar si) (siUnit si) u)
 
 substsSubst :: TySubst -> TySubst -> TySubst
 substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
