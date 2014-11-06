@@ -10,21 +10,11 @@ import DataCon
 import Type
 import TyCon
 import TypeRep
-import TysWiredIn
-import TysPrim
-import PrelNames
 
-import Bag
 import FastString
-import Panic ( panic )
 import Outputable
-import VarEnv
-import Util ( thenCmp )
 
-import SrcLoc ( noSrcSpan )
 import TcMType ( zonkCt, newFlatWanted )
-import UniqFM ( emptyUFM, UniqFM, foldUFM )
-import TrieMap ( foldTM, ListMap, TypeMap )
 import CoAxiom ( CoAxiomRule(..) )
 import Pair ( Pair(..) )
 import OccName ( occName, occNameFS, mkTcOcc )
@@ -32,13 +22,8 @@ import RdrName
 import Module
 
 import Control.Applicative
-import Control.Monad
 import Data.Either
-import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
-import Data.List ( sortBy )
-import Data.Maybe
-import Data.Ord
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
