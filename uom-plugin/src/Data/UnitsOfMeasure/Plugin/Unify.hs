@@ -1,7 +1,9 @@
 module Data.UnitsOfMeasure.Plugin.Unify
-  ( UnifyResult(..)
-  , TySubst
+  ( TySubst
   , SubstItem(..)
+  , substsUnit
+  , substsSubst
+  , UnifyResult(..)
   , unifyUnits
   ) where
 
@@ -15,13 +17,9 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 import TcPluginExtras
 
 
-data UnifyResult = Win [TyVar] TySubst | Lose | Draw [TyVar] TySubst
-
-instance Outputable UnifyResult where
-  ppr (Win  tvs subst) = text "Win"  <+> ppr tvs <+> ppr subst
-  ppr (Draw tvs subst) = text "Draw" <+> ppr tvs <+> ppr subst
-  ppr Lose             = text "Lose"
-
+-- | A substitution is essentially a list of (variable, unit) pairs,
+-- but we keep the original 'Ct' that lead to the substitution being
+-- made, for use when turning the substitution back into constraints.
 type TySubst = [SubstItem]
 
 data SubstItem = SubstItem { siVar     :: TyVar
@@ -32,7 +30,30 @@ data SubstItem = SubstItem { siVar     :: TyVar
 instance Outputable SubstItem where
   ppr si = ppr (siVar si) <+> text " := " <+> ppr (siUnit si)
 
+-- | Apply a substitution to a single normalised unit
+substsUnit :: TySubst -> NormUnit -> NormUnit
+substsUnit []     u = u
+substsUnit (si:s) u = substsUnit s (substUnit (siVar si) (siUnit si) u)
 
+-- | Compose two substitutions
+substsSubst :: TySubst -> TySubst -> TySubst
+substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
+
+
+-- | Possible results of unifying a single pair of units.  In the
+-- non-failing cases, we return a substitution and a list of fresh
+-- variables that were created.
+data UnifyResult = Win [TyVar] TySubst | Lose | Draw [TyVar] TySubst
+
+instance Outputable UnifyResult where
+  ppr (Win  tvs subst) = text "Win"  <+> ppr tvs <+> ppr subst
+  ppr (Draw tvs subst) = text "Draw" <+> ppr tvs <+> ppr subst
+  ppr Lose             = text "Lose"
+
+
+-- | Attempt to unify two normalised units to produce a unifying
+-- substitution.  The 'Ct' is the equality between the non-normalised
+-- (and perhaps less substituted) unit type expressions.
 unifyUnits :: UnitDefs -> Ct -> NormUnit -> NormUnit -> TcPluginM UnifyResult
 unifyUnits uds ct u0 v0 = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
                              unifyOne uds ct [] [] (u0 /: v0)

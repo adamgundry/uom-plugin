@@ -112,14 +112,6 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
           Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') evs [eq] (xs ++ eqs)
 
 
-substsUnit :: TySubst -> NormUnit -> NormUnit
-substsUnit []     u = u
-substsUnit (si:s) u = substsUnit s (substUnit (siVar si) (siUnit si) u)
-
-substsSubst :: TySubst -> TySubst -> TySubst
-substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
-
-
 
 lookupUnitDefs :: TcPluginM UnitDefs
 lookupUnitDefs = do
