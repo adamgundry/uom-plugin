@@ -17,7 +17,6 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , divisible
   , divideExponents
   , substUnit
-  , cancel
   ) where
 
 import Type
@@ -119,15 +118,3 @@ substUnit :: TyVar -> NormUnit -> NormUnit -> NormUnit
 substUnit a v u = case Map.lookup (VarAtom a) $ _NormUnit u of
                     Nothing -> u
                     Just i  -> (v ^: i) *: leftover a u
-
-
-
-cancel :: NormUnit -> NormUnit -> (NormUnit, NormUnit)
-cancel (NormUnit u) (NormUnit v) = (NormUnit u', NormUnit v')
-  where
-    ns = Map.elems (u `Map.union` v)
-    g  = foldr1 gcd ns
-    ok = not (null ns) && g > 1
-
-    (u', v') | ok        = (Map.map (`div` g) u, Map.map (`div` g) v)
-             | otherwise = (u, v)
