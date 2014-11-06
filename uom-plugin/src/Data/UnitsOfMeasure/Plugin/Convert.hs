@@ -41,14 +41,14 @@ isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon
 -- the type has kind 'Unit', and may fail even if it does.
 normaliseUnit :: UnitDefs -> Type -> Maybe NormUnit
 normaliseUnit uds ty | Just ty1 <- tcView ty = normaliseUnit uds ty1
-normaliseUnit _   (TyVarTy v)              = pure $ atom $ VarAtom v
+normaliseUnit _   (TyVarTy v)              = pure $ varUnit v
 normaliseUnit uds (TyConApp tc tys)
   | tc == unitOneTyCon  uds                = pure one
-  | tc == unitBaseTyCon uds, [x]    <- tys = atom . BaseAtom <$> isStrLitTy x
+  | tc == unitBaseTyCon uds, [x]    <- tys = baseUnit <$> isStrLitTy x
   | tc == mulTyCon      uds, [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == divTyCon      uds, [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == expTyCon      uds, [u, n] <- tys = (^:) <$> normaliseUnit uds u <*> isNumLitTy n
-  | isFamilyTyCon tc                       = pure $ atom $ FamAtom tc tys
+  | isFamilyTyCon tc                       = pure $ famUnit tc tys
 normaliseUnit _ _ = Nothing
 
 

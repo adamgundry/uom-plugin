@@ -72,7 +72,7 @@ unifyOne uds ct tvs subst u
                 () | divisible i u -> let r = divideExponents (-i) $ leftover a u
                                              in return $ Win tvs $ SubstItem a r ct : subst
                    | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
-                                                       let r = atom (VarAtom beta) *: divideExponents (-i) (leftover a u)
+                                                       let r = varUnit beta *: divideExponents (-i) (leftover a u)
                                                        unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
                    | otherwise            -> go (at:ls) xs
 
