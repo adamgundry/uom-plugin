@@ -125,10 +125,10 @@ lookupUnitDefs = do
     m <- look "*:"
     d <- look "/:"
     e <- look "^:"
-    return $ UnitDefs (TyConApp (promoteTyCon u) []) u (getDataCon u "One") (getDataCon u "Base") m d e
+    return $ UnitDefs u (getDataCon u "One") (getDataCon u "Base") m d e
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
-                       [d] -> d
+                       [d] -> promoteDataCon d
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
     look s = tcLookupTyCon =<< lookupRdrName myModule (mkRdrUnqual (mkTcOcc s))
