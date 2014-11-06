@@ -78,9 +78,7 @@ unifyOne uds ct tvs subst u
 
         go ls (at@(FamAtom f tys, i) : xs) = do
           mb <- matchFam f tys
-          case mb of
-            Just (_, ty)
-              | Just v <- normaliseUnit uds ty -> unifyOne uds ct tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
-              | otherwise                  -> error "help help help help" -- TODO
-            Nothing                        -> go (at:ls) xs -- TODO: more we can do here?
+          case normaliseUnit uds . snd =<< mb of
+            Just v  -> unifyOne uds ct tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
+            Nothing -> go (at:ls) xs
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
