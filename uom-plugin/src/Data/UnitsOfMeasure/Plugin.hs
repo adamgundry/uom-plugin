@@ -50,7 +50,7 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
           Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs)
-                                            <$> mapM (mkWanted uds) (filter substable subst)
+                                            <$> mapM substItemToCt (filter substable subst)
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
     -- Extract the unit equality constraints
@@ -67,14 +67,16 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
     fromUnitEquality :: UnitEquality -> Ct
     fromUnitEquality (ct, _, _) = ct
 
-    mkWanted :: UnitDefs -> SubstItem -> TcPluginM Ct
-    mkWanted uds si = case siFlavour si of
-        Wanted -> unsafeTcPluginTcM $ newFlatWanted (ctLocOrigin (siLoc si)) pred
-        Given  -> return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) (siLoc si)
+    substItemToCt :: SubstItem -> TcPluginM Ct
+    substItemToCt si
+      | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) loc
+      | otherwise               = unsafeTcPluginTcM $ newFlatWanted (ctLocOrigin loc) pred
       where
         pred = mkEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
         ty2  = reifyUnit uds (siUnit si)
+        ct   = siCt si
+        loc  = ctLoc ct
 
     -- plugins may give back only solutions to non-CFunEqCan wanted constraints
     solvable (_, ct) = not (isCFunEqCan ct) && isWanted (ctEvidence ct)
@@ -100,7 +102,7 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
     simples :: [TyVar] -> TySubst -> [(EvTerm, Ct)] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
     simples tvs subst evs xs [] = return $ Simplified tvs subst evs xs
     simples tvs subst evs xs (eq@(ct, u, v):eqs) = do
-        ur <- unifyUnits uds (ctFlavour ct) (ctLoc ct) (substsUnit subst u) (substsUnit subst v)
+        ur <- unifyUnits uds ct (substsUnit subst u) (substsUnit subst v)
         tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
           Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')

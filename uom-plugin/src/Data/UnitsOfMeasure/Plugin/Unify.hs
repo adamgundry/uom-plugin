@@ -2,8 +2,6 @@ module Data.UnitsOfMeasure.Plugin.Unify
   ( UnifyResult(..)
   , TySubst
   , SubstItem(..)
-  , Flavour(..)
-  , ctFlavour
   , unifyUnits
   ) where
 
@@ -28,29 +26,19 @@ type TySubst = [SubstItem]
 
 data SubstItem = SubstItem { siVar     :: TyVar
                            , siUnit    :: NormUnit
-                           , siFlavour :: Flavour
-                           , siLoc     ::  CtLoc
+                           , siCt     ::  Ct
                            }
 
 instance Outputable SubstItem where
   ppr si = ppr (siVar si) <+> text " := " <+> ppr (siUnit si)
 
-data Flavour = Given | Wanted
-  deriving (Eq, Show)
 
-instance Outputable Flavour where
-  ppr = text . show
+unifyUnits :: UnitDefs -> Ct -> NormUnit -> NormUnit -> TcPluginM UnifyResult
+unifyUnits uds ct u0 v0 = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+                             unifyOne uds ct [] [] (u0 /: v0)
 
-ctFlavour :: Ct -> Flavour
-ctFlavour ct | isGiven (ctEvidence ct) = Given
-             | otherwise               = Wanted
-
-unifyUnits :: UnitDefs -> Flavour -> CtLoc -> NormUnit -> NormUnit -> TcPluginM UnifyResult
-unifyUnits uds fl loc u0 v0 = do tcPluginTrace ("unifyUnits " ++ show fl) (ppr u0 $$ ppr v0)
-                                 unifyOne uds fl loc [] [] (u0 /: v0)
-
-unifyOne :: UnitDefs -> Flavour -> CtLoc -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
-unifyOne uds fl loc tvs subst u
+unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
+unifyOne uds ct tvs subst u
       | isOne u           = return $ Win tvs subst
       | isConstant u      = return   Lose
       | otherwise         = tcPluginTrace "unifyOne" (ppr u) >> go [] (ascending u)
@@ -61,17 +49,17 @@ unifyOne uds fl loc tvs subst u
         go ls (at@(VarAtom a, i) : xs) =
             case () of
                 () | divisible i u -> let r = divideExponents (-i) $ leftover a u
-                                             in return $ Win tvs $ SubstItem a r fl loc : subst
+                                             in return $ Win tvs $ SubstItem a r ct : subst
                    | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
                                                        let r = atom (VarAtom beta) *: divideExponents (-i) (leftover a u)
-                                                       unifyOne uds fl loc (beta:tvs) (SubstItem a r fl loc:subst) $ substUnit a r u
+                                                       unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
           mb <- matchFam f tys
           case mb of
             Just (_, ty)
-              | Just v <- normaliseUnit uds ty -> unifyOne uds fl loc tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
+              | Just v <- normaliseUnit uds ty -> unifyOne uds ct tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
               | otherwise                  -> error "help help help help" -- TODO
             Nothing                        -> go (at:ls) xs -- TODO: more we can do here?
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
