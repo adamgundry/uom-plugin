@@ -50,7 +50,25 @@ infixr 8 ^:
 
 type role Quantity representational nominal
 newtype Quantity a (u :: Unit) = MkQuantity { unQuantity :: a }
-  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- These classes work uniformly on the underyling representation,
+-- regardless of the units
+deriving instance Bounded a => Bounded (Quantity a u)
+deriving instance Eq      a => Eq      (Quantity a u)
+deriving instance Ord     a => Ord     (Quantity a u)
+deriving instance Show    a => Show    (Quantity a u)
+
+-- These classes are not unit-polymorphic, so we have to restrict the
+-- unit index to be dimensionless
+deriving instance (Enum       a, u ~ One) => Enum       (Quantity a u)
+deriving instance (Floating   a, u ~ One) => Floating   (Quantity a u)
+deriving instance (Fractional a, u ~ One) => Fractional (Quantity a u)
+deriving instance (Integral   a, u ~ One) => Integral   (Quantity a u)
+deriving instance (Num        a, u ~ One) => Num        (Quantity a u)
+deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
+deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
+deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
+
 
 zero :: Num a => Quantity a u
 zero = MkQuantity 0
@@ -83,15 +101,6 @@ sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 
 negate' :: Num a => Quantity a u -> Quantity a u
 negate' (MkQuantity x) = MkQuantity (negate x)
-
-
-deriving instance (Floating   a, u ~ One) => Floating   (Quantity a u)
-deriving instance (Fractional a, u ~ One) => Fractional (Quantity a u)
-deriving instance (Integral   a, u ~ One) => Integral   (Quantity a u)
-deriving instance (Num        a, u ~ One) => Num        (Quantity a u)
-deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
-deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
-deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
 
 
 type family MkUnit (s :: Symbol) :: Unit
