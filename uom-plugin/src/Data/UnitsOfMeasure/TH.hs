@@ -11,6 +11,7 @@ import GHC.Prim (Proxy#, proxy#)
 
 import Control.Applicative
 import Data.Char
+import Numeric
 import Text.Parse.Units
 
 import Language.Haskell.TH
@@ -29,9 +30,9 @@ import Data.UnitsOfMeasure
 --   the corresponding type, so @[u|m/s|]@ becomes the type
 --   @Base "m" /: Base "s"@ of kind 'Unit';
 --
--- * in an expression context, it can be used to assign units to a
---   value, in conjunction with the '(%)' operator, e.g.
---   @42 % [u|m|]@ is an expression of type @Quantity Integer [u|m|]@
+-- * in an expression context, it can be used to create a 'Quantity'
+--   corresponding to a numeric literal, for example @[u|42 m|]@ and
+--   @[u|-2.2 m|] are expressions of type @Quantity Integer [u|m|]@.
 --
 u :: QuasiQuoter
 u = QuasiQuoter
@@ -41,16 +42,22 @@ u = QuasiQuoter
       , quoteDec  = uDec
       }
 
--- | Parse a unit expression and create a proxy that can be used with
--- the '(%)' operator to create a quantity with those units.
+-- | Parse a number followed by a unit expression, and create a
+-- quantity with those units.
 uExp :: String -> Q Exp
-uExp s = [| proxy# :: Proxy# $(uType s) |]
+uExp s = case reads s of
+           [(i, s')] -> f (integerL i) s'
+           _         -> case readSigned readFloat s of
+                          [(r, s')] -> f (rationalL r) s'
+                          _         -> fail ("unable to parse numeric literal \"" ++ s ++ "\"")
+  where
+    f l s' =[| $(litE l) % (proxy# :: Proxy# $(uType s')) |]
 
 -- | Parse a unit expression and convert it into the corresponding type.
 uType :: String -> Q Type
 uType s = case parseUnit universalSymbolTable s of
             Right expr -> reifyUnit expr
-            Left  err  -> reportError ("unable to parse unit expression: " ++ err)  >> [t|()|]
+            Left  err  -> fail ("unable to parse unit expression \"" ++ s ++ "\": " ++ err)
 
 -- | Convert a unit expression into the corresponding type.
 reifyUnit :: UnitExp () String -> Q Type
