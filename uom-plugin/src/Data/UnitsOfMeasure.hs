@@ -21,7 +21,7 @@ module Data.UnitsOfMeasure
     , Quantity(unQuantity) -- N.B. MkQuantity not exported!
     , zero
     , mk
-    , (%)
+    , unsafeMkQuantity
 
       -- * Unit-safe arithmetic operations
     , (+:)
@@ -93,11 +93,11 @@ zero = MkQuantity 0
 mk :: a -> Quantity a One
 mk = MkQuantity
 
--- | Assign a unit to a quantity.
--- This must always be applied to a concrete second argument
--- (generalizing over @u@ allows the unit system to be broken)!
-(%) :: a -> Proxy# u -> Quantity a u
-x % _ = MkQuantity x
+-- | Assign an arbitrary unit to a value.  Warning: polymorphic use of
+-- this function may violate unit safety, because combined with
+-- 'unQuantity' it allows arbitrary coercion of units!
+unsafeMkQuantity :: Proxy# u -> a -> Quantity a u
+unsafeMkQuantity _ = MkQuantity
 
 -- | Addition of quantities requires the units to match.
 (+:) :: Num a => Quantity a u -> Quantity a u -> Quantity a u

@@ -53,8 +53,8 @@ uExp s = case reads s of
                           [(r, s')] -> mkLiteral (rationalL r) s'
                           _         -> mkConversion =<< parseUnitQ s
   where
-    mkLiteral l s'    = [| $(litE l) % (proxy# :: Proxy# $(uType s')) |]
-    mkConversion expr = [| (% (proxy# :: Proxy# $(reifyUnit expr)))   |]
+    mkLiteral l s'    = [| unsafeMkQuantity (proxy# :: Proxy# $(uType s'      )) $(litE l) |]
+    mkConversion expr = [| unsafeMkQuantity (proxy# :: Proxy# $(reifyUnit expr))           |]
 
 -- | Parse a unit expression and convert it into the corresponding type.
 uType :: String -> Q Type
