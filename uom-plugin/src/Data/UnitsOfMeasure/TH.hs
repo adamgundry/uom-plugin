@@ -32,7 +32,8 @@ import Data.UnitsOfMeasure
 --
 -- * in an expression context, it can be used to create a 'Quantity'
 --   corresponding to a numeric literal, for example @[u|42 m|]@ and
---   @[u|-2.2 m|] are expressions of type @Quantity Integer [u|m|]@.
+--   @[u|-2.2 m|] are expressions of type @Quantity Integer [u|m|]@,
+--   and @[u|m|]@ alone is a function of type @a -> Quantity a [u|m|]@.
 --
 u :: QuasiQuoter
 u = QuasiQuoter
@@ -42,22 +43,27 @@ u = QuasiQuoter
       , quoteDec  = uDec
       }
 
--- | Parse a number followed by a unit expression, and create a
--- quantity with those units.
+-- | Parse a unit expression optionally preceded by a literal, and
+-- create a constructor for 'Quantity' with the given units (applied
+-- to the literal if one is present).
 uExp :: String -> Q Exp
 uExp s = case reads s of
-           [(i, s')] -> f (integerL i) s'
+           [(i, s')] -> mkLiteral (integerL i) s'
            _         -> case readSigned readFloat s of
-                          [(r, s')] -> f (rationalL r) s'
-                          _         -> fail ("unable to parse numeric literal \"" ++ s ++ "\"")
+                          [(r, s')] -> mkLiteral (rationalL r) s'
+                          _         -> mkConversion =<< parseUnitQ s
   where
-    f l s' =[| $(litE l) % (proxy# :: Proxy# $(uType s')) |]
+    mkLiteral l s'    = [| $(litE l) % (proxy# :: Proxy# $(uType s')) |]
+    mkConversion expr = [| (% (proxy# :: Proxy# $(reifyUnit expr)))   |]
 
 -- | Parse a unit expression and convert it into the corresponding type.
 uType :: String -> Q Type
-uType s = case parseUnit universalSymbolTable s of
-            Right expr -> reifyUnit expr
-            Left  err  -> fail ("unable to parse unit expression \"" ++ s ++ "\": " ++ err)
+uType s = reifyUnit =<< parseUnitQ s
+
+parseUnitQ :: String -> Q (UnitExp () String)
+parseUnitQ s = case parseUnit universalSymbolTable s of
+                 Right expr -> return expr
+                 Left  err  -> fail ("unable to parse unit expression \"" ++ s ++ "\": " ++ err)
 
 -- | Convert a unit expression into the corresponding type.
 reifyUnit :: UnitExp () String -> Q Type
