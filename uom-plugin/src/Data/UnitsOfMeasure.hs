@@ -28,8 +28,8 @@ module Data.UnitsOfMeasure
     , MkUnit
     ) where
 
-import GHC.Prim (Proxy#, proxy#)
-import GHC.TypeLits
+import GHC.Prim     (Proxy#)
+import GHC.TypeLits (Symbol, Nat)
 
 -- | (Kind) Units of measure
 data Unit = One | Base Symbol

@@ -8,7 +8,6 @@ module Data.UnitsOfMeasure.TH
 
 import GHC.Prim (Proxy#, proxy#)
 
-import Control.Applicative
 import Text.Parse.Units
 
 import Language.Haskell.TH
