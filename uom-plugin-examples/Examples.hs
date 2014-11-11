@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-{-# OPTIONS_GHC -ftc-plugin Data.UnitsOfMeasure.Plugin #-}
+{-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 module Examples where
 
 import Data.UnitsOfMeasure

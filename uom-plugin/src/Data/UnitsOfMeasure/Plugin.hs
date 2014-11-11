@@ -1,6 +1,8 @@
 module Data.UnitsOfMeasure.Plugin
-  ( tcPlugin
+  ( plugin
   ) where
+
+import Plugins
 
 import TcEvidence
 import TcRnTypes
@@ -31,8 +33,11 @@ import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
 
 
-tcPlugin :: TcPlugin
-tcPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = const $ lookupUnitDefs
+plugin :: Plugin
+plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
+
+uomPlugin :: TcPlugin
+uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
                                                , tcPluginSolve = unitsOfMeasureSolver
                                                , tcPluginStop  = const $ return ()
                                                }

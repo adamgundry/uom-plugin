@@ -33,8 +33,9 @@ import RdrName   ( RdrName, rdrNameOcc )
 import SrcLoc    ( SrcSpan )
 import qualified TcEnv     ( tcLookupTyCon )
 import qualified TcMType ( newFlexiTyVarTy )
-import TcRnMonad ( tcPluginIO, tcPluginTrace, isTouchableTcM, getTopEnv )
+import TcRnMonad ( isTouchableTcM, getTopEnv )
 import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..), TcPluginM, unsafeTcPluginTcM )
+import TcRnDriver ( tcPluginIO, tcPluginTrace )
 import TcType    ( TcType, TcTyVar )
 
 import TyCon
@@ -50,7 +51,7 @@ import TypeRep
 
 
 simplePlugin :: TcPluginSolver -> TcPlugin
-simplePlugin solver = TcPlugin { tcPluginInit  = const $ return ()
+simplePlugin solver = TcPlugin { tcPluginInit  = return ()
                                , tcPluginSolve = const solver
                                , tcPluginStop  = const $ return ()
                                }
@@ -61,8 +62,8 @@ tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
                                       , tcPluginStop  = traceStop
                                       }
   where
-    traceInit  xs      = tcPluginTrace ("tcPluginInit " ++ s) (ppr xs) >> tcPluginInit xs
-    traceStop  z       = tcPluginTrace ("tcPluginStop " ++ s) empty    >> tcPluginStop z
+    traceInit    = tcPluginTrace ("tcPluginInit " ++ s) empty >> tcPluginInit
+    traceStop  z = tcPluginTrace ("tcPluginStop " ++ s) empty >> tcPluginStop z
 
     traceSolve z given derived wanted = do
         tcPluginTrace ("tcPluginSolve start " ++ s)
