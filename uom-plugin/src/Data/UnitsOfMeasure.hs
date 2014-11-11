@@ -62,7 +62,7 @@ infixr 8 ^:
 newtype Quantity a (u :: Unit) = MkQuantity { unQuantity :: a }
 type role Quantity representational nominal
 
--- These classes work uniformly on the underyling representation,
+-- These classes work uniformly on the underlying representation,
 -- regardless of the units
 deriving instance Bounded a => Bounded (Quantity a u)
 deriving instance Eq      a => Eq      (Quantity a u)
