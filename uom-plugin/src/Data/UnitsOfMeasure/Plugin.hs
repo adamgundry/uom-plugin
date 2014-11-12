@@ -16,7 +16,7 @@ import TypeRep
 import FastString
 import Outputable
 
-import TcMType ( zonkCt, newFlatWanted )
+import TcMType ( newFlatWanted )
 import CoAxiom ( CoAxiomRule(..) )
 import Pair ( Pair(..) )
 import OccName ( occName, occNameFS, mkTcOcc )
@@ -45,9 +45,9 @@ uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
 unitsOfMeasureSolver uds givens deriveds wanteds = do
-    (unit_givens , other_givens )  <- partitionEithers <$> mapM (toUnitEquality uds) givens
-    (unit_wanteds, other_wanteds)  <- partitionEithers <$> mapM (toUnitEquality uds) wanteds
-    let unit_cts = unit_givens ++ unit_wanteds
+    let (unit_givens , other_givens ) = partitionEithers $ map (toUnitEquality uds) givens
+        (unit_wanteds, other_wanteds) = partitionEithers $ map (toUnitEquality uds) wanteds
+        unit_cts = unit_givens ++ unit_wanteds
     case filter (not . isCFunEqCan . fromUnitEquality) unit_wanteds of
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
@@ -59,10 +59,8 @@ unitsOfMeasureSolver uds givens deriveds wanteds = do
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
     -- Extract the unit equality constraints
-    toUnitEquality :: UnitDefs -> Ct -> TcPluginM (Either UnitEquality Ct)
-    toUnitEquality uds ct = do
-        ct' <- unsafeTcPluginTcM $ zonkCt ct -- TODO suspcious
-        return $ case classifyPredType $ ctEvPred $ ctEvidence ct' of
+    toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
+    toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
                           EqPred t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
                                        , Just u1 <- normaliseUnit uds t1
                                        , Just u2 <- normaliseUnit uds t2
