@@ -49,11 +49,4 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
 -- Some polymorphic functions for working with quantities
 sum' xs = foldr (+:) zero xs
 mean xs = sum' xs /: mk (genericLength xs)
-
-
--- Unfortunately the following leads to an infinite loop in the
--- constraint solver if it is given its most general type signature,
--- or no type signature at all:
-foo :: Num a => Quantity a [u| m |] -> Quantity a [u| s |] -> Quantity a [u| m*s |]
--- foo :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
 foo x y = x *: y +: y *: x
