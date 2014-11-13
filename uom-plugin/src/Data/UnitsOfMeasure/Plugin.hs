@@ -47,17 +47,14 @@ unitsOfMeasureSolver :: UnitDefs -> Bool -> [Ct] -> [Ct] -> [Ct] -> TcPluginM Tc
 unitsOfMeasureSolver uds is_final givens deriveds wanteds
   | not is_final = return $ TcPluginOk [] []
   | otherwise    = do
-    let (unit_givens , other_givens ) = partitionEithers $ map (toUnitEquality uds) givens
-        (unit_wanteds, other_wanteds) = partitionEithers $ map (toUnitEquality uds) wanteds
-        unit_cts = unit_givens ++ unit_wanteds
-    case filter (not . isCFunEqCan . fromUnitEquality) unit_wanteds of
+    let (unit_wanteds, other_wanteds) = partitionEithers $ map (toUnitEquality uds) wanteds
+    case unit_wanteds of
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
-        sr <- simplifyUnits uds unit_cts
+        sr <- simplifyUnits uds unit_wanteds
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk (filter solvable evs)
-                                            <$> mapM substItemToCt (filter substable subst)
+          Simplified tvs subst evs eqs -> TcPluginOk evs <$> mapM substItemToCt subst
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
   where
     -- Extract the unit equality constraints
@@ -82,15 +79,6 @@ unitsOfMeasureSolver uds is_final givens deriveds wanteds
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
         loc  = ctLoc ct
-
-    -- plugins may give back only solutions to non-CFunEqCan wanted constraints
-    solvable (_, ct) = not (isCFunEqCan ct) && isWanted (ctEvidence ct)
-
-    -- In what can only be described as a grotesque hack, we simply
-    -- throw away our solutions for flatten tyvars; this isn't sound
-    -- in general (because our solution may be more restrictive than
-    -- the result of unflattening)!
-    substable si = not $ isFlattenTyVar $ siVar si
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)

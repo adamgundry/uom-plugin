@@ -67,13 +67,14 @@ unifyOne uds ct tvs subst u
       where
         go :: [(Atom, Integer)] -> [(Atom, Integer)] -> TcPluginM UnifyResult
         go _  []                       = return $ Draw tvs subst
-        go ls (at@(VarAtom a, i) : xs) =
+        go ls (at@(VarAtom a, i) : xs) = do
+            tch <- isTouchableTcPluginM a
             case () of
-                () | divisible i u -> let r = divideExponents (-i) $ leftover a u
+                () | tch && divisible i u -> let r = divideExponents (-i) $ leftover a u
                                              in return $ Win tvs $ SubstItem a r ct : subst
-                   | any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
-                                                       let r = varUnit beta *: divideExponents (-i) (leftover a u)
-                                                       unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
+                   | tch && any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
+                                                              let r = varUnit beta *: divideExponents (-i) (leftover a u)
+                                                              unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
