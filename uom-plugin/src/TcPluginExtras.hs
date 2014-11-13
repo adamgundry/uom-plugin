@@ -58,12 +58,12 @@ tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
     traceInit    = tcPluginTrace ("tcPluginInit " ++ s) empty >> tcPluginInit
     traceStop  z = tcPluginTrace ("tcPluginStop " ++ s) empty >> tcPluginStop z
 
-    traceSolve z given derived wanted = do
-        tcPluginTrace ("tcPluginSolve start " ++ s)
+    traceSolve z b given derived wanted = do
+        tcPluginTrace ("tcPluginSolve start " ++ s ++ if b then "FINAL" else "INNER")
                           (text "given   =" <+> ppr given
                         $$ text "derived =" <+> ppr derived
                         $$ text "wanted  =" <+> ppr wanted)
-        r <- tcPluginSolve z given derived wanted
+        r <- tcPluginSolve z b given derived wanted
         case r of
           TcPluginOk solved new     -> tcPluginTrace ("tcPluginSolve ok " ++ s)
                                            (text "solved =" <+> ppr solved
