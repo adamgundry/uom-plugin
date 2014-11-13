@@ -7,10 +7,15 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , unifyUnits
   ) where
 
+import FastString
+import Name
 import Outputable
+import TcRnMonad
 import TcRnTypes
+import TcType
 import Type
 import TypeRep
+import Var
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
@@ -68,11 +73,11 @@ unifyOne uds ct tvs subst u
         go :: [(Atom, Integer)] -> [(Atom, Integer)] -> TcPluginM UnifyResult
         go _  []                       = return $ Draw tvs subst
         go ls (at@(VarAtom a, i) : xs) = do
-            tch <- isTouchableTcPluginM a
+            tch <- if given_mode then return True else isTouchableTcPluginM a
             case () of
                 () | tch && divisible i u -> let r = divideExponents (-i) $ leftover a u
                                              in return $ Win tvs $ SubstItem a r ct : subst
-                   | tch && any (not . isBase . fst) xs -> do TyVarTy beta <- newFlexiTyVarTy $ unitKind uds
+                   | tch && any (not . isBase . fst) xs -> do beta <- newUnitVar
                                                               let r = varUnit beta *: divideExponents (-i) (leftover a u)
                                                               unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
                    | otherwise            -> go (at:ls) xs
@@ -83,3 +88,14 @@ unifyOne uds ct tvs subst u
             Just v  -> unifyOne uds ct tvs subst $ mkNormUnit (ls ++ xs) *: v ^: i
             Nothing -> go (at:ls) xs
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
+
+
+        given_mode = isGiven (ctEvidence ct)
+
+        newUnitVar | given_mode = newSkolemTyVar $ unitKind uds
+                   | otherwise  = newFlexiTyVar  $ unitKind uds
+
+        newSkolemTyVar kind = do
+            uniq <- unsafeTcPluginTcM newUnique
+            let name = mkSysTvName uniq (fsLit "beta")
+            return $ mkTcTyVar name kind vanillaSkolemTv

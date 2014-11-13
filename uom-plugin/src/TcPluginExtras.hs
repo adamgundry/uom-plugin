@@ -15,6 +15,7 @@ module TcPluginExtras
     -- * Wrappers
   , tcLookupTyCon
   , newGlobalBinder
+  , newFlexiTyVar
   , newFlexiTyVarTy
   , isTouchableTcPluginM
   , matchFam
@@ -31,7 +32,7 @@ import Outputable
 import RdrName   ( RdrName, rdrNameOcc )
 import SrcLoc    ( SrcSpan )
 import qualified TcEnv     ( tcLookupTyCon )
-import qualified TcMType ( newFlexiTyVarTy )
+import qualified TcMType ( newFlexiTyVar, newFlexiTyVarTy )
 import TcRnMonad ( isTouchableTcM, getTopEnv )
 import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..), TcPluginM, unsafeTcPluginTcM )
 import TcRnDriver ( tcPluginIO, tcPluginTrace )
@@ -91,6 +92,9 @@ tcLookupTyCon = unsafeTcPluginTcM . TcEnv.tcLookupTyCon
 newGlobalBinder :: Module -> OccName -> SrcSpan -> TcPluginM Name
 newGlobalBinder m o s = unsafeTcPluginTcM $ IfaceEnv.newGlobalBinder m o s
 
+
+newFlexiTyVar :: Kind -> TcPluginM TcTyVar
+newFlexiTyVar = unsafeTcPluginTcM . TcMType.newFlexiTyVar
 
 newFlexiTyVarTy :: Kind -> TcPluginM TcType
 newFlexiTyVarTy = unsafeTcPluginTcM . TcMType.newFlexiTyVarTy

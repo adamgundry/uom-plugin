@@ -45,32 +45,38 @@ uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
 
 unitsOfMeasureSolver :: UnitDefs -> Bool -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
 unitsOfMeasureSolver uds is_final givens deriveds wanteds
-  | not is_final = return $ TcPluginOk [] []
-  | otherwise    = do
-    let (unit_wanteds, other_wanteds) = partitionEithers $ map (toUnitEquality uds) wanteds
+  | is_final     = solverFinal uds wanteds
+  | null wanteds = solverGivens uds givens
+  | otherwise    = return $ TcPluginOk [] []
+
+solverGivens :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
+solverGivens uds givens = do
+    let (unit_givens, _) = partitionEithers $ map (toUnitEquality uds) givens
+    case unit_givens of
+      []    -> return $ TcPluginOk [] []
+      (_:_) -> do
+        sr <- simplifyUnits uds unit_givens
+        tcPluginTrace "unitsOfMeasureSolver simplified givens" (ppr sr)
+        case sr of
+          Simplified tvs subst evs eqs -> TcPluginOk (map solvedGiven unit_givens) <$> mapM (substItemToCt uds) subst
+          Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
+  where
+    solvedGiven (ct, _, _) = (ctev_evtm (ctEvidence ct), ct)
+
+solverFinal :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
+solverFinal uds wanteds = do
+    let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds unit_wanteds
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk evs <$> mapM substItemToCt subst
+          Simplified tvs subst evs eqs -> TcPluginOk evs <$> mapM (substItemToCt uds) subst
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
-  where
-    -- Extract the unit equality constraints
-    toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
-    toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
-                          EqPred t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
-                                       , Just u1 <- normaliseUnit uds t1
-                                       , Just u2 <- normaliseUnit uds t2
-                                       -> Left (ct, u1, u2)
-                          _            -> Right ct
 
-    fromUnitEquality :: UnitEquality -> Ct
-    fromUnitEquality (ct, _, _) = ct
-
-    substItemToCt :: SubstItem -> TcPluginM Ct
-    substItemToCt si
+substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
+substItemToCt uds si
       | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) loc
       | otherwise               = unsafeTcPluginTcM $ newFlatWanted (ctLocOrigin loc) pred
       where
@@ -82,6 +88,19 @@ unitsOfMeasureSolver uds is_final givens deriveds wanteds
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
+
+-- Extract the unit equality constraints
+toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
+toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
+                      EqPred t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
+                                   , Just u1 <- normaliseUnit uds t1
+                                   , Just u2 <- normaliseUnit uds t2
+                                   -> Left (ct, u1, u2)
+                      _            -> Right ct
+
+fromUnitEquality :: UnitEquality -> Ct
+fromUnitEquality (ct, _, _) = ct
+
 
 data SimplifyResult = Simplified [TyVar] TySubst [(EvTerm,Ct)] [UnitEquality] | Impossible UnitEquality [UnitEquality]
 
