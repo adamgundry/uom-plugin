@@ -9,7 +9,6 @@ module TcPluginExtras
   , unsafeTcPluginTcM
 
     -- * Extensions
-  , simplePlugin
   , tracePlugin
   , lookupRdrName
 
@@ -49,12 +48,6 @@ import TypeRep
 
 
 
-
-simplePlugin :: TcPluginSolver -> TcPlugin
-simplePlugin solver = TcPlugin { tcPluginInit  = return ()
-                               , tcPluginSolve = const solver
-                               , tcPluginStop  = const $ return ()
-                               }
 
 tracePlugin :: String -> TcPlugin -> TcPlugin
 tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
