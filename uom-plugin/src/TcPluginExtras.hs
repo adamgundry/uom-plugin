@@ -18,6 +18,7 @@ module TcPluginExtras
   , newFlexiTyVar
   , newFlexiTyVarTy
   , isTouchableTcPluginM
+  , zonkCt
   , matchFam
   ) where
 
@@ -32,9 +33,9 @@ import Outputable
 import RdrName   ( RdrName, rdrNameOcc )
 import SrcLoc    ( SrcSpan )
 import qualified TcEnv     ( tcLookupTyCon )
-import qualified TcMType ( newFlexiTyVar, newFlexiTyVarTy )
+import qualified TcMType ( newFlexiTyVar, newFlexiTyVarTy, zonkCt )
 import TcRnMonad ( isTouchableTcM, getTopEnv )
-import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..), TcPluginM, unsafeTcPluginTcM )
+import TcRnTypes ( Ct, TcPlugin(..), TcPluginSolver, TcPluginResult(..), TcPluginM, unsafeTcPluginTcM )
 import TcRnDriver ( tcPluginIO, tcPluginTrace )
 import TcType    ( TcType, TcTyVar )
 
@@ -101,6 +102,9 @@ newFlexiTyVarTy = unsafeTcPluginTcM . TcMType.newFlexiTyVarTy
 
 isTouchableTcPluginM :: TcTyVar -> TcPluginM Bool
 isTouchableTcPluginM = unsafeTcPluginTcM . isTouchableTcM
+
+zonkCt :: Ct -> TcPluginM Ct
+zonkCt = unsafeTcPluginTcM . TcMType.zonkCt
 
 
 -- This is just TcSMonad.matchFam, but written to work in TcM instead

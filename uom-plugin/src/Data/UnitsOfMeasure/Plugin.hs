@@ -45,34 +45,21 @@ uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
 
 unitsOfMeasureSolver :: UnitDefs -> Bool -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
 unitsOfMeasureSolver uds is_final givens deriveds wanteds
-  | is_final     = solverFinal uds wanteds
-  | null wanteds = solverGivens uds givens
+  | is_final     = solverFinal uds givens wanteds
   | otherwise    = return $ TcPluginOk [] []
 
-solverGivens :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
-solverGivens uds givens = do
-    let (unit_givens, _) = partitionEithers $ map (toUnitEquality uds) givens
-    case unit_givens of
-      []    -> return $ TcPluginOk [] []
-      (_:_) -> do
-        sr <- simplifyUnits uds unit_givens
-        tcPluginTrace "unitsOfMeasureSolver simplified givens" (ppr sr)
-        case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk (map solvedGiven unit_givens) <$> mapM (substItemToCt uds) subst
-          Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
-  where
-    solvedGiven (ct, _, _) = (ctev_evtm (ctEvidence ct), ct)
-
-solverFinal :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
-solverFinal uds wanteds = do
+solverFinal :: UnitDefs -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
+solverFinal uds givens wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
-        sr <- simplifyUnits uds unit_wanteds
+        (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM zonkCt givens
+        sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk evs <$> mapM (substItemToCt uds) subst
+          Simplified tvs subst evs eqs -> TcPluginOk (filter (isWanted . ctEvidence . snd) evs)
+                                              <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) subst)
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
