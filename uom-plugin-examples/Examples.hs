@@ -50,3 +50,16 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
 sum' xs = foldr (+:) zero xs
 mean xs = sum' xs /: mk (genericLength xs)
 foo x y = x *: y +: y *: x
+
+
+-- Some given equations to make use of
+f :: (One /: (w ^: 2)) ~ (One /: [u| kg^2 |])  => Quantity a w -> Quantity a [u| kg |]
+f = id
+
+g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
+g = id
+
+
+-- I don't understand why, but the 'Show' instance for 'Quantity'
+-- doesn't seem to work properly, as this gives an error:
+-- x = show ([u| 3 m |] :: Quantity Double [u| m |])
