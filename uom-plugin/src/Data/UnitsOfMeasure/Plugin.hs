@@ -43,13 +43,8 @@ uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
                                                }
 
 
-unitsOfMeasureSolver :: UnitDefs -> Bool -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
-unitsOfMeasureSolver uds is_final givens deriveds wanteds
-  | is_final     = solverFinal uds givens wanteds
-  | otherwise    = return $ TcPluginOk [] []
-
-solverFinal :: UnitDefs -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
-solverFinal uds givens wanteds = do
+unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
+unitsOfMeasureSolver uds givens _deriveds wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []
