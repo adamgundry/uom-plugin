@@ -44,6 +44,26 @@ uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
 
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
+unitsOfMeasureSolver uds givens _deriveds []      = do
+    zonked_cts <- mapM zonkCt givens
+    let (unit_givens , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) zonked_cts
+    case unit_givens of
+      []    -> return $ TcPluginOk [] []
+      (_:_) -> do
+        sr <- simplifyUnits uds $ map snd unit_givens
+        tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
+        return $ case sr of
+          Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
+          Simplified tvs subst evs eqs -> TcPluginOk [] []
+          Impossible (ct, u, v) eqs    -> TcPluginContradiction [ct]
+  where
+    foo :: Ct -> Either UnitEquality Ct -> Either (Ct, UnitEquality) Ct
+    foo ct (Left x)    = Left (ct, x)
+    foo _  (Right ct') = Right ct'
+
+    solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
+
+
 unitsOfMeasureSolver uds givens _deriveds wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
