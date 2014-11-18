@@ -14,30 +14,16 @@ module TcPluginExtras
 
     -- * Wrappers
   , tcLookupTyCon
-  , newGlobalBinder
   , newFlexiTyVar
-  , newFlexiTyVarTy
   , isTouchableTcPluginM
   , zonkCt
   , matchFam
   ) where
 
-import DynamicLoading ( lookupRdrNameInModuleForPlugins )
-import HscTypes  ( HscEnv )
-import qualified IfaceEnv  ( newGlobalBinder )
-import Kind      ( Kind )
-import Module    ( Module, ModuleName, moduleNameString )
-import Name      ( Name )
-import OccName   ( OccName, occNameString )
 import Outputable
-import RdrName   ( RdrName, rdrNameOcc )
-import SrcLoc    ( SrcSpan )
-import qualified TcEnv     ( tcLookupTyCon )
-import qualified TcMType ( newFlexiTyVar, newFlexiTyVarTy, zonkCt )
-import TcRnMonad ( isTouchableTcM, getTopEnv )
-import TcRnTypes ( Ct, TcPlugin(..), TcPluginSolver, TcPluginResult(..), TcPluginM, unsafeTcPluginTcM )
-import TcRnDriver ( tcPluginIO, tcPluginTrace )
-import TcType    ( TcType, TcTyVar )
+import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..) ) -- TODO: move imports
+import TcType    ( TcType )
+import TcPluginM
 
 import TyCon
 import FamInst
@@ -74,37 +60,6 @@ tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
                                            (text "bad =" <+> ppr bad)
         return r
 
-
-
-lookupRdrName :: ModuleName -> RdrName -> TcPluginM Name
-lookupRdrName mod rdr = do
-  hsc_env <- unsafeTcPluginTcM getTopEnv
-  mb_name <- tcPluginIO $ lookupRdrNameInModuleForPlugins hsc_env mod rdr
-  case mb_name of
-    Just name -> return name
-    Nothing   -> error $ "TcPluginExtras.lookupRdrName: missing "
-                          ++ moduleNameString mod ++ "." ++ occNameString (rdrNameOcc rdr)
-
-
-tcLookupTyCon :: Name -> TcPluginM TyCon
-tcLookupTyCon = unsafeTcPluginTcM . TcEnv.tcLookupTyCon
-
-
-newGlobalBinder :: Module -> OccName -> SrcSpan -> TcPluginM Name
-newGlobalBinder m o s = unsafeTcPluginTcM $ IfaceEnv.newGlobalBinder m o s
-
-
-newFlexiTyVar :: Kind -> TcPluginM TcTyVar
-newFlexiTyVar = unsafeTcPluginTcM . TcMType.newFlexiTyVar
-
-newFlexiTyVarTy :: Kind -> TcPluginM TcType
-newFlexiTyVarTy = unsafeTcPluginTcM . TcMType.newFlexiTyVarTy
-
-isTouchableTcPluginM :: TcTyVar -> TcPluginM Bool
-isTouchableTcPluginM = unsafeTcPluginTcM . isTouchableTcM
-
-zonkCt :: Ct -> TcPluginM Ct
-zonkCt = unsafeTcPluginTcM . TcMType.zonkCt
 
 
 -- This is just TcSMonad.matchFam, but written to work in TcM instead

@@ -11,7 +11,6 @@ import TcType
 import DataCon
 import Type
 import TyCon
-import TypeRep
 
 import FastString
 import Outputable
@@ -25,7 +24,7 @@ import Module
 
 import Control.Applicative
 import Data.Either
-import qualified Data.Map as Map
+import Data.Maybe
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
@@ -139,7 +138,7 @@ lookupUnitDefs = do
                        [d] -> promoteDataCon d
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
-    look s = tcLookupTyCon =<< lookupRdrName myModule (mkRdrUnqual (mkTcOcc s))
+    look s = tcLookupTyCon . fromJust =<< lookupRdrName myModule (mkRdrUnqual (mkTcOcc s))
     myModule = mkModuleName "Data.UnitsOfMeasure"
 
 

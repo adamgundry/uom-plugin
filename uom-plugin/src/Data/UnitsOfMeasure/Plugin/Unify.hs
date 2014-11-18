@@ -11,10 +11,8 @@ import FastString
 import Name
 import Outputable
 import TcRnMonad
-import TcRnTypes
 import TcType
 import Type
-import TypeRep
 import Var
 
 import Data.UnitsOfMeasure.Plugin.Convert
