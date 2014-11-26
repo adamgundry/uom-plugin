@@ -128,18 +128,20 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
 
 lookupUnitDefs :: TcPluginM UnitDefs
 lookupUnitDefs = do
-    u <- look "Unit"
-    m <- look "*:"
-    d <- look "/:"
-    e <- look "^:"
+    md <- lookupModule myModule myPackage
+    u <- look md "Unit"
+    m <- look md "*:"
+    d <- look md "/:"
+    e <- look md "^:"
     return $ UnitDefs u (getDataCon u "One") (getDataCon u "Base") m d e
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
                        [d] -> promoteDataCon d
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
-    look s = tcLookupTyCon . fromJust =<< lookupRdrName myModule (mkRdrUnqual (mkTcOcc s))
-    myModule = mkModuleName "Data.UnitsOfMeasure"
+    look md s = tcLookupTyCon =<< lookupName md (mkTcOcc s)
+    myModule  = mkModuleName "Data.UnitsOfMeasure"
+    myPackage = fsLit "uom-plugin"
 
 
 byFiat :: String -> CoAxiomRule

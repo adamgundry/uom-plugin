@@ -10,7 +10,8 @@ module TcPluginExtras
 
     -- * Extensions
   , tracePlugin
-  , lookupRdrName
+  , lookupModule
+  , lookupName
 
     -- * Wrappers
   , tcLookupTyCon
@@ -34,6 +35,12 @@ import Pair
 import VarSet
 import TypeRep
 
+import Module
+import Name
+import Finder
+import IfaceEnv
+import SrcLoc
+import FastString
 
 
 
@@ -92,3 +99,17 @@ matchFam tycon args
 
   | otherwise
   = return Nothing
+
+
+lookupModule :: ModuleName -> FastString -> TcPluginM Module
+lookupModule mod_nm pkg = do
+    hsc_env <- getTopEnv
+    found_module <- tcPluginIO $ findImportedModule hsc_env mod_nm $ Just pkg
+    case found_module of
+      Found _ md -> return md
+      _          -> error $ "Unable to resolve module looked up by plugin: " ++ moduleNameString mod_nm
+
+lookupName :: Module -> OccName -> TcPluginM Name
+lookupName md occ = unsafeTcPluginTcM $ newGlobalBinder md occ loc
+  where
+    loc = mkGeneralSrcSpan (fsLit "<typechecker plugin>")
