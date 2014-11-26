@@ -18,6 +18,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 
 import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.Internal
 
 -- | The 'u' quasiquoter may be used in a declaration, type or
 -- expression context, and its meaning depends on the context:
@@ -53,8 +54,8 @@ uExp s = case reads s of
                           [(r, s')] -> mkLiteral (rationalL r) s'
                           _         -> mkConversion =<< parseUnitQ s
   where
-    mkLiteral l s'    = [| unsafeMkQuantity (proxy# :: Proxy# $(uType s'      )) $(litE l) |]
-    mkConversion expr = [| unsafeMkQuantity (proxy# :: Proxy# $(reifyUnit expr))           |]
+    mkLiteral l s'    = [| (MkQuantity :: a -> Quantity a $(uType s'      )) $(litE l) |]
+    mkConversion expr = [|  MkQuantity :: a -> Quantity a $(reifyUnit expr) |]
 
 -- | Parse a unit expression and convert it into the corresponding type.
 uType :: String -> Q Type

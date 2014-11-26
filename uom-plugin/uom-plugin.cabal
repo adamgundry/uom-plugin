@@ -12,6 +12,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Data.UnitsOfMeasure,
+                       Data.UnitsOfMeasure.Internal,
                        Data.UnitsOfMeasure.TH,
                        Data.UnitsOfMeasure.Plugin
   other-modules:       Data.UnitsOfMeasure.Plugin.Convert,

@@ -140,7 +140,7 @@ lookupUnitDefs = do
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
     look md s = tcLookupTyCon =<< lookupName md (mkTcOcc s)
-    myModule  = mkModuleName "Data.UnitsOfMeasure"
+    myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
     myPackage = fsLit "uom-plugin"
 
 
