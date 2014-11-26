@@ -60,6 +60,5 @@ g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
 g = id
 
 
--- I don't understand why, but the 'Show' instance for 'Quantity'
--- doesn't seem to work properly, as this gives an error:
--- x = show ([u| 3 m |] :: Quantity Double [u| m |])
+-- We can use standard typeclass methods on quantities
+x = show [u| 3 m |]
