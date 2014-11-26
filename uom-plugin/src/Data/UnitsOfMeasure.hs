@@ -18,7 +18,8 @@ module Data.UnitsOfMeasure
     , type (^:)
 
       -- * Values indexed by their units
-    , Quantity(unQuantity) -- N.B. MkQuantity not exported!
+    , Quantity
+    , unQuantity
     , zero
     , mk
     , unsafeMkQuantity
@@ -59,7 +60,7 @@ infixr 8 ^:
 
 -- | A @Quantity a u@ is represented identically to a value of
 -- underlying numeric type @a@, but with units @u@.
-newtype Quantity a (u :: Unit) = MkQuantity { unQuantity :: a }
+newtype Quantity a (u :: Unit) = MkQuantity a
 type role Quantity representational nominal
 
 -- These classes work uniformly on the underlying representation,
@@ -80,6 +81,10 @@ deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
 deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
 deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
 
+
+-- | Extract the underlying value of a quantity
+unQuantity :: Quantity a u -> a
+unQuantity (MkQuantity x) = x
 
 -- | Zero is polymorphic in its units: this is required because the
 -- 'Num' instance constrains the quantity to be dimensionless, so
