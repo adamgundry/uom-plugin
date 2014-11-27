@@ -12,7 +12,8 @@
 
 module Data.UnitsOfMeasure
     ( -- * Type-level units of measure
-      Unit(..)
+      Unit(Base)
+    , type One
     , type (*:)
     , type (/:)
     , type (^:)

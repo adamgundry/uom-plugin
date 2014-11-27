@@ -7,7 +7,8 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Data.UnitsOfMeasure.Internal
-    ( Unit(..)
+    ( Unit(Base)
+    , type One
     , type (*:)
     , type (/:)
     , type (^:)
@@ -17,7 +18,10 @@ module Data.UnitsOfMeasure.Internal
 import GHC.TypeLits (Symbol, Nat)
 
 -- | (Kind) Units of measure
-data Unit = One | Base Symbol
+data Unit = Base Symbol
+
+-- | Dimensionless unit (identity element)
+type family One :: Unit
 
 -- | Multiplication for units of measure
 type family (u :: Unit) *: (v :: Unit) :: Unit

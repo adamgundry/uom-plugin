@@ -128,10 +128,11 @@ lookupUnitDefs :: TcPluginM UnitDefs
 lookupUnitDefs = do
     md <- lookupModule myModule myPackage
     u <- look md "Unit"
+    o <- look md "One"
     m <- look md "*:"
     d <- look md "/:"
     e <- look md "^:"
-    return $ UnitDefs u (getDataCon u "One") (getDataCon u "Base") m d e
+    return $ UnitDefs u (getDataCon u "Base") o m d e
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
                        [d] -> promoteDataCon d
