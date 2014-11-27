@@ -36,7 +36,7 @@ module Data.UnitsOfMeasure
     , MkUnit
     ) where
 
-import GHC.TypeLits (Symbol, Nat)
+import GHC.TypeLits (Symbol)
 
 import Data.UnitsOfMeasure.Internal
 

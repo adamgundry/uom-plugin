@@ -7,8 +7,6 @@ module Data.UnitsOfMeasure.TH
     ( u
     ) where
 
-import GHC.Prim (Proxy#, proxy#)
-
 import Control.Applicative
 import Data.Char
 import Numeric

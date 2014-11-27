@@ -19,12 +19,10 @@ import TcMType ( newFlatWanted )
 import CoAxiom ( CoAxiomRule(..) )
 import Pair ( Pair(..) )
 import OccName ( occName, occNameFS, mkTcOcc )
-import RdrName
 import Module
 
 import Control.Applicative
 import Data.Either
-import Data.Maybe
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
