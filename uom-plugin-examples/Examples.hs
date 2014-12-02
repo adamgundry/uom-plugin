@@ -62,3 +62,6 @@ g = id
 
 -- We can use standard typeclass methods on quantities
 x = show [u| 3 m |]
+
+-- A nicer way to show quantities
+y = showQuantity [u| 3 kg m/s^2 |]

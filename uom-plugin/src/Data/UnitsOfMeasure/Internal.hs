@@ -13,6 +13,9 @@ module Data.UnitsOfMeasure.Internal
     , type (/:)
     , type (^:)
     , Quantity(..)
+
+    , TypeInt(..)
+    , Unpack
     ) where
 
 import GHC.TypeLits (Symbol, Nat)
@@ -58,3 +61,17 @@ deriving instance (Num        a, u ~ One) => Num        (Quantity a u)
 deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
 deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
 deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
+
+
+-- | Type-level integers, represented as wrapped type-level naturals
+-- with redundant zeros (but we won't ever use @'Neg' 0@).
+data TypeInt = Pos Nat | Neg Nat
+
+-- | Unpack a unit as a list of (base unit, exponent) pairs, where the
+-- order is deterministic and the exponent is never zero.  This does
+-- not break type soundness because 'Unpack' will reduce only when the
+-- unit is entirely constant, and it does not allow the structure of
+-- the unit to be observed.  The reduction behaviour is implemented by
+-- the plugin, because we cannot define it otherwise.
+type family Unpack (u :: Unit) :: [(Symbol, TypeInt)] where
+  Unpack (Base b) = '[ '(b, Pos 1) ]

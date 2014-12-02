@@ -25,6 +25,10 @@ data UnitDefs = UnitDefs
     , mulTyCon      :: TyCon -- ^ The '(*:)' type family
     , divTyCon      :: TyCon -- ^ The '(/:)' type family
     , expTyCon      :: TyCon -- ^ The '(^:)' type family
+    , unpackTyCon     :: TyCon -- ^ The 'Unpack' type family
+    , typeIntTyCon    :: TyCon -- ^ The 'TypeInt' type constructor, to be promoted to a kind
+    , typeIntPosTyCon :: TyCon -- ^ The 'Pos' data constructor of 'TypeInt', promoted to a type constructor
+    , typeIntNegTyCon :: TyCon -- ^ The 'Neg' data constructor of 'TypeInt', promoted to a type constructor
     }
 
 -- | 'Unit' promoted to a kind

@@ -10,6 +10,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Data.UnitsOfMeasure
     ( -- * Type-level units of measure
       Unit(Base)
@@ -33,11 +38,22 @@ module Data.UnitsOfMeasure
     , negate'
     , recip'
 
+      -- * Showing things
+    , showQuantity
+    , showUnit
+
       -- * Pay no attention to that man behind the curtain
     , MkUnit
+
+    , TypeInt(..)
+    , type (^^:)
+    , Pack
+    , Unpack
+    , KnownUnit
+    , KnownTypeInt
     ) where
 
-import GHC.TypeLits (Symbol)
+import GHC.TypeLits
 
 import Data.UnitsOfMeasure.Internal
 
@@ -97,3 +113,57 @@ recip' (MkQuantity x) = MkQuantity (recip x)
 -- type-level strings) into units.  It will be 'Base' for base units
 -- or expand the definition for derived units.
 type family MkUnit (s :: Symbol) :: Unit
+
+
+-- | Unit exponentiation for type-level integers
+type family (^^:) (u :: Unit) (i :: TypeInt) :: Unit where
+  u ^^: Pos n = u ^: n
+  u ^^: Neg n = One /: (u ^: n)
+
+-- | Pack a list of (base unit, exponent) pairs as a unit.  This is a
+-- perfectly ordinary closed type family.  'Pack' is a left inverse of
+-- 'Unpack' up to the equational theory of units, but it is not a
+-- right inverse (because there are multiple list representations of
+-- the same unit).
+type family Pack (xs :: [(Symbol, TypeInt)]) :: Unit where
+  Pack '[]             = One
+  Pack ('(b, i) ': xs) = (Base b ^^: i) *: Pack xs
+
+
+class KnownTypeInt (i :: TypeInt) where
+  typeIntVal :: proxy i -> Integer
+
+instance KnownNat n => KnownTypeInt (Pos n) where
+  typeIntVal _ = natVal (undefined :: proxy n)
+
+instance KnownNat n => KnownTypeInt (Neg n) where
+  typeIntVal _ = - (natVal (undefined :: proxy n))
+
+
+class KnownUnit (u :: [(Symbol, TypeInt)]) where
+  getUnit :: proxy u -> [(String, Integer)]
+
+instance KnownUnit '[] where
+  getUnit _ = []
+
+instance (KnownSymbol b, KnownTypeInt i, KnownUnit xs) => KnownUnit ('(b, i) ': xs) where
+  getUnit _ = ( symbolVal (undefined :: proxy b)
+              , typeIntVal (undefined :: proxy i)
+              ) : getUnit (undefined :: proxy xs)
+
+-- | Render a quantity nicely, followed by its units
+showQuantity :: forall a u. (Show a, KnownUnit (Unpack u)) => Quantity a u -> String
+showQuantity x = show (unQuantity x) ++ " " ++ showUnit (undefined :: proxy u)
+
+-- | Render a unit nicely
+showUnit :: forall proxy u . KnownUnit (Unpack u) => proxy u -> String
+showUnit _ = showUnitBits (getUnit (undefined :: proxy' (Unpack u)))
+
+showUnitBits :: [(String, Integer)] -> String
+showUnitBits []     = "1"
+showUnitBits [x]    = showAtom x
+showUnitBits (x:xs) = showAtom x ++ " " ++ showUnitBits xs
+
+showAtom :: (String, Integer) -> String
+showAtom (s, 1) = s
+showAtom (s, i) = s ++ "^" ++ show i

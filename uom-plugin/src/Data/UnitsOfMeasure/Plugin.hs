@@ -8,9 +8,12 @@ import TcEvidence
 import TcRnTypes
 import TcType
 
+import BasicTypes
 import DataCon
 import Type
 import TyCon
+import TypeRep
+import TysWiredIn
 
 import FastString
 import Outputable
@@ -64,7 +67,7 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
 unitsOfMeasureSolver uds givens _deriveds wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
-      []    -> return $ TcPluginOk [] []
+      []    -> lookForUnpacks uds wanteds
       (_:_) -> do
         (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM zonkCt givens
         sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
@@ -84,6 +87,41 @@ substItemToCt uds si
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
         loc  = ctLoc ct
+
+
+lookForUnpacks :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
+lookForUnpacks uds wanteds = return $ TcPluginOk [] $ map unpackCt unpacks
+  where
+    unpacks = concatMap collectCt wanteds
+
+    collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
+
+    collectType _  (TyVarTy v)      = []
+    collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
+    collectType ct (TyConApp tc [a])
+      | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
+                                        Just xs -> [(ct,a,xs)]
+                                        _       -> []
+    collectType ct (TyConApp tc as) = concatMap (collectType ct) as
+    collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
+    collectType ct (ForAllTy _ t)   = collectType ct t
+    collectType _  (LitTy _)        = []
+
+    unpackCt (ct,a,xs) = mkNonCanonical $ CtGiven (mkEqPred ty1 ty2) (evByFiat "units" (ty1, ty2)) loc
+      where
+        ty1 = TyConApp (unpackTyCon uds) [a]
+        ty2 = foldr promoter (mkTyConApp (promoteDataCon nilDataCon) [list_elem_ty]) xs
+        loc = ctLoc ct
+
+    promoter (b, i) t = mkTyConApp cons_tycon [ list_elem_ty, mkTyConApp pair_con [typeSymbolKind, typeIntKind, mkStrLitTy b, mkTypeInt i], t]
+    list_elem_ty = mkTyConApp pair_tycon [typeSymbolKind, typeIntKind]
+    cons_tycon = promoteDataCon consDataCon
+    pair_tycon = promotedTupleTyCon   BoxedTuple 2
+    pair_con   = promotedTupleDataCon BoxedTuple 2
+    typeIntKind = mkTyConTy $ promoteTyCon $ typeIntTyCon uds
+
+    mkTypeInt i | i >= 0    = mkTyConApp (typeIntPosTyCon uds) [mkNumLitTy i]
+                | otherwise = mkTyConApp (typeIntNegTyCon uds) [mkNumLitTy (-i)]
 
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
@@ -132,7 +170,9 @@ lookupUnitDefs = do
     m <- look md "*:"
     d <- look md "/:"
     e <- look md "^:"
-    return $ UnitDefs u (getDataCon u "Base") o m d e
+    x <- look md "Unpack"
+    i <- look md "TypeInt"
+    return $ UnitDefs u (getDataCon u "Base") o m d e x i (getDataCon i "Pos") (getDataCon i "Neg")
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
                        [d] -> promoteDataCon d

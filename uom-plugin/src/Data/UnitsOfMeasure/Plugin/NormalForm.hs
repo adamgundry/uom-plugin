@@ -18,6 +18,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
     -- * Predicates
   , isOne
   , isConstant
+  , maybeConstant
   , isBase
   , divisible
 
@@ -135,6 +136,13 @@ isOne = Map.null . _NormUnit
 -- | Test whether a unit is constant (contains only base units)
 isConstant :: NormUnit -> Bool
 isConstant = all isBase . Map.keys . _NormUnit
+
+-- | Extract the base units if a unit is constant
+maybeConstant :: NormUnit -> Maybe [(BaseUnit, Integer)]
+maybeConstant = mapM getBase . Map.toList . _NormUnit
+  where
+    getBase (BaseAtom b, i) = Just (b, i)
+    getBase _               = Nothing
 
 -- | Test whether an atom is a base unit
 isBase :: Atom -> Bool
