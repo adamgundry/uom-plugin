@@ -1,14 +1,27 @@
 name:                uom-plugin
 version:             0.1.0.0
 synopsis:            Units of measure as a GHC typechecker plugin
+category:            Type System
 description:         A prototype typechecker plugin for GHC with support for units of measure
 license:             BSD3
 license-file:        LICENSE
-author:              Adam Gundry
-maintainer:          adam@well-typed.com
+author:              Adam Gundry <adam@well-typed.com>
+maintainer:          Adam Gundry <adam@well-typed.com>
+bug-reports:         https://github.com/adamgundry/uom-plugin/issues
+stability:           experimental
 copyright:           Copyright (c) 2014, Adam Gundry
 build-type:          Simple
 cabal-version:       >=1.10
+description:
+
+    The @uom-plugin@ library adds support for units of measure to GHC
+    using the new experimental facility for typechecker plugins, which
+    is available in recent builds of GHC HEAD and will be included in
+    GHC 7.10.
+
+source-repository head
+  type:     git
+  location: https://github.com/adamgundry/uom-plugin.git
 
 library
   exposed-modules:     Data.UnitsOfMeasure,
