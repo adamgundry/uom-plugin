@@ -72,7 +72,7 @@ tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
 -- This is just TcSMonad.matchFam, but written to work in TcM instead
 matchFam :: TyCon -> [Type] -> TcPluginM (Maybe (TcCoercion, TcType))
 matchFam tycon args
-  | isOpenSynFamilyTyCon tycon
+  | isOpenTypeFamilyTyCon tycon
   = do { fam_envs <- unsafeTcPluginTcM tcGetFamInstEnvs
        ; let mb_match = tcLookupFamInst fam_envs tycon args
        ; tcPluginTrace "lookupFamInst" $
