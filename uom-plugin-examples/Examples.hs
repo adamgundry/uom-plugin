@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
@@ -65,3 +67,19 @@ x = show [u| 3 m |]
 
 -- A nicer way to show quantities
 y = showQuantity [u| 3 kg m/s^2 |]
+
+
+-- Conversions
+instance HasCanonicalBaseUnit "s"
+
+instance HasCanonicalBaseUnit "m"
+
+instance HasCanonicalBaseUnit "ft" where
+  type CanonicalBaseUnit "ft" = "m"
+  conversionBase _ = [u| 3.28 ft/m |]
+
+tenMetresInFeet :: Quantity Double [u| ft |]
+tenMetresInFeet = convert [u| 10m |]
+
+anotherConversion :: Quantity Double [u| m*m |]
+anotherConversion = convert [u| 5 ft^2 |]
