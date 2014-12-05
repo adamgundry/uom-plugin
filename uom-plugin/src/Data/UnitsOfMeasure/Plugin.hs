@@ -64,10 +64,12 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
     solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
 
 
-unitsOfMeasureSolver uds givens _deriveds wanteds = do
+unitsOfMeasureSolver uds givens _deriveds wanteds
+  | xs@(_:_) <- lookForUnpacks uds givens wanteds = return $ TcPluginOk [] xs
+  | otherwise = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
-      []    -> lookForUnpacks uds wanteds
+      []    -> return $ TcPluginOk [] []
       (_:_) -> do
         (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM zonkCt givens
         sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
@@ -89,10 +91,10 @@ substItemToCt uds si
         loc  = ctLoc ct
 
 
-lookForUnpacks :: UnitDefs -> [Ct] -> TcPluginM TcPluginResult
-lookForUnpacks uds wanteds = return $ TcPluginOk [] $ map unpackCt unpacks
+lookForUnpacks :: UnitDefs -> [Ct] -> [Ct] -> [Ct]
+lookForUnpacks uds givens wanteds = map unpackCt unpacks
   where
-    unpacks = concatMap collectCt wanteds
+    unpacks = concatMap collectCt $ givens ++ wanteds
 
     collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
 
