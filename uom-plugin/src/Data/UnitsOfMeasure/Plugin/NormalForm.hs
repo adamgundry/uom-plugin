@@ -21,6 +21,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , maybeConstant
   , isBase
   , divisible
+  , occurs
 
     -- * Destructors
   , ascending
@@ -31,6 +32,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 
 import Type
 import TyCon
+import VarSet
 
 import FastString
 import Outputable
@@ -152,6 +154,15 @@ isBase _            = False
 -- | Test whether all exponents in a unit are divisble by an integer
 divisible :: Integer -> NormUnit -> Bool
 divisible i = Foldable.all (\ j -> j `rem` i == 0) . _NormUnit
+
+-- | Test whether a type variable occurs in a unit (possibly under a
+-- type family application)
+occurs :: TyVar -> NormUnit -> Bool
+occurs a = any occursAtom . Map.keys . _NormUnit
+  where
+    occursAtom (BaseAtom _)    = False
+    occursAtom (VarAtom b)     = a == b
+    occursAtom (FamAtom _ tys) = elemVarSet a $ tyVarsOfTypes tys
 
 
 -- | View a unit as a list of atoms in order of ascending absolute exponent

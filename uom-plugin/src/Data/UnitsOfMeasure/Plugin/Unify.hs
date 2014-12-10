@@ -72,9 +72,10 @@ unifyOne uds ct tvs subst u
         go _  []                       = return $ Draw tvs subst
         go ls (at@(VarAtom a, i) : xs) = do
             tch <- if given_mode then return True else isTouchableTcPluginM a
+            let r = divideExponents (-i) $ leftover a u
             case () of
-                () | tch && divisible i u -> let r = divideExponents (-i) $ leftover a u
-                                             in return $ Win tvs $ SubstItem a r ct : subst
+                () | tch && divisible i u -> return $ if occurs a r then Draw tvs subst
+                                                                    else Win tvs $ SubstItem a r ct : subst
                    | tch && any (not . isBase . fst) xs -> do beta <- newUnitVar
                                                               let r = varUnit beta *: divideExponents (-i) (leftover a u)
                                                               unifyOne uds ct (beta:tvs) (SubstItem a r ct:subst) $ substUnit a r u
