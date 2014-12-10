@@ -73,7 +73,10 @@ lookupModule mod_nm pkg = do
     found_module <- tcPluginIO $ findImportedModule hsc_env mod_nm $ Just pkg
     case found_module of
       Found _ md -> return md
-      _          -> error $ "Unable to resolve module looked up by plugin: " ++ moduleNameString mod_nm
+      _          -> do found_module' <- tcPluginIO $ findImportedModule hsc_env mod_nm $ Just $ fsLit "this"
+                       case found_module' of
+                         Found _ md -> return md
+                         _          -> error $ "Unable to resolve module looked up by plugin: " ++ moduleNameString mod_nm
 
 lookupName :: Module -> OccName -> TcPluginM Name
 lookupName md occ = newGlobalBinder md occ loc
