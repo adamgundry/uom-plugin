@@ -23,24 +23,11 @@ module TcPluginExtras
 
 import Outputable
 import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..) )
-import TcType    ( TcType )
 import TcPluginM
-
-import TyCon
-import FamInst
-import FamInstEnv
-import CoAxiom
-import TcEvidence
-import Pair
-import VarSet
-import TypeRep
 
 import Module
 import Name
-import Finder
-import SrcLoc
 import FastString
-
 
 
 tracePlugin :: String -> TcPlugin -> TcPlugin
@@ -69,16 +56,13 @@ tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
 
 lookupModule :: ModuleName -> FastString -> TcPluginM Module
 lookupModule mod_nm pkg = do
-    hsc_env <- getTopEnv
-    found_module <- tcPluginIO $ findImportedModule hsc_env mod_nm $ Just pkg
+    found_module <- findImportedModule mod_nm $ Just pkg
     case found_module of
       Found _ md -> return md
-      _          -> do found_module' <- tcPluginIO $ findImportedModule hsc_env mod_nm $ Just $ fsLit "this"
+      _          -> do found_module' <- findImportedModule mod_nm $ Just $ fsLit "this"
                        case found_module' of
                          Found _ md -> return md
                          _          -> error $ "Unable to resolve module looked up by plugin: " ++ moduleNameString mod_nm
 
 lookupName :: Module -> OccName -> TcPluginM Name
-lookupName md occ = newGlobalBinder md occ loc
-  where
-    loc = mkGeneralSrcSpan (fsLit "<typechecker plugin>")
+lookupName md occ = lookupOrig md occ
