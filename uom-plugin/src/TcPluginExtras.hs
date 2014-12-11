@@ -7,27 +7,36 @@ module TcPluginExtras
   , TcPluginM
   , tcPluginTrace
   , unsafeTcPluginTcM
-
-    -- * Extensions
-  , tracePlugin
-  , lookupModule
-  , lookupName
-
-    -- * Wrappers
   , tcLookupTyCon
   , newFlexiTyVar
   , isTouchableTcPluginM
   , zonkCt
   , matchFam
+
+    -- * Wrappers
+  , newUnique
+  , newFlatWanted
+
+    -- * Extensions
+  , tracePlugin
+  , lookupModule
+  , lookupName
   ) where
 
 import Outputable
 import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..) )
+import TcRnMonad ( Ct, CtOrigin )
 import TcPluginM
+
+import Type
+import Unique
 
 import Module
 import Name
 import FastString
+
+import qualified TcRnMonad
+import qualified TcMType
 
 
 tracePlugin :: String -> TcPlugin -> TcPlugin
@@ -66,3 +75,10 @@ lookupModule mod_nm pkg = do
 
 lookupName :: Module -> OccName -> TcPluginM Name
 lookupName md occ = lookupOrig md occ
+
+
+newUnique :: TcPluginM Unique
+newUnique = unsafeTcPluginTcM TcRnMonad.newUnique
+
+newFlatWanted :: CtOrigin -> PredType -> TcPluginM Ct
+newFlatWanted orig = unsafeTcPluginTcM . TcMType.newFlatWanted orig

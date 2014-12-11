@@ -18,7 +18,6 @@ import TysWiredIn
 import FastString
 import Outputable
 
-import TcMType ( newFlatWanted )
 import CoAxiom ( CoAxiomRule(..) )
 import Pair ( Pair(..) )
 import OccName ( occName, occNameFS, mkTcOcc )
@@ -82,7 +81,7 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
       | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) loc
-      | otherwise               = unsafeTcPluginTcM $ newFlatWanted (ctLocOrigin loc) pred
+      | otherwise               = newFlatWanted (ctLocOrigin loc) pred
       where
         pred = mkEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)

@@ -10,7 +10,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
 import FastString
 import Name
 import Outputable
-import TcRnMonad
+import TcRnMonad ( Ct, isGiven, ctEvidence )
 import TcType
 import Type
 import Var
@@ -95,6 +95,6 @@ unifyOne uds ct tvs subst u
                    | otherwise  = newFlexiTyVar  $ unitKind uds
 
         newSkolemTyVar kind = do
-            uniq <- unsafeTcPluginTcM newUnique
+            uniq <- newUnique
             let name = mkSysTvName uniq (fsLit "beta")
             return $ mkTcTyVar name kind vanillaSkolemTv
