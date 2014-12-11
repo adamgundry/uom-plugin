@@ -53,7 +53,7 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
         sr <- simplifyUnits uds $ map snd unit_givens
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         return $ case sr of
-          Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
+          -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
           Simplified tvs subst evs eqs -> TcPluginOk [] []
           Impossible (ct, u, v) eqs    -> TcPluginContradiction [ct]
   where
