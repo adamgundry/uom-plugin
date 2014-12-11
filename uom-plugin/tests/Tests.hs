@@ -11,6 +11,8 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
 import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Show
 import Data.UnitsOfMeasure.TH
 
 import Data.List

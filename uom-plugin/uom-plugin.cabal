@@ -25,7 +25,10 @@ source-repository head
 
 library
   exposed-modules:     Data.UnitsOfMeasure,
+                       Data.UnitsOfMeasure.Convert,
                        Data.UnitsOfMeasure.Internal,
+                       Data.UnitsOfMeasure.Show,
+                       Data.UnitsOfMeasure.Singleton,
                        Data.UnitsOfMeasure.TH,
                        Data.UnitsOfMeasure.Plugin
   other-modules:       Data.UnitsOfMeasure.Plugin.Convert,
