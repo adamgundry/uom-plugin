@@ -81,7 +81,7 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
       | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) loc
-      | otherwise               = newFlatWanted (ctLocOrigin loc) pred
+      | otherwise               = newSimpleWanted (ctLocOrigin loc) pred
       where
         pred = mkEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
@@ -130,7 +130,7 @@ type UnitEquality = (Ct, NormUnit, NormUnit)
 -- Extract the unit equality constraints
 toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
 toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
-                      EqPred t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
+                      EqPred NomEq t1 t2 | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
                                    , Just u1 <- normaliseUnit uds t1
                                    , Just u2 <- normaliseUnit uds t2
                                    -> Left (ct, u1, u2)

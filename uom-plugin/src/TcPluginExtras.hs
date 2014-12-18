@@ -15,7 +15,7 @@ module TcPluginExtras
 
     -- * Wrappers
   , newUnique
-  , newFlatWanted
+  , newSimpleWanted
 
     -- * Extensions
   , tracePlugin
@@ -80,5 +80,5 @@ lookupName md occ = lookupOrig md occ
 newUnique :: TcPluginM Unique
 newUnique = unsafeTcPluginTcM TcRnMonad.newUnique
 
-newFlatWanted :: CtOrigin -> PredType -> TcPluginM Ct
-newFlatWanted orig = unsafeTcPluginTcM . TcMType.newFlatWanted orig
+newSimpleWanted :: CtOrigin -> PredType -> TcPluginM Ct
+newSimpleWanted orig = unsafeTcPluginTcM . TcMType.newSimpleWanted orig
