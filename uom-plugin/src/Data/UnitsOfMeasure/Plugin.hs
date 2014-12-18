@@ -8,6 +8,7 @@ import TcEvidence
 import TcRnTypes
 import TcType
 
+import Coercion
 import BasicTypes
 import DataCon
 import Type
@@ -184,17 +185,15 @@ lookupUnitDefs = do
     myPackage = fsLit "uom-plugin"
 
 
-byFiat :: String -> CoAxiomRule
-byFiat name =
-    CoAxiomRule
-        { coaxrName      = fsLit name
-        , coaxrTypeArity = 2
-        , coaxrAsmpRoles = []
-        , coaxrRole      = Nominal
-        , coaxrProves    = \ ts cs -> case (ts,cs) of
-                                        ([s,t],[]) -> return (Pair s t)
-                                        _          -> Nothing
-        }
-
+-- | Produce bogus evidence that the two types are equal.  Obviously
+-- this will cause terrible trouble if they are in fact apart.
+--
+-- Previously we used a 'CoAxiomRule' for this, but that could not be
+-- deserialized from interface files because 'tcIfaceCoAxiomRule' has
+-- a built-in list of known CoAxiomRules.  Fortunately we can now
+-- embed a 'UnivCo' in 'TcCoercion'.  In the future, we may want to
+-- make it possible for plugins to create their own CoAxiomRules,
+-- carring some sort of serializable code pointer instead of
+-- 'coaxrProves'.
 evByFiat :: String -> (Type, Type) -> EvTerm
-evByFiat name (t1,t2) = EvCoercion $ mkTcAxiomRuleCo (byFiat name) [t1,t2] []
+evByFiat name (t1,t2) = EvCoercion $ TcCoercion $ mkUnivCo (fsLit name) Nominal t1 t2
