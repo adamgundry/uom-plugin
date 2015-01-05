@@ -79,6 +79,9 @@ unit = id
 inverse :: Quantity a (u *: (One /: u)) -> Quantity a One
 inverse = id
 
+inverse2 :: proxy b -> Quantity a (Base b /: Base b) -> Quantity a One
+inverse2 _ = id
+
 -- Inferring this type leads to unit equations with occur-check failures
 z q = convert q
 

@@ -38,9 +38,11 @@ import FastString
 import Outputable
 import Util ( thenCmp )
 
+import Control.Applicative
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import Data.List ( sortBy )
+import Data.Maybe
 import Data.Ord
 
 
@@ -50,14 +52,14 @@ type BaseUnit = FastString
 -- | An atom in the normal form is either a base unit, a variable or a
 -- stuck type family application (but not one of the built-in type
 -- families that correspond to group operations).
-data Atom = BaseAtom BaseUnit | VarAtom TyVar | FamAtom TyCon [Type]
+data Atom = BaseAtom Type | VarAtom TyVar | FamAtom TyCon [Type]
 
 instance Eq Atom where
   a == b = compare a b == EQ
 
 -- TODO: using cmpTypes here probably isn't ideal, but does it matter?
 instance Ord Atom where
-  compare (BaseAtom x)    (BaseAtom y)      = compare x y
+  compare (BaseAtom x)    (BaseAtom y)      = cmpType x y
   compare (BaseAtom _)    _                 = LT
   compare (VarAtom  _)    (BaseAtom _)      = GT
   compare (VarAtom  a)    (VarAtom  b)      = compare a b
@@ -92,7 +94,7 @@ varUnit :: TyVar -> NormUnit
 varUnit = atom . VarAtom
 
 -- | Construct a normalised unit from a single base unit
-baseUnit :: BaseUnit -> NormUnit
+baseUnit :: Type -> NormUnit
 baseUnit = atom . BaseAtom
 
 -- | Construct a normalised unit from a stuck type family application:
@@ -135,21 +137,27 @@ invert = NormUnit . Map.map negate . _NormUnit
 isOne :: NormUnit -> Bool
 isOne = Map.null . _NormUnit
 
--- | Test whether a unit is constant (contains only base units)
+-- | Test whether a unit is constant (contains only base literals)
 isConstant :: NormUnit -> Bool
-isConstant = all isBase . Map.keys . _NormUnit
+isConstant = all isBaseLiteral . Map.keys . _NormUnit
 
 -- | Extract the base units if a unit is constant
 maybeConstant :: NormUnit -> Maybe [(BaseUnit, Integer)]
 maybeConstant = mapM getBase . Map.toList . _NormUnit
   where
-    getBase (BaseAtom b, i) = Just (b, i)
-    getBase _               = Nothing
+    getBase (BaseAtom ty, i) = (\ b -> (b, i)) <$> isStrLitTy ty
+    getBase _                = Nothing
 
--- | Test whether an atom is a base unit
+-- | Test whether an atom is a base unit (but not necessarily a
+-- *literal*, e.g. it could be @Base b@ for some variable @b@)
 isBase :: Atom -> Bool
 isBase (BaseAtom _) = True
 isBase _            = False
+
+-- | Test whether an atom is a literal base unit
+isBaseLiteral :: Atom -> Bool
+isBaseLiteral (BaseAtom ty) = isJust $ isStrLitTy ty
+isBaseLiteral _             = False
 
 -- | Test whether all exponents in a unit are divisble by an integer
 divisible :: Integer -> NormUnit -> Bool
@@ -160,7 +168,7 @@ divisible i = Foldable.all (\ j -> j `rem` i == 0) . _NormUnit
 occurs :: TyVar -> NormUnit -> Bool
 occurs a = any occursAtom . Map.keys . _NormUnit
   where
-    occursAtom (BaseAtom _)    = False
+    occursAtom (BaseAtom ty)   = elemVarSet a $ tyVarsOfType ty
     occursAtom (VarAtom b)     = a == b
     occursAtom (FamAtom _ tys) = elemVarSet a $ tyVarsOfTypes tys
 

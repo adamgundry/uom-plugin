@@ -48,7 +48,7 @@ normaliseUnit uds ty | Just ty1 <- tcView ty = normaliseUnit uds ty1
 normaliseUnit _   (TyVarTy v)              = pure $ varUnit v
 normaliseUnit uds (TyConApp tc tys)
   | tc == unitOneTyCon  uds                = pure one
-  | tc == unitBaseTyCon uds, [x]    <- tys = baseUnit <$> isStrLitTy x
+  | tc == unitBaseTyCon uds, [x]    <- tys = pure $ baseUnit x
   | tc == mulTyCon      uds, [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == divTyCon      uds, [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == expTyCon      uds, [u, n] <- tys = (^:) <$> normaliseUnit uds u <*> isNumLitTy n
@@ -75,6 +75,6 @@ reifyUnit uds u | null xs && null ys = oneTy
     pow 1 ty = ty
     pow n ty = mkTyConApp (expTyCon uds) [ty, mkNumLitTy n]
 
-    reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [mkStrLitTy s]
+    reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [s]
     reifyAtom (VarAtom  v)    = mkTyVarTy  v
     reifyAtom (FamAtom f tys) = mkTyConApp f tys

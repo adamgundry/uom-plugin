@@ -31,7 +31,7 @@ class HasCanonicalBaseUnit (b :: Symbol) where
 
   conversionBase :: Fractional a => proxy b -> Quantity a (Base b /: Base (CanonicalBaseUnit b))
   default conversionBase :: (Fractional a, b ~ CanonicalBaseUnit b) => proxy b -> Quantity a (Base b /: Base b)
-  conversionBase _ = lem1 (undefined :: proxy (Base b)) 1
+  conversionBase _ = 1
 
 type family MapCBU (xs :: [(Symbol, TypeInt)]) :: [(Symbol, TypeInt)] where
   MapCBU '[]             = '[]
@@ -55,12 +55,9 @@ help SNil          = 1
 help (SCons p i u) = unsafeConvertQuantity $ power (conversionBase p) i *: help u
 
 
--- TODO: this is true in the equational theory of units, but
--- solvability is not closed under substitution, because of units like
--- `Base b` where `b` is a variable, which is not currently handled.
-lem1 :: proxy u -> Quantity a One -> Quantity a (u /: u)
-lem1 _ = id
-
+-- | TODO: why does 'help' still need this? It fails to deduce this:
+--     (((('Base b ^^: i) *: Pack xs1) /: (('Base (CanonicalBaseUnit b) ^^: i) *: Pack (MapCBU xs1)))
+--   ~ ((('Base b /: 'Base (CanonicalBaseUnit b)) ^^: i) *: (Pack xs1 /: Pack (MapCBU xs1))))
 unsafeConvertQuantity :: Quantity a u -> Quantity a v
 unsafeConvertQuantity = MkQuantity . unQuantity
 
