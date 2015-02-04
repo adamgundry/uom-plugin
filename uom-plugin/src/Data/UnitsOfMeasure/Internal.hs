@@ -7,8 +7,9 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Data.UnitsOfMeasure.Internal
-    ( Unit(Base)
+    ( Unit
     , type One
+    , type Base
     , type (*:)
     , type (/:)
     , type (^:)
@@ -21,10 +22,13 @@ module Data.UnitsOfMeasure.Internal
 import GHC.TypeLits (Symbol, Nat)
 
 -- | (Kind) Units of measure
-data Unit = Base Symbol
+data Unit
 
 -- | Dimensionless unit (identity element)
 type family One :: Unit
+
+-- | Base unit
+type family Base (b :: Symbol) :: Unit
 
 -- | Multiplication for units of measure
 type family (u :: Unit) *: (v :: Unit) :: Unit
@@ -73,5 +77,4 @@ data TypeInt = Pos Nat | Neg Nat
 -- unit is entirely constant, and it does not allow the structure of
 -- the unit to be observed.  The reduction behaviour is implemented by
 -- the plugin, because we cannot define it otherwise.
-type family Unpack (u :: Unit) :: [(Symbol, TypeInt)] where
-  Unpack (Base b) = '[ '(b, Pos 1) ]
+type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
