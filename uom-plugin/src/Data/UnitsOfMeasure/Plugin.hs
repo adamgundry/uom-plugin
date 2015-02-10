@@ -19,8 +19,6 @@ import TysWiredIn
 import FastString
 import Outputable
 
-import CoAxiom ( CoAxiomRule(..) )
-import Pair ( Pair(..) )
 import OccName ( occName, occNameFS, mkTcOcc )
 import Module
 
@@ -135,8 +133,9 @@ toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
       | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
       , Just u1 <- normaliseUnit uds t1
       , Just u2 <- normaliseUnit uds t2 -> Left (ct, u1, u2)
-    ClassPred c [t1, t2]
-      | c == equivClass uds
+    IrredPred t
+      | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
+      , tc == equivTyCon uds
       , Just u1 <- normaliseUnit uds t1
       , Just u2 <- normaliseUnit uds t2 -> Left (ct, u1, u2)
     _                                   -> Right ct
@@ -161,7 +160,7 @@ simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] []
         tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
           Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
-                                  ((evMagic ct, ct):evs) [] (xs ++ eqs)
+                                  ((evMagic uds ct, ct):evs) [] (xs ++ eqs)
           Lose             -> return $ Impossible eq (xs ++ eqs)
           Draw [] []       -> simples tvs subst evs (eq:xs) eqs
           Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') evs [eq] (xs ++ eqs)
@@ -179,7 +178,7 @@ lookupUnitDefs = do
     e <- look md "^:"
     x <- look md "Unpack"
     i <- look md "TypeInt"
-    c <- lookClass md "~~"
+    c <- look md "~~"
     return $ UnitDefs u b o m d e x i (getDataCon i "Pos") (getDataCon i "Neg") c
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
@@ -187,7 +186,6 @@ lookupUnitDefs = do
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
     look md s = tcLookupTyCon =<< lookupName md (mkTcOcc s)
-    lookClass md s = tcLookupClass =<< lookupName md (mkTcOcc s)
     myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
     myPackage = fsLit "uom-plugin"
 
@@ -205,8 +203,13 @@ lookupUnitDefs = do
 evByFiat :: String -> (Type, Type) -> EvTerm
 evByFiat name (t1,t2) = EvCoercion $ TcCoercion $ mkUnivCo (fsLit name) Nominal t1 t2
 
-evMagic :: Ct -> EvTerm
-evMagic ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
+-- | Produce bogus evidence for a constraint, including actual
+-- equality constraints and our fake '(~~)' equality constraints.
+evMagic :: UnitDefs -> Ct -> EvTerm
+evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq t1 t2   -> evByFiat "units" (t1, t2)
-    ClassPred c [t1, t2] -> evByFiat "units" (t1, t2)
+    IrredPred t
+      | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
+      , tc == equivTyCon uds -> evByFiat "units" (t1, t2) `EvCast`
+                                  TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
     _                    -> error "evMagic"

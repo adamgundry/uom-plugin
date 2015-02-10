@@ -22,6 +22,7 @@ module Data.UnitsOfMeasure.Internal
     , type (~~)
     ) where
 
+import GHC.Exts (Constraint)
 import GHC.TypeLits (Symbol, Nat)
 
 -- | (Kind) Units of measure
@@ -86,6 +87,6 @@ type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
 -- | This is a bit of a hack, honestly, but a good hack.  Constraints
 -- @u ~~ v@ are just like equalities @u ~ v@, except solving them will
 -- be delayed until the plugin.  This may lead to better inferred types.
-class (u :: Unit) ~~ (v :: Unit)
+type family (u :: Unit) ~~ (v :: Unit) :: Constraint
 
 infix 4 ~~
