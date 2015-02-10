@@ -6,6 +6,7 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnit
   ) where
 
+import Class
 import TyCon
 import Type
 import TypeRep
@@ -29,6 +30,7 @@ data UnitDefs = UnitDefs
     , typeIntTyCon    :: TyCon -- ^ The 'TypeInt' type constructor, to be promoted to a kind
     , typeIntPosTyCon :: TyCon -- ^ The 'Pos' data constructor of 'TypeInt', promoted to a type constructor
     , typeIntNegTyCon :: TyCon -- ^ The 'Neg' data constructor of 'TypeInt', promoted to a type constructor
+    , equivClass      :: Class -- ^ The '(~~)' type class
     }
 
 -- | 'Unit' promoted to a kind

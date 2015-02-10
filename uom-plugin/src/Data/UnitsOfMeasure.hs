@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
@@ -74,11 +75,11 @@ MkQuantity x +: MkQuantity y = MkQuantity (x + y)
 MkQuantity x -: MkQuantity y = MkQuantity (x - y)
 
 -- | Multiplication of quantities multiplies the units.
-(*:) :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
+(*:) :: (Num a, w ~~ u *: v) => Quantity a u -> Quantity a v -> Quantity a w
 MkQuantity x *: MkQuantity y = MkQuantity (x * y)
 
 -- | Division of quantities divides the units.
-(/:) :: Fractional a => Quantity a u -> Quantity a v -> Quantity a (u /: v)
+(/:) :: (Fractional a, w ~~ u /: v) => Quantity a u -> Quantity a v -> Quantity a w
 MkQuantity x /: MkQuantity y = MkQuantity (x / y)
 
 infixl 6 +:, -:
@@ -88,7 +89,7 @@ infixl 7 *:, /:
 -- square.  Fractional units are not currently supported.  This
 -- operation is provided as a primitive because it is not otherwise
 -- definable.
-sqrt' :: Floating a => Quantity a (u ^: 2) -> Quantity a u
+sqrt' :: (Floating a, w ~~ u ^: 2) => Quantity a w -> Quantity a u
 sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 
 -- | Negation of quantities is polymorphic in the units.
@@ -96,7 +97,7 @@ negate' :: Num a => Quantity a u -> Quantity a u
 negate' (MkQuantity x) = MkQuantity (negate x)
 
 -- | Reciprocal of quantities reciprocates the units.
-recip' :: Fractional a => Quantity a u -> Quantity a (One /: u)
+recip' :: (Fractional a, w ~~ One /: u) => Quantity a u -> Quantity a w
 recip' (MkQuantity x) = MkQuantity (recip x)
 
 

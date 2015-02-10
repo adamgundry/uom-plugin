@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RoleAnnotations #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -17,6 +18,8 @@ module Data.UnitsOfMeasure.Internal
 
     , TypeInt(..)
     , Unpack
+
+    , type (~~)
     ) where
 
 import GHC.TypeLits (Symbol, Nat)
@@ -78,3 +81,11 @@ data TypeInt = Pos Nat | Neg Nat
 -- the unit to be observed.  The reduction behaviour is implemented by
 -- the plugin, because we cannot define it otherwise.
 type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
+
+
+-- | This is a bit of a hack, honestly, but a good hack.  Constraints
+-- @u ~~ v@ are just like equalities @u ~ v@, except solving them will
+-- be delayed until the plugin.  This may lead to better inferred types.
+class (u :: Unit) ~~ (v :: Unit)
+
+infix 4 ~~

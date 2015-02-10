@@ -7,6 +7,7 @@ module TcPluginExtras
   , TcPluginM
   , tcPluginTrace
   , unsafeTcPluginTcM
+  , tcLookupClass
   , tcLookupTyCon
   , newFlexiTyVar
   , isTouchableTcPluginM
