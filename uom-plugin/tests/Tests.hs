@@ -13,7 +13,6 @@
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Show
-import Data.UnitsOfMeasure.TH
 
 import Data.List
 

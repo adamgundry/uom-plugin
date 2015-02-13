@@ -52,7 +52,7 @@ conversionRatio _ = help (unitSing :: SUnit (Unpack u))
 
 help :: forall a xs . (Fractional a, HasCanonical xs) => SUnit xs -> Quantity a (Pack xs /: Pack (MapCBU xs))
 help SNil          = 1
-help (SCons p i u) = unsafeConvertQuantity $ power (conversionBase p) i *: help u
+help (SCons p i x) = unsafeConvertQuantity $ power (conversionBase p) i *: help x
 
 
 -- | TODO: why does 'help' still need this? It fails to deduce this:

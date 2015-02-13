@@ -29,11 +29,11 @@ library
                        Data.UnitsOfMeasure.Internal,
                        Data.UnitsOfMeasure.Show,
                        Data.UnitsOfMeasure.Singleton,
-                       Data.UnitsOfMeasure.TH,
                        Data.UnitsOfMeasure.Plugin
   other-modules:       Data.UnitsOfMeasure.Plugin.Convert,
                        Data.UnitsOfMeasure.Plugin.NormalForm,
                        Data.UnitsOfMeasure.Plugin.Unify,
+                       Data.UnitsOfMeasure.TH,
                        TcPluginExtras
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.7 && <5,

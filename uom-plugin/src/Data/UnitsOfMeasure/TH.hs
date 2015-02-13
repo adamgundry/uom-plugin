@@ -15,7 +15,6 @@ import Text.Parse.Units
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 
-import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Internal
 
 -- | The 'u' quasiquoter may be used in a declaration, type or

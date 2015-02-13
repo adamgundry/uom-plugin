@@ -20,6 +20,8 @@ module Data.UnitsOfMeasure.Internal
     , Unpack
 
     , type (~~)
+
+    , MkUnit
     ) where
 
 import GHC.Exts (Constraint)
@@ -90,3 +92,9 @@ type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
 type family (u :: Unit) ~~ (v :: Unit) :: Constraint
 
 infix 4 ~~
+
+
+-- | This type family is used for translating unit names (as
+-- type-level strings) into units.  It will be 'Base' for base units
+-- or expand the definition for derived units.
+type family MkUnit (s :: Symbol) :: Unit

@@ -27,6 +27,9 @@ module Data.UnitsOfMeasure
     , zero
     , mk
 
+      -- * TH constructor for quantities
+    , u
+
       -- * Unit-safe arithmetic operations
     , (+:)
     , (-:)
@@ -48,6 +51,7 @@ module Data.UnitsOfMeasure
 import GHC.TypeLits
 
 import Data.UnitsOfMeasure.Internal
+import Data.UnitsOfMeasure.TH
 
 
 -- | Extract the underlying value of a quantity
@@ -99,12 +103,6 @@ negate' (MkQuantity x) = MkQuantity (negate x)
 -- | Reciprocal of quantities reciprocates the units.
 recip' :: (Fractional a, w ~~ One /: u) => Quantity a u -> Quantity a w
 recip' (MkQuantity x) = MkQuantity (recip x)
-
-
--- | This type family is used for translating unit names (as
--- type-level strings) into units.  It will be 'Base' for base units
--- or expand the definition for derived units.
-type family MkUnit (s :: Symbol) :: Unit
 
 
 -- | Unit exponentiation for type-level integers
