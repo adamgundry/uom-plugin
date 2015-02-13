@@ -59,7 +59,6 @@ type role Quantity representational nominal
 deriving instance Bounded a => Bounded (Quantity a u)
 deriving instance Eq      a => Eq      (Quantity a u)
 deriving instance Ord     a => Ord     (Quantity a u)
-deriving instance Show    a => Show    (Quantity a u)
 
 -- These classes are not unit-polymorphic, so we have to restrict the
 -- unit index to be dimensionless

@@ -91,12 +91,15 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "uom-plugin"
   [ testGroup "Basic functionality"
-    [ testCase "show" $ show [u| 3 m |] @?= "MkQuantity 3"
+    [ testCase "show 3m"                 $ show [u| 3 m |]                @?= "[u| 3 m |]"
+    , testCase "show 3m/s"               $ show [u| 3 m/s |]              @?= "[u| 3 m / s |]"
+    , testCase "show 3.2 s^2"            $ show [u| 3.2 s^2 |]            @?= "[u| 3.2 s^2 |]"
+    , testCase "show 3.0 kg m^2 / m s^2" $ show [u| 3.0 kg m^2 / m s^2 |] @?= "[u| 3.0 kg m / s^2 |]"
     ]
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
-    , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m s^-2"
-    , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m s^-2"
+    , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
+    , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m / s^2"
     ]
   , testGroup "convert"
     [ testCase "10m in ft"     $ unQuantity (convert [u| 10m |] :: Quantity Double [u| ft |]) @?= 32.8
