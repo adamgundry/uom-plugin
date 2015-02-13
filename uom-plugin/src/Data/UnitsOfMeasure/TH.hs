@@ -69,7 +69,8 @@ reifyUnit Unity        = [t| One |]
 reifyUnit (Unit _ s)   = [t| MkUnit $(litT (strTyLit s))            |]
 reifyUnit (u `Mult` v) = [t| $(reifyUnit u) *: $(reifyUnit v)       |]
 reifyUnit (u `Div`  v) = [t| $(reifyUnit u) /: $(reifyUnit v)       |]
-reifyUnit (u `Pow`  n) = [t| $(reifyUnit u) ^: $(litT (numTyLit n)) |]
+reifyUnit (u `Pow`  n) | n >= 0    = [t| $(reifyUnit u) ^: $(litT (numTyLit n)) |]
+                       | otherwise = [t| One /: $(reifyUnit u) ^: $(litT (numTyLit (- n))) |]
 
 
 -- | Parse the string as a mixture of base units and derived units,

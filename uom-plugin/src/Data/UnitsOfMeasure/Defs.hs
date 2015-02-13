@@ -15,7 +15,7 @@ import Data.UnitsOfMeasure
 
 -- SI derived units
 -- http://physics.nist.gov/cuu/Units/units.html
-[u| Hz = 1/s
+[u| Hz = s^-1
   , N  = kg m / s^2
   , Pa = N / m^2
   , J  = N m
