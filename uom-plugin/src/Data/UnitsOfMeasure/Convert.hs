@@ -13,8 +13,8 @@
 
 module Data.UnitsOfMeasure.Convert
     ( HasCanonicalBaseUnit(..)
-    , conversionRatio
     , convert
+    , ratio
     ) where
 
 import Data.UnitsOfMeasure
@@ -70,3 +70,7 @@ convert :: forall a u v . (Fractional a, Good u, Good v, SameDimension u v)
 convert = (r *:)
   where
     r = conversionRatio (undefined :: proxy v) /: conversionRatio (undefined :: proxy u)
+
+ratio :: (Fractional a, Good u, Good v, SameDimension u v)
+         => (a -> proxy u) -> (b -> proxy v) -> Quantity a (u /: v)
+ratio x y = conversionRatio (x undefined) /: conversionRatio (y undefined)
