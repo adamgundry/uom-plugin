@@ -18,6 +18,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | This module defines singleton types for integers and concrete
+-- units.
 module Data.UnitsOfMeasure.Singleton
     ( STypeInt(..)
     , KnownTypeInt(..)

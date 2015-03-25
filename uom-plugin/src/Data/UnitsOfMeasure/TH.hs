@@ -3,6 +3,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
+-- | Template Haskell utilities for working with units of measure in a
+-- nice syntax.
 module Data.UnitsOfMeasure.TH
     ( u
     ) where

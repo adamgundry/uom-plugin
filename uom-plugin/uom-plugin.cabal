@@ -17,7 +17,8 @@ description:
     The @uom-plugin@ library adds support for units of measure to GHC
     using the new experimental facility for typechecker plugins, which
     is available in recent builds of GHC HEAD and will be included in
-    GHC 7.10.
+    GHC 7.10.  See "Data.UnitsOfMeasure.Tutorial" for an introduction
+    to the library.
 
 source-repository head
   type:     git
@@ -28,9 +29,10 @@ library
                        Data.UnitsOfMeasure.Convert,
                        Data.UnitsOfMeasure.Defs,
                        Data.UnitsOfMeasure.Internal,
+                       Data.UnitsOfMeasure.Plugin,
                        Data.UnitsOfMeasure.Show,
                        Data.UnitsOfMeasure.Singleton,
-                       Data.UnitsOfMeasure.Plugin
+                       Data.UnitsOfMeasure.Tutorial
   other-modules:       Data.UnitsOfMeasure.Plugin.Convert,
                        Data.UnitsOfMeasure.Plugin.NormalForm,
                        Data.UnitsOfMeasure.Plugin.Unify,

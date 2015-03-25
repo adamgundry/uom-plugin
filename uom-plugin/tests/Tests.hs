@@ -107,5 +107,6 @@ tests = testGroup "uom-plugin"
   , testGroup "convert"
     [ testCase "10m in ft"     $ unQuantity (convert [u| 10m |] :: Quantity Double [u| ft |]) @?= 32.8
     , testCase "5 km^2 in m^2" $ unQuantity (convert [u| 5km^2 |] :: Quantity Double [u| m*m |]) @?= 5000000
+    , testCase "ratio"         $ show (ratio [u| ft |] [u| m |]) @?= "[u| 3.28 ft / m |]"
     ]
   ]

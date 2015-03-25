@@ -20,6 +20,11 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Experimental support for showing units of measure in a pretty
+-- syntax.  This requires the units to be fully determined.
+--
+-- Apart from the definitions below, this module also exports a 'Show'
+-- instance for @'Quantity' a u@.
 module Data.UnitsOfMeasure.Show
     ( showQuantity
     , showUnit

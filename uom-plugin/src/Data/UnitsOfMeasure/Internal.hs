@@ -7,6 +7,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
+-- | This module defines the core types used in the @uom-plugin@
+-- library.  Note that importing this module may allow you to violate
+-- invariants, so you should generally work with the safe interface in
+-- "Data.UnitsOfMeasure" instead.
 module Data.UnitsOfMeasure.Internal
     ( Unit
     , type One
@@ -52,6 +56,8 @@ infixr 8 ^:
 -- | A @Quantity a u@ is represented identically to a value of
 -- underlying numeric type @a@, but with units @u@.
 newtype Quantity a (u :: Unit) = MkQuantity a
+  -- ^ Warning: the 'MkQuantity' constructor allows module invariants
+  -- to be violated, so use it with caution!
 type role Quantity representational nominal
 
 -- These classes work uniformly on the underlying representation,

@@ -1,3 +1,11 @@
+-- | This module defines a typechecker plugin that solves equations
+-- involving units of measure.  To use it, add
+--
+-- > {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+--
+-- above the module header of your source files, or in the
+-- @ghc-options@ field of your @.cabal@ file.  You do not need to
+-- import this module.
 module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
@@ -31,6 +39,8 @@ import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
 
 
+-- | The plugin that GHC will load when this module is used with the
+-- @-fplugin@ option.
 plugin :: Plugin
 plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
 
