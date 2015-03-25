@@ -24,13 +24,14 @@
 -- syntax.  This requires the units to be fully determined.
 --
 -- Apart from the definitions below, this module also exports a 'Show'
--- instance for @'Quantity' a u@.
+-- instance for @'Quantity' a u@, which is re-exported by
+-- "Data.UnitsOfMeasure".
 module Data.UnitsOfMeasure.Show
     ( showQuantity
     , showUnit
     ) where
 
-import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
 import Data.List (partition)
@@ -38,14 +39,20 @@ import Data.List (partition)
 instance (Show a, KnownUnit (Unpack u)) => Show (Quantity a u) where
   show x = "[u| " ++ showQuantity x ++ " |]"
 
--- | Render a quantity nicely, followed by its units
+-- | Render a quantity nicely, followed by its units:
+--
+-- >>> showQuantity (1 /: [u| 0.1 s / m kg |])
+-- "10.0 kg m / s"
 showQuantity :: forall a u. (Show a, KnownUnit (Unpack u)) => Quantity a u -> String
-showQuantity x = show (unQuantity x) ++ if s == "1" then "" else ' ':s
+showQuantity (MkQuantity x) = show x ++ if s == "1" then "" else ' ':s
   where s = showUnit (undefined :: proxy u)
 
--- | Render a unit nicely
+-- | Render a unit nicely:
+--
+-- >>> showUnit (undefined :: proxy [u| 1 / s |])
+-- "s^-1"
 showUnit :: forall proxy u . KnownUnit (Unpack u) => proxy u -> String
-showUnit _ = showUnitBits (getUnit (undefined :: proxy' (Unpack u)))
+showUnit _ = showUnitBits (unitVal (undefined :: proxy' (Unpack u)))
 
 showUnitBits :: [(String, Integer)] -> String
 showUnitBits [] = "1"

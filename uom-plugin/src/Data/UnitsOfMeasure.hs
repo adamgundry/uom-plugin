@@ -52,6 +52,7 @@ module Data.UnitsOfMeasure
 import GHC.TypeLits
 
 import Data.UnitsOfMeasure.Internal
+import Data.UnitsOfMeasure.Show ()
 import Data.UnitsOfMeasure.TH
 
 

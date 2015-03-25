@@ -66,6 +66,10 @@ help :: forall a xs . (Fractional a, HasCanonical xs) => SUnit xs -> Quantity a 
 help SNil          = 1
 help (SCons p i x) = unsafeConvertQuantity $ power (conversionBase p) i *: help x
 
+power :: Fractional a => Quantity a u -> STypeInt i -> Quantity a (u ^^: i)
+power (MkQuantity x) (SPos p) = MkQuantity (x ^^ natVal p)
+power (MkQuantity x) (SNeg p) = MkQuantity (x ^^ (- natVal p))
+
 
 -- | TODO: why does 'help' still need this? It fails to deduce this:
 --     (((('Base b ^^: i) *: Pack xs1) /: (('Base (CanonicalBaseUnit b) ^^: i) *: Pack (MapCBU xs1)))
