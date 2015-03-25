@@ -85,6 +85,11 @@ inverse2 _ = id
 z q = convert q
 
 
+patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
+patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
+patternSplice _          _                 = False
+
+
 main :: IO ()
 main = defaultMain tests
 

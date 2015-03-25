@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
@@ -20,26 +21,32 @@ import Language.Haskell.TH.Quote
 
 import Data.UnitsOfMeasure.Internal
 
--- | The 'u' quasiquoter may be used in a declaration, type or
--- expression context, and its meaning depends on the context:
+-- | The 'u' quasiquoter may be used to create units or quantities;
+-- its meaning depends on the context:
 --
 -- * in a declaration context, it creates new base and derived units
 --   from a comma-separated list of names with optional definitions,
---   for example @[u|kg, m, s, N = kg * m/s^2|]@;
+--   for example @['u'|kg, m, s, N = kg * m/s^2|]@;
 --
 -- * in a type context, it parses a single unit and converts it into
---   the corresponding type, so @[u|m/s|]@ becomes the type
---   @Base "m" /: Base "s"@ of kind 'Unit';
+--   the corresponding type, so @['u'|m/s|]@ becomes the type
+--   @'Base' "m" /: 'Base' "s"@ of kind 'Unit';
 --
 -- * in an expression context, it can be used to create a 'Quantity'
---   corresponding to a numeric literal, for example @[u|42 m|]@ and
---   @[u|-2.2 m|] are expressions of type @Quantity Integer [u|m|]@,
---   and @[u|m|]@ alone is a function of type @a -> Quantity a [u|m|]@.
+--   corresponding to a numeric literal, for example @['u'|42 m|]@ is
+--   an expression of type @'Quantity' 'Integer' ('Base' "m")@,
+--   @['u'|-2.2 m|]@ is an expression of type @'Quantity' 'Double' ('Base' "m")@,
+--   and @['u'|m|]@ alone is a function of type @a -> 'Quantity' a ('Base' "m")@;
+--
+-- * in a pattern context, it can be used to match on a particular
+--   value of a quantity with an 'Integer' or 'Rational'
+--   representation type, for example @f ['u'| 42 m |] = 'True'@ is a
+--   (partial) function of type @'Quantity' 'Integer' [u|m|] -> Bool@.
 --
 u :: QuasiQuoter
 u = QuasiQuoter
       { quoteExp  = uExp
-      , quotePat  = error "u quasiquoter cannot be used in a pattern context"
+      , quotePat  = uPat
       , quoteType = uType
       , quoteDec  = uDec
       }
@@ -48,14 +55,25 @@ u = QuasiQuoter
 -- create a constructor for 'Quantity' with the given units (applied
 -- to the literal if one is present).
 uExp :: String -> Q Exp
-uExp s = case reads s of
-           [(i, s')] -> mkLiteral (integerL i) s'
-           _         -> case readSigned readFloat s of
-                          [(r, s')] -> mkLiteral (rationalL r) s'
-                          _         -> mkConversion =<< parseUnitQ s
+uExp s
+  | [(i, s')] <- reads s                = mkLiteral (integerL  i) s'
+  | [(r, s')] <- readSigned readFloat s = mkLiteral (rationalL r) s'
+  | otherwise                           = mkConversion =<< parseUnitQ s
   where
     mkLiteral l s'    = [| (MkQuantity :: a -> Quantity a $(uType s'      )) $(litE l) |]
     mkConversion expr = [|  MkQuantity :: a -> Quantity a $(reifyUnit expr) |]
+
+-- | Parse an integer or rational literal followed by a unit
+-- expression, and create a pattern match on @'Quantity' 'Integer' u@
+-- or @'Quantity' 'Rational' u@.  Unfortunately we cannot easily
+-- support arbitrary representation types.
+uPat :: String -> Q Pat
+uPat s
+  | [(i, s')] <- reads s                = mkPat (integerL  i) [t|Integer |] s'
+  | [(r, s')] <- readSigned readFloat s = mkPat (rationalL r) [t|Rational|] s'
+  | otherwise                           = error "unable to parse literal"
+  where
+    mkPat l t s' = [p| MkQuantity $(litP l) |] `sigP` [t| Quantity $t $(uType s') |]
 
 -- | Parse a unit expression and convert it into the corresponding type.
 uType :: String -> Q Type
