@@ -1,11 +1,7 @@
 module Data.UnitsOfMeasure.Plugin.Unify
-  ( TySubst
-  , SubstItem(..)
-  , substsUnit
-  , substsSubst
-  , UnifyResult(..)
-  , unifyUnits
+  ( SubstItem(..)
   , UnitEquality
+  , SimplifyState(..)
   , SimplifyResult(..)
   , simplifyUnits
   ) where
@@ -45,6 +41,8 @@ substsUnit (si:s) u = substsUnit s (substUnit (siVar si) (siUnit si) u)
 substsSubst :: TySubst -> TySubst -> TySubst
 substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
 
+substsUnitEquality :: TySubst -> UnitEquality -> UnitEquality
+substsUnitEquality s (ct, u, v) = (ct, substsUnit s u, substsUnit s v)
 
 -- | Possible results of unifying a single pair of units.  In the
 -- non-failing cases, we return a substitution and a list of fresh
@@ -60,9 +58,9 @@ instance Outputable UnifyResult where
 -- | Attempt to unify two normalised units to produce a unifying
 -- substitution.  The 'Ct' is the equality between the non-normalised
 -- (and perhaps less substituted) unit type expressions.
-unifyUnits :: UnitDefs -> Ct -> NormUnit -> NormUnit -> TcPluginM UnifyResult
-unifyUnits uds ct u0 v0 = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
-                             unifyOne uds ct [] [] (u0 /: v0)
+unifyUnits :: UnitDefs -> UnitEquality -> TcPluginM UnifyResult
+unifyUnits uds (ct, u0, v0) = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+                                 unifyOne uds ct [] [] (u0 /: v0)
 
 unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> NormUnit -> TcPluginM UnifyResult
 unifyOne uds ct tvs subst u
@@ -105,23 +103,69 @@ unifyOne uds ct tvs subst u
 
 type UnitEquality = (Ct, NormUnit, NormUnit)
 
-data SimplifyResult = Simplified [TyVar] TySubst [Ct] [UnitEquality] | Impossible UnitEquality [UnitEquality]
+data SimplifyState
+  = SimplifyState { simplifyFreshVars :: [TyVar]
+                  , simplifySubst     :: TySubst
+                  , simplifySolved    :: [UnitEquality]
+                  , simplifyStuck     :: [UnitEquality]
+                  }
+
+instance Outputable SimplifyState where
+  ppr (SimplifyState fresh subst solved stuck)
+    = text "fresh = " <+> ppr fresh
+      $$ text "subst = " <+> ppr subst
+      $$ text "solved = " <+> ppr solved
+      $$ text "stuck = " <+> ppr stuck
+
+initialState :: SimplifyState
+initialState = SimplifyState [] [] [] []
+
+data SimplifyResult
+  = Simplified SimplifyState
+  | Impossible { simplifyImpossible :: UnitEquality
+               , simplifyRemaining  :: [UnitEquality]
+               }
 
 instance Outputable SimplifyResult where
-  ppr (Simplified tvs subst cts eqs) = text "Simplified" $$ ppr tvs $$ ppr subst $$ ppr cts $$ ppr eqs
-  ppr (Impossible eq eqs)            = text "Impossible" <+> ppr eq <+> ppr eqs
+  ppr (Simplified ss)     = text "Simplified" $$ ppr ss
+  ppr (Impossible eq eqs) = text "Impossible" <+> ppr eq <+> ppr eqs
 
 simplifyUnits :: UnitDefs -> [UnitEquality] -> TcPluginM SimplifyResult
-simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] [] [] [] eqs
+simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples initialState eqs
   where
-    simples :: [TyVar] -> TySubst -> [Ct] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
-    simples tvs subst cts xs [] = return $ Simplified tvs subst cts xs
-    simples tvs subst cts xs (eq@(ct, u, v):eqs) = do
-        ur <- unifyUnits uds ct (substsUnit subst u) (substsUnit subst v)
+    simples :: SimplifyState -> [UnitEquality] -> TcPluginM SimplifyResult
+    simples ss [] = return $ Simplified ss
+    simples ss (eq:eqs) = do
+        ur <- unifyUnits uds (substsUnitEquality subst eq)
         tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
-          Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
-                                  (ct:cts) [] (xs ++ eqs)
-          Lose             -> return $ Impossible eq (xs ++ eqs)
-          Draw [] []       -> simples tvs subst cts (eq:xs) eqs
-          Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') cts [eq] (xs ++ eqs)
+          Win tvs' subst'  -> let (ss', xs) = win eq tvs' subst' ss
+                              in simples ss' (xs ++ eqs)
+          Draw [] []       -> simples (addStuck eq ss) eqs
+          Draw tvs' subst' -> let (ss', xs) = draw eq tvs' subst' ss
+                              in simples ss' (xs ++ eqs)
+          Lose             -> return Impossible { simplifyImpossible = eq
+                                                , simplifyRemaining  = simplifyStuck ss ++ eqs }
+      where
+        subst = simplifySubst ss
+
+win :: UnitEquality -> [TyVar] -> TySubst -> SimplifyState -> (SimplifyState, [UnitEquality])
+win eq tvs subst ss =
+  ( SimplifyState { simplifyFreshVars = simplifyFreshVars ss ++ tvs
+                  , simplifySubst     = substsSubst subst (simplifySubst ss) ++ subst
+                  , simplifySolved    = eq : simplifySolved ss
+                  , simplifyStuck     = []
+                  }
+  , simplifyStuck ss )
+
+draw :: UnitEquality -> [TyVar] -> TySubst -> SimplifyState -> (SimplifyState, [UnitEquality])
+draw eq tvs subst ss =
+  ( SimplifyState { simplifyFreshVars = simplifyFreshVars ss ++ tvs
+                  , simplifySubst     = substsSubst subst (simplifySubst ss) ++ subst
+                  , simplifySolved    = simplifySolved ss
+                  , simplifyStuck     = [eq]
+                  }
+  , simplifyStuck ss )
+
+addStuck :: UnitEquality -> SimplifyState -> SimplifyState
+addStuck eq ss = ss { simplifyStuck = eq : simplifyStuck ss }

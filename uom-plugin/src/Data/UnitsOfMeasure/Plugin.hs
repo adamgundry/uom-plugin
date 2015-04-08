@@ -62,8 +62,8 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         return $ case sr of
           -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
-          Simplified tvs subst evs eqs -> TcPluginOk [] []
-          Impossible (ct, u, v) eqs    -> TcPluginContradiction [ct]
+          Simplified _    -> TcPluginOk [] []
+          Impossible eq _ -> TcPluginContradiction [fromUnitEquality eq]
   where
     foo :: Ct -> Either UnitEquality Ct -> Either (Ct, UnitEquality) Ct
     foo ct (Left x)    = Left (ct, x)
@@ -83,9 +83,9 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
         sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst cts eqs -> TcPluginOk [ (evMagic uds ct, ct) | ct <- cts, isWanted (ctEvidence ct) ]
-                                              <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) subst)
-          Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
+          Simplified ss   -> TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss, let ct = fromUnitEquality eq, isWanted (ctEvidence ct) ]
+                               <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) (simplifySubst ss))
+          Impossible eq _ -> return $ TcPluginContradiction [fromUnitEquality eq]
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
