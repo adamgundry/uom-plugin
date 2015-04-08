@@ -90,6 +90,26 @@ patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
 patternSplice _          _                 = False
 
 
+-- a*a ~ 1  =>  a ~ 1
+givens :: ((a *: a) ~ One) => Quantity Double a -> Quantity Double One
+givens = id
+
+-- a^2 ~ b^3, b^6 ~ 1 => a ~ 1
+givens2 :: ((a ^: 2) ~ (b ^: 3), (b ^: 6) ~ One) => Quantity Double a -> Quantity Double One
+givens2 = id
+
+-- a^2 ~ b^3, b^37 ~ 1 => b ~ 1
+givens3 :: ((a ^: 2) ~ (b ^: 3), (b ^: 37) ~ One) => Quantity Double b -> Quantity Double One
+givens3 = id
+
+-- in baf, c is uniquely determined to be a^3 (or b^2)
+baz :: (a ~ (c ^: 3), b ~ (c ^: 2)) => Quantity Double a -> Quantity Double b -> Quantity Double c -> Int
+baz _ _ _ = 3
+baf :: ((a ^: 2) ~ (b ^: 3)) => Quantity Double a -> Quantity Double b -> Int
+baf qa qb = baz qa qb undefined
+
+
+
 main :: IO ()
 main = defaultMain tests
 
