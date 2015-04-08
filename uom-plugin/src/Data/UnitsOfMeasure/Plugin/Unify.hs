@@ -5,6 +5,9 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , substsSubst
   , UnifyResult(..)
   , unifyUnits
+  , UnitEquality
+  , SimplifyResult(..)
+  , simplifyUnits
   ) where
 
 import FastString
@@ -98,3 +101,27 @@ unifyOne uds ct tvs subst u
             uniq <- newUnique
             let name = mkSysTvName uniq (fsLit "beta")
             return $ mkTcTyVar name kind vanillaSkolemTv
+
+
+type UnitEquality = (Ct, NormUnit, NormUnit)
+
+data SimplifyResult = Simplified [TyVar] TySubst [Ct] [UnitEquality] | Impossible UnitEquality [UnitEquality]
+
+instance Outputable SimplifyResult where
+  ppr (Simplified tvs subst cts eqs) = text "Simplified" $$ ppr tvs $$ ppr subst $$ ppr cts $$ ppr eqs
+  ppr (Impossible eq eqs)            = text "Impossible" <+> ppr eq <+> ppr eqs
+
+simplifyUnits :: UnitDefs -> [UnitEquality] -> TcPluginM SimplifyResult
+simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] [] [] [] eqs
+  where
+    simples :: [TyVar] -> TySubst -> [Ct] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
+    simples tvs subst cts xs [] = return $ Simplified tvs subst cts xs
+    simples tvs subst cts xs (eq@(ct, u, v):eqs) = do
+        ur <- unifyUnits uds ct (substsUnit subst u) (substsUnit subst v)
+        tcPluginTrace "unifyUnits result" (ppr ur)
+        case ur of
+          Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
+                                  (ct:cts) [] (xs ++ eqs)
+          Lose             -> return $ Impossible eq (xs ++ eqs)
+          Draw [] []       -> simples tvs subst cts (eq:xs) eqs
+          Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') cts [eq] (xs ++ eqs)

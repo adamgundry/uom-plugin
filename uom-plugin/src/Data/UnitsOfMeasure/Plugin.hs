@@ -83,7 +83,7 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
         sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
         tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
         case sr of
-          Simplified tvs subst evs eqs -> TcPluginOk (filter (isWanted . ctEvidence . snd) evs)
+          Simplified tvs subst cts eqs -> TcPluginOk [ (evMagic uds ct, ct) | ct <- cts, isWanted (ctEvidence ct) ]
                                               <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) subst)
           Impossible (ct, u, v) eqs    -> return $ TcPluginContradiction [ct]
 
@@ -134,8 +134,6 @@ lookForUnpacks uds givens wanteds = map unpackCt unpacks
                 | otherwise = mkTyConApp (typeIntNegTyCon uds) [mkNumLitTy (-i)]
 
 
-type UnitEquality = (Ct, NormUnit, NormUnit)
-
 -- Extract the unit equality constraints
 toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
 toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
@@ -152,29 +150,6 @@ toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
 
 fromUnitEquality :: UnitEquality -> Ct
 fromUnitEquality (ct, _, _) = ct
-
-
-data SimplifyResult = Simplified [TyVar] TySubst [(EvTerm,Ct)] [UnitEquality] | Impossible UnitEquality [UnitEquality]
-
-instance Outputable SimplifyResult where
-  ppr (Simplified tvs subst evs eqs) = text "Simplified" $$ ppr tvs $$ ppr subst $$ ppr evs $$ ppr eqs
-  ppr (Impossible eq eqs)            = text "Impossible" <+> ppr eq <+> ppr eqs
-
-simplifyUnits :: UnitDefs -> [UnitEquality] -> TcPluginM SimplifyResult
-simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples [] [] [] [] eqs
-  where
-    simples :: [TyVar] -> TySubst -> [(EvTerm, Ct)] -> [UnitEquality] -> [UnitEquality] -> TcPluginM SimplifyResult
-    simples tvs subst evs xs [] = return $ Simplified tvs subst evs xs
-    simples tvs subst evs xs (eq@(ct, u, v):eqs) = do
-        ur <- unifyUnits uds ct (substsUnit subst u) (substsUnit subst v)
-        tcPluginTrace "unifyUnits result" (ppr ur)
-        case ur of
-          Win tvs' subst'  -> simples (tvs++tvs') (substsSubst subst' subst ++ subst')
-                                  ((evMagic uds ct, ct):evs) [] (xs ++ eqs)
-          Lose             -> return $ Impossible eq (xs ++ eqs)
-          Draw [] []       -> simples tvs subst evs (eq:xs) eqs
-          Draw tvs' subst' -> simples (tvs++tvs') (substsSubst subst' subst ++ subst') evs [eq] (xs ++ eqs)
-
 
 
 lookupUnitDefs :: TcPluginM UnitDefs
