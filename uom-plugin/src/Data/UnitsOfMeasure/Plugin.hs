@@ -59,7 +59,7 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
-        tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
+        tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
         return $ case sr of
           -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
           Simplified _    -> TcPluginOk [] []
@@ -80,12 +80,17 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
       []    -> return $ TcPluginOk [] []
       (_:_) -> do
         (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM zonkCt givens
-        sr <- simplifyUnits uds $ unit_givens ++ unit_wanteds
-        tcPluginTrace "unitsOfMeasureSolver simplified" (ppr sr)
+        sr <- simplifyUnits uds unit_givens
+        tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
         case sr of
-          Simplified ss   -> TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss, let ct = fromUnitEquality eq, isWanted (ctEvidence ct) ]
-                               <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) (simplifySubst ss))
           Impossible eq _ -> return $ TcPluginContradiction [fromUnitEquality eq]
+          Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
+                                tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
+                                case sr' of
+                                  Impossible eq _ -> return $ TcPluginContradiction [fromUnitEquality $ substsUnitEquality (simplifyUnsubst ss) eq]
+                                  Simplified ss'  -> TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
+                                                         <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) (substsSubst (simplifyUnsubst ss) (simplifySubst ss')))
+
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
