@@ -51,6 +51,7 @@ library
 test-suite test-uom-plugin
   type:                exitcode-stdio-1.0
   main-is:             Tests.hs
+  other-modules:       ErrorTests
   other-extensions:    TemplateHaskell
   build-depends:       base, uom-plugin,
                        tasty >=0.10 && <0.11, tasty-hunit >=0.9 && <0.10

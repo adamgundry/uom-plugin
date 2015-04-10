@@ -12,31 +12,16 @@
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Defs
 import Data.UnitsOfMeasure.Show
 
+import Control.Exception
 import Data.List
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
--- Declaring some base units and derived units
-[u| ft, kg, m, s, km,
-    N = kg * m/s^2
-  |]
-
--- Conversions
-instance HasCanonicalBaseUnit "s"
-
-instance HasCanonicalBaseUnit "m"
-
-instance HasCanonicalBaseUnit "ft" where
-  type CanonicalBaseUnit "ft" = "m"
-  conversionBase _ = [u| 3.28 ft/m |]
-
-instance HasCanonicalBaseUnit "km" where
-  type CanonicalBaseUnit "km" = "m"
-  conversionBase _ = [u| 0.001 km/m |]
-
+import ErrorTests
 
 myMass :: Quantity Double (Base "kg")
 myMass = [u| 65 kg |]
@@ -134,4 +119,20 @@ tests = testGroup "uom-plugin"
     , testCase "5 km^2 in m^2" $ unQuantity (convert [u| 5km^2 |] :: Quantity Double [u| m*m |]) @?= 5000000
     , testCase "ratio"         $ show (ratio [u| ft |] [u| m |]) @?= "[u| 3.28 ft / m |]"
     ]
+  , testGroup "errors"
+    [ testCase "s/m ~ m/s"            $ mismatch1 `throws` mismatch1_errors
+    , testCase "m + s"                $ mismatch2 `throws` mismatch2_errors
+    , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
+    , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
+    , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
+    ]
   ]
+
+
+-- | Assert that evaluation of the first argument (to WHNF) will throw
+-- an exception whose string representation contains the given
+-- substrings.
+throws :: a -> [String] -> Assertion
+throws v xs =
+    (evaluate v >> assertFailure "No exception!")
+  `catch` \ (e :: SomeException) -> if all (`isInfixOf` show e) xs then return () else throw e
