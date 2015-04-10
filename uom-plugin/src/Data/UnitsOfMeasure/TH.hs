@@ -11,7 +11,6 @@ module Data.UnitsOfMeasure.TH
     ( u
     ) where
 
-import Control.Applicative
 import Data.Char
 import Numeric
 import Text.Parse.Units

@@ -11,7 +11,6 @@ import Type
 import TypeRep
 import TcType
 
-import Control.Applicative
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.NormalForm

@@ -38,7 +38,6 @@ import FastString
 import Outputable
 import Util ( thenCmp )
 
-import Control.Applicative
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import Data.List ( sortBy )

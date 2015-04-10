@@ -30,7 +30,6 @@ import Outputable
 import OccName ( occName, occNameFS, mkTcOcc )
 import Module
 
-import Control.Applicative
 import Data.Either
 
 import Data.UnitsOfMeasure.Plugin.Convert
