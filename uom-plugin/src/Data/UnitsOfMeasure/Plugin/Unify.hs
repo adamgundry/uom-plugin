@@ -105,8 +105,8 @@ unifyOne uds ct tvs subst unsubst u
                    | otherwise  = newFlexiTyVar  $ unitKind uds
 
         newSkolemTyVar kind = do
-            uniq <- newUnique
-            let name = mkSysTvName uniq (fsLit "beta")
+            x <- newUnique
+            let name = mkSysTvName x (fsLit "beta")
             return $ mkTcTyVar name kind vanillaSkolemTv
 
 
@@ -141,7 +141,7 @@ instance Outputable SimplifyResult where
   ppr (Impossible eq eqs) = text "Impossible" <+> ppr eq <+> ppr eqs
 
 simplifyUnits :: UnitDefs -> [UnitEquality] -> TcPluginM SimplifyResult
-simplifyUnits uds eqs = tcPluginTrace "simplifyUnits" (ppr eqs) >> simples initialState eqs
+simplifyUnits uds eqs0 = tcPluginTrace "simplifyUnits" (ppr eqs0) >> simples initialState eqs0
   where
     simples :: SimplifyState -> [UnitEquality] -> TcPluginM SimplifyResult
     simples ss [] = return $ Simplified ss

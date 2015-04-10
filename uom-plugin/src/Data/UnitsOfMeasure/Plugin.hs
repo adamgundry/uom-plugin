@@ -68,7 +68,7 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
     foo ct (Left x)    = Left (ct, x)
     foo _  (Right ct') = Right ct'
 
-    solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
+    -- solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
 
 
 unitsOfMeasureSolver uds givens _deriveds wanteds
@@ -93,10 +93,10 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
-      | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven pred (evByFiat "units" (ty1, ty2)) loc
-      | otherwise               = newSimpleWanted (ctLocOrigin loc) pred
+      | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven prd (evByFiat "units" (ty1, ty2)) loc
+      | otherwise               = newSimpleWanted (ctLocOrigin loc) prd
       where
-        pred = mkEqPred ty1 ty2
+        prd  = mkEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
@@ -110,13 +110,13 @@ lookForUnpacks uds givens wanteds = map unpackCt unpacks
 
     collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
 
-    collectType _  (TyVarTy v)      = []
+    collectType _  (TyVarTy _)      = []
     collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
     collectType ct (TyConApp tc [a])
       | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
                                         Just xs -> [(ct,a,xs)]
                                         _       -> []
-    collectType ct (TyConApp tc as) = concatMap (collectType ct) as
+    collectType ct (TyConApp _ as)  = concatMap (collectType ct) as
     collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
     collectType ct (ForAllTy _ t)   = collectType ct t
     collectType _  (LitTy _)        = []
