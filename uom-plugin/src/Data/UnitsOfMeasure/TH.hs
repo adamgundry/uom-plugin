@@ -55,6 +55,7 @@ u = QuasiQuoter
 -- to the literal if one is present).
 uExp :: String -> Q Exp
 uExp s
+  | [(r, s')] <- reads s                = mkLiteral (rationalL r) s'
   | [(i, s')] <- reads s                = mkLiteral (integerL  i) s'
   | [(r, s')] <- readSigned readFloat s = mkLiteral (rationalL r) s'
   | otherwise                           = mkConversion =<< parseUnitQ s
@@ -68,6 +69,7 @@ uExp s
 -- support arbitrary representation types.
 uPat :: String -> Q Pat
 uPat s
+  | [(r, s')] <- reads s                = mkPat (rationalL r) [t|Rational|] s'
   | [(i, s')] <- reads s                = mkPat (integerL  i) [t|Integer |] s'
   | [(r, s')] <- readSigned readFloat s = mkPat (rationalL r) [t|Rational|] s'
   | otherwise                           = error "unable to parse literal"
