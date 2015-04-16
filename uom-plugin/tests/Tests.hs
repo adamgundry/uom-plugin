@@ -12,7 +12,7 @@
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
-import Data.UnitsOfMeasure.Defs
+import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
 import Control.Exception
@@ -22,6 +22,9 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import ErrorTests
+
+
+-- Some basic examples
 
 myMass :: Quantity Double (Base "kg")
 myMass = [u| 65 kg |]
@@ -42,14 +45,14 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
 
 sum' xs = foldr (+:) zero xs
 mean xs = sum' xs /: mk (genericLength xs)
+
 foo x y = x *: y +: y *: x
 
-f :: (One /: (w ^: 2)) ~ (One /: [u| kg^2 |])  => Quantity a w -> Quantity a [u| kg |]
-f = id
+foo' :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
+foo' = foo
 
-g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
-g = id
 
+-- Check that the abelian group laws hold
 
 associativity :: Quantity a (u *: (v *: w)) -> Quantity a ((u *: v) *: w)
 associativity = id
@@ -66,14 +69,16 @@ inverse = id
 inverse2 :: proxy b -> Quantity a (Base b /: Base b) -> Quantity a One
 inverse2 _ = id
 
--- Inferring this type leads to unit equations with occur-check failures
-z q = convert q
 
+-- Gingerly now...
 
-patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
-patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
-patternSplice _          _                 = False
+-- w^-2 ~ kg^-2  =>  w ~ kg
+f :: (One /: (w ^: 2)) ~ (One /: [u| kg^2 |])  => Quantity a w -> Quantity a [u| kg |]
+f = id
 
+-- u ~ v * w, v^2 ~ v  =>  u ~ w
+g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
+g = id
 
 -- a*a ~ 1  =>  a ~ 1
 givens :: ((a *: a) ~ One) => Quantity Double a -> Quantity Double One
@@ -94,13 +99,33 @@ baf :: ((a ^: 2) ~ (b ^: 3)) => Quantity Double a -> Quantity Double b -> Int
 baf qa qb = baz qa qb undefined
 
 
+-- Miscellaneous bits and bobs
+
+-- Inferring this type used to lead to unit equations with occur-check
+-- failures, because it involves things like Pack (Unpack u) ~ u
+z q = convert q
+
+-- Pattern splices are supported, albeit with restricted types
+patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
+patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
+patternSplice _          _                 = False
+
+-- Andrew's awkward generalisation example is accepted only with a
+-- type signature, even with NoMonoLocalBinds
+tricky :: forall a u . Num a => Quantity a u -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
+tricky x = let f :: Quantity a v -> Quantity a (u *: v)
+               f = (x *:)
+           in (f [u| 3 m |], f [u| 5 kg |])
+
+
+-- Runtime testsuite
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "uom-plugin"
-  [ testGroup "Basic functionality"
+  [ testGroup "Showing constants"
     [ testCase "show 3m"                 $ show [u| 3 m |]                @?= "[u| 3 m |]"
     , testCase "show 3m/s"               $ show [u| 3 m/s |]              @?= "[u| 3 m / s |]"
     , testCase "show 3.2 s^2"            $ show [u| 3.2 s^2 |]            @?= "[u| 3.2 s^2 |]"
@@ -110,14 +135,20 @@ tests = testGroup "uom-plugin"
     , testCase "show 2 1 / kg s"         $ show [u| 2 1 / kg s |]         @?= "[u| 2 kg^-1 s^-1 |]"
     , testCase "show (1 % 2) kg"         $ show [u| 1 % 2 kg |]           @?= "[u| 0.5 kg |]"
     ]
+  , testGroup "Basic operations"
+    [ testCase "2 + 2"                   $ [u| 2 s |] +: [u| 2 s |]        @?= [u| 4 s |]
+    , testCase "in m/s"                  $ inMetresPerSecond 5             @?= [u| 5 m/s |]
+    , testCase "mean"                    $ mean [ [u| 2 N |], [u| 4 N |] ] @?= [u| 3 N |]
+    , testCase "tricky generalisation"   $ tricky [u| 2 s |]               @?= ([u| 6 m s |], [u| 10 kg s |])
+    ]
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
     , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
     , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m / s^2"
     ]
   , testGroup "convert"
-    [ testCase "10m in ft"     $ unQuantity (convert [u| 10m |] :: Quantity Double [u| ft |]) @?= 32.8
-    , testCase "5 km^2 in m^2" $ unQuantity (convert [u| 5km^2 |] :: Quantity Double [u| m*m |]) @?= 5000000
+    [ testCase "10m in ft"     $ convert [u| 10m |]   @?= [u| 32.8 ft |]
+    , testCase "5 km^2 in m^2" $ convert [u| 5km^2 |] @?= [u| 5000000 m m |]
     , testCase "ratio"         $ show (ratio [u| ft |] [u| m |]) @?= "[u| 3.28 ft / m |]"
     ]
   , testGroup "errors"
