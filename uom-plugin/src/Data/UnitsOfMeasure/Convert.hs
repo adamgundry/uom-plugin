@@ -12,7 +12,38 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
 -- | Experimental support for conversions between units with the same
--- dimension, for example feet and metres.
+-- dimension, for example feet and metres.  This interface is not
+-- necessarily stable!
+--
+-- Rather than defining dimensions explicitly, we pick a "canonical"
+-- base unit for each dimension, and record the conversion ratio
+-- between each base unit and the canonical base unit for its
+-- dimension.  This means we can automatically calculate the
+-- conversion ratio between a unit and its canonical representation,
+-- and hence between any two units that share a dimension (i.e. have
+-- the same canonical representation).
+--
+-- For example, to declare @m@ as a canonical base unit, write:
+--
+-- > instance HasCanonicalBaseUnit "m"
+--
+-- To declare @ft@ as a derived unit, write:
+--
+-- > instance HasCanonicalBaseUnit "ft" where
+-- >   type CanonicalBaseUnit "ft" = "m"
+-- >   conversionBase _ = [u| 3.28 ft/m |]
+--
+-- Now it is possible to 'convert' between quantities whose units
+-- involve feet or metres.  For example:
+--
+-- >>> convert [u| 10m |] :: Quantity Double [u| ft |]
+-- [u| 32.8 ft |]
+-- >>> convert [u| 3ft^2 |] :: Quantity Double [u| m^2 |]
+-- [u| 0.27885187388459254 m^2 |]
+--
+-- You are likely to get unpleasant compiler error messages if you
+-- attempt to convert without the units being fully determined by type
+-- inference, or if the units do not have the same dimension.
 module Data.UnitsOfMeasure.Convert
     ( convert
     , ratio
@@ -27,15 +58,13 @@ import GHC.Exts ( Constraint )
 import GHC.TypeLits
 
 
--- | Class to capture the dimensions to which base units belong.
--- Rather than defining dimensions explicitly, we pick a "canonical"
--- base unit for each dimension, and record the conversion ratio
--- between each base unit and the canonical base unit for its
--- dimension.  For a canonical base unit, the class instance can be
--- left empty.
-class HasCanonicalBaseUnit (b :: Symbol) where
+-- | Class to capture the dimensions to which base units belong.  For
+-- a canonical base unit, the class instance can be left empty.
+class (CanonicalBaseUnit (CanonicalBaseUnit b) ~ CanonicalBaseUnit b)
+    => HasCanonicalBaseUnit (b :: Symbol) where
   -- | The canonical base unit for this base unit.  If @b@ is
-  -- canonical, then @'CanonicalBaseUnit' b = b@.
+  -- canonical, then @'CanonicalBaseUnit' b = b@.  Otherwise,
+  -- @'CanonicalBaseUnit' b@ must itself be canonical.
   type CanonicalBaseUnit b :: Symbol
   type CanonicalBaseUnit b = b
 
