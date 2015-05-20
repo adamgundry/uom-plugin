@@ -39,6 +39,7 @@ module Data.UnitsOfMeasure
     , sqrt'
     , negate'
     , recip'
+    , fromRational'
 
       -- * Pay no attention to that man behind the curtain
     , MkUnit
@@ -106,6 +107,9 @@ negate' (MkQuantity x) = MkQuantity (negate x)
 recip' :: (Fractional a, w ~~ One /: u) => Quantity a u -> Quantity a w
 recip' (MkQuantity x) = MkQuantity (recip x)
 
+-- | Convert a 'Rational' quantity into any 'Fractional' type
+fromRational' :: Fractional a => Quantity Rational u -> Quantity a u
+fromRational' (MkQuantity x) = MkQuantity (fromRational x)
 
 -- | Unit exponentiation for type-level integers
 type family (^^:) (u :: Unit) (i :: TypeInt) :: Unit where

@@ -41,8 +41,8 @@ class HasCanonicalBaseUnit (b :: Symbol) where
 
   -- | The conversion ratio between this base unit and its canonical
   -- base unit.  If @b@ is canonical then this ratio is @1@.
-  conversionBase :: Fractional a => proxy b -> Quantity a (Base b /: Base (CanonicalBaseUnit b))
-  default conversionBase :: (Fractional a, b ~ CanonicalBaseUnit b) => proxy b -> Quantity a (Base b /: Base b)
+  conversionBase :: proxy b -> Quantity Rational (Base b /: Base (CanonicalBaseUnit b))
+  default conversionBase :: (b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (Base b /: Base b)
   conversionBase _ = 1
 
 type family MapCBU (xs :: [(Symbol, TypeInt)]) :: [(Symbol, TypeInt)] where
@@ -54,19 +54,15 @@ type family HasCanonical (xs :: [(Symbol, TypeInt)]) :: Constraint where
   HasCanonical ('(b, i) ': xs) = (HasCanonicalBaseUnit b, HasCanonical xs)
 
 
-conversionRatio :: forall proxy a u . ( Fractional a
-                                      , KnownUnit (Unpack u)
-                                      , HasCanonical (Unpack u)
-                                      , u ~ Pack (Unpack u)
-                                      )
-               => proxy u -> Quantity a (u /: Pack (MapCBU (Unpack u)))
+conversionRatio :: forall proxy u . Good u
+               => proxy u -> Quantity Rational (u /: Pack (MapCBU (Unpack u)))
 conversionRatio _ = help (unitSing :: SUnit (Unpack u))
 
-help :: forall a xs . (Fractional a, HasCanonical xs) => SUnit xs -> Quantity a (Pack xs /: Pack (MapCBU xs))
+help :: forall xs . HasCanonical xs => SUnit xs -> Quantity Rational (Pack xs /: Pack (MapCBU xs))
 help SNil          = 1
 help (SCons p i x) = unsafeConvertQuantity $ power (conversionBase p) i *: help x
 
-power :: Fractional a => Quantity a u -> STypeInt i -> Quantity a (u ^^: i)
+power :: Quantity Rational u -> STypeInt i -> Quantity Rational (u ^^: i)
 power (MkQuantity x) (SPos p) = MkQuantity (x ^^ natVal p)
 power (MkQuantity x) (SNeg p) = MkQuantity (x ^^ (- natVal p))
 
@@ -78,22 +74,20 @@ unsafeConvertQuantity :: Quantity a u -> Quantity a v
 unsafeConvertQuantity = MkQuantity . unQuantity
 
 
-type Good u = (u ~ Pack (Unpack u), KnownUnit (Unpack u), HasCanonical (Unpack u))
-type SameDimension u v = Pack (MapCBU (Unpack u)) ~ Pack (MapCBU (Unpack v))
+type Good            u = (u ~ Pack (Unpack u), KnownUnit (Unpack u), HasCanonical (Unpack u))
+type Convertible   u v = (Good u, Good v, ToCanonicalUnit u ~ ToCanonicalUnit v)
+type ToCanonicalUnit u = Pack (MapCBU (Unpack u))
 
 -- | Automatically convert a quantity with units @u@ so that its units
 -- are @v@, provided @u@ and @v@ have the same dimension.
-convert :: forall a u v . (Fractional a, Good u, Good v, SameDimension u v)
-         => Quantity a u -> Quantity a v
-convert = (r *:)
-  where
-    r = conversionRatio (undefined :: proxy v) /: conversionRatio (undefined :: proxy u)
+convert :: forall a u v . (Fractional a, Convertible u v) => Quantity a u -> Quantity a v
+convert = (ratio (undefined :: proxy' (proxy v)) (undefined :: proxy' (proxy u)) *:)
 
 -- | Calculate the conversion ratio between two units with the same
 -- dimension.  The slightly unusual proxy arguments allow this to be
 -- called using quasiquoters to specify the units, for example
 -- @'ratio' [u| ft |] [u| m |]@.
 ratio :: forall a u v (proxy :: Unit -> *) proxy' .
-         (Fractional a, Good u, Good v, SameDimension u v)
+         (Fractional a, Convertible u v)
       => proxy' (proxy u) -> proxy' (proxy v) -> Quantity a (u /: v)
-ratio _ _ = conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)
+ratio _ _ = fromRational' $ conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)
