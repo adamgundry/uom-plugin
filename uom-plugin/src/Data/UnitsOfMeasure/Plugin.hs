@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
 --
@@ -37,6 +39,7 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
 
+import GHC.TcPluginM.Extra ( evByFiat )
 
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
@@ -71,9 +74,11 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
     -- solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
 
 
-unitsOfMeasureSolver uds givens _deriveds wanteds
-  | xs@(_:_) <- lookForUnpacks uds givens wanteds = return $ TcPluginOk [] xs
-  | otherwise = do
+unitsOfMeasureSolver uds givens _deriveds wanteds = do
+  xs <- lookForUnpacks uds givens wanteds
+  case null xs of
+   False -> return $ TcPluginOk [] xs
+   True  -> do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []
@@ -93,8 +98,8 @@ unitsOfMeasureSolver uds givens _deriveds wanteds
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
-      | isGiven (ctEvidence ct) = return $ mkNonCanonical $ CtGiven prd (evByFiat "units" (ty1, ty2)) loc
-      | otherwise               = newSimpleWanted (ctLocOrigin loc) prd
+      | isGiven (ctEvidence ct) = newGivenCt loc prd $ evByFiat "units" (ty1, ty2)
+      | otherwise               = newWantedCt loc prd
       where
         prd  = mkEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
@@ -103,8 +108,8 @@ substItemToCt uds si
         loc  = ctLoc ct
 
 
-lookForUnpacks :: UnitDefs -> [Ct] -> [Ct] -> [Ct]
-lookForUnpacks uds givens wanteds = map unpackCt unpacks
+lookForUnpacks :: UnitDefs -> [Ct] -> [Ct] -> TcPluginM [Ct]
+lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
   where
     unpacks = concatMap collectCt $ givens ++ wanteds
 
@@ -121,7 +126,7 @@ lookForUnpacks uds givens wanteds = map unpackCt unpacks
     collectType ct (ForAllTy _ t)   = collectType ct t
     collectType _  (LitTy _)        = []
 
-    unpackCt (ct,a,xs) = mkNonCanonical $ CtGiven (mkEqPred ty1 ty2) (evByFiat "units" (ty1, ty2)) loc
+    unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" (ty1, ty2))
       where
         ty1 = TyConApp (unpackTyCon uds) [a]
         ty2 = foldr promoter (mkTyConApp (promoteDataCon nilDataCon) [list_elem_ty]) xs
@@ -130,12 +135,19 @@ lookForUnpacks uds givens wanteds = map unpackCt unpacks
     promoter (b, i) t = mkTyConApp cons_tycon [ list_elem_ty, mkTyConApp pair_con [typeSymbolKind, typeIntKind, mkStrLitTy b, mkTypeInt i], t]
     list_elem_ty = mkTyConApp pair_tycon [typeSymbolKind, typeIntKind]
     cons_tycon = promoteDataCon consDataCon
-    pair_tycon = promotedTupleTyCon   BoxedTuple 2
-    pair_con   = promotedTupleDataCon BoxedTuple 2
     typeIntKind = mkTyConTy $ promoteTyCon $ typeIntTyCon uds
 
     mkTypeInt i | i >= 0    = mkTyConApp (typeIntPosTyCon uds) [mkNumLitTy i]
                 | otherwise = mkTyConApp (typeIntNegTyCon uds) [mkNumLitTy (-i)]
+
+pair_tycon, pair_con :: TyCon
+#if __GLASGOW_HASKELL__ >= 711
+pair_tycon = promotedTupleTyCon   Boxed 2
+pair_con   = promotedTupleDataCon Boxed 2
+#else
+pair_tycon = promotedTupleTyCon   BoxedTuple 2
+pair_con   = promotedTupleDataCon BoxedTuple 2
+#endif
 
 
 -- Extract the unit equality constraints
@@ -178,19 +190,6 @@ lookupUnitDefs = do
     myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
     myPackage = fsLit "uom-plugin"
 
-
--- | Produce bogus evidence that the two types are equal.  Obviously
--- this will cause terrible trouble if they are in fact apart.
---
--- Previously we used a 'CoAxiomRule' for this, but that could not be
--- deserialized from interface files because 'tcIfaceCoAxiomRule' has
--- a built-in list of known CoAxiomRules.  Fortunately we can now
--- embed a 'UnivCo' in 'TcCoercion'.  In the future, we may want to
--- make it possible for plugins to create their own CoAxiomRules,
--- carring some sort of serializable code pointer instead of
--- 'coaxrProves'.
-evByFiat :: String -> (Type, Type) -> EvTerm
-evByFiat name (t1,t2) = EvCoercion $ TcCoercion $ mkUnivCo (fsLit name) Nominal t1 t2
 
 -- | Produce bogus evidence for a constraint, including actual
 -- equality constraints and our fake '(~~)' equality constraints.

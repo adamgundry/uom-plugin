@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module TcPluginExtras
@@ -16,7 +17,8 @@ module TcPluginExtras
 
     -- * Wrappers
   , newUnique
-  , newSimpleWanted
+  , newWantedCt
+  , newGivenCt
 
     -- * Extensions
   , tracePlugin
@@ -24,62 +26,38 @@ module TcPluginExtras
   , lookupName
   ) where
 
-import Outputable
-import TcRnTypes ( TcPlugin(..), TcPluginSolver, TcPluginResult(..) )
-import TcRnMonad ( Ct, CtOrigin )
 import TcPluginM
 
-import Type
-import Unique
-
-import Module
-import Name
-import FastString
+import TcEvidence ( EvTerm )
+import TcRnTypes  ( TcPlugin(..), TcPluginSolver, mkNonCanonical )
+import TcRnMonad  ( Ct, CtLoc )
+import Type       ( PredType )
+import Unique     ( Unique )
 
 import qualified TcRnMonad
-import qualified TcMType
 
+import GHC.TcPluginM.Extra
 
-tracePlugin :: String -> TcPlugin -> TcPlugin
-tracePlugin s TcPlugin{..} = TcPlugin { tcPluginInit  = traceInit
-                                      , tcPluginSolve = traceSolve
-                                      , tcPluginStop  = traceStop
-                                      }
-  where
-    traceInit    = tcPluginTrace ("tcPluginInit " ++ s) empty >> tcPluginInit
-    traceStop  z = tcPluginTrace ("tcPluginStop " ++ s) empty >> tcPluginStop z
+#if __GLASGOW_HASKELL__ >= 711
 
-    traceSolve z given derived wanted = do
-        tcPluginTrace ("tcPluginSolve start " ++ s)
-                          (text "given   =" <+> ppr given
-                        $$ text "derived =" <+> ppr derived
-                        $$ text "wanted  =" <+> ppr wanted)
-        r <- tcPluginSolve z given derived wanted
-        case r of
-          TcPluginOk solved new     -> tcPluginTrace ("tcPluginSolve ok " ++ s)
-                                           (text "solved =" <+> ppr solved
-                                         $$ text "new    =" <+> ppr new)
-          TcPluginContradiction bad -> tcPluginTrace ("tcPluginSolve contradiction " ++ s)
-                                           (text "bad =" <+> ppr bad)
-        return r
-
-
-lookupModule :: ModuleName -> FastString -> TcPluginM Module
-lookupModule mod_nm pkg = do
-    found_module <- findImportedModule mod_nm $ Just pkg
-    case found_module of
-      Found _ md -> return md
-      _          -> do found_module' <- findImportedModule mod_nm $ Just $ fsLit "this"
-                       case found_module' of
-                         Found _ md -> return md
-                         _          -> error $ "Unable to resolve module looked up by plugin: " ++ moduleNameString mod_nm
-
-lookupName :: Module -> OccName -> TcPluginM Name
-lookupName md occ = lookupOrig md occ
+#else
+import TcMType ( newSimpleWanted )
+#endif
 
 
 newUnique :: TcPluginM Unique
 newUnique = unsafeTcPluginTcM TcRnMonad.newUnique
 
-newSimpleWanted :: CtOrigin -> PredType -> TcPluginM Ct
-newSimpleWanted orig = unsafeTcPluginTcM . TcMType.newSimpleWanted orig
+newWantedCt :: CtLoc -> PredType -> TcPluginM Ct
+#if __GLASGOW_HASKELL__ >= 711
+newWantedCt loc = fmap mkNonCanonical . TcPluginM.newWanted loc
+#else
+newWantedCt loc = unsafeTcPluginTcM . TcMType.newSimpleWanted (TcRnMonad.ctLocOrigin loc)
+#endif
+
+newGivenCt :: CtLoc -> PredType -> EvTerm -> TcPluginM Ct
+#if __GLASGOW_HASKELL__ >= 711
+newGivenCt loc prd ev = fmap mkNonCanonical $ TcPluginM.newGiven loc prd ev
+#else
+newGivenCt loc prd ev = return $ mkNonCanonical $ TcRnMonad.CtGiven prd ev loc
+#endif
