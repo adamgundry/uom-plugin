@@ -162,9 +162,9 @@ tests = testGroup "uom-plugin"
 
 
 -- | Assert that evaluation of the first argument (to WHNF) will throw
--- an exception whose string representation contains the given
--- substrings.
-throws :: a -> [String] -> Assertion
+-- an exception whose string representation contains one of the given
+-- lists of substrings.
+throws :: a -> [[String]] -> Assertion
 throws v xs =
     (evaluate v >> assertFailure "No exception!")
-  `catch` \ (e :: SomeException) -> if all (`isInfixOf` show e) xs then return () else throw e
+  `catch` \ (e :: SomeException) -> if any (all (`isInfixOf` show e)) xs then return () else throw e
