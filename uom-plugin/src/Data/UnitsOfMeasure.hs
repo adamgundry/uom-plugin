@@ -41,6 +41,10 @@ module Data.UnitsOfMeasure
     , recip'
     , fromRational'
 
+      -- * Declaring units
+    , declareBaseUnit
+    , declareDerivedUnit
+
       -- * Pay no attention to that man behind the curtain
     , MkUnit
 
@@ -48,12 +52,14 @@ module Data.UnitsOfMeasure
     , type (^^:)
     , Pack
     , Unpack
+    , KnownUnit
     ) where
 
 import GHC.TypeLits
 
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Show ()
+import Data.UnitsOfMeasure.Singleton
 import Data.UnitsOfMeasure.TH
 
 

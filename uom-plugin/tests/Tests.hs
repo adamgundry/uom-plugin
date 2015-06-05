@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -22,6 +23,11 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import ErrorTests
+
+
+-- Declarations
+declareBaseUnit "byte"
+declareDerivedUnit "bps" "byte / s"
 
 
 -- Some basic examples

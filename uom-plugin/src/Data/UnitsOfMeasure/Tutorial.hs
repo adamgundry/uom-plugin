@@ -30,6 +30,19 @@ import Data.UnitsOfMeasure
 -- > {-# LANGUAGE TypeFamilies, UndecidableInstances #-}
 --
 --
+-- === Interactive use
+--
+-- If experimenting with @uom-plugin@ in GHCi you will need to
+-- activate the plugin with the command
+--
+-- >>> :seti -fplugin Data.UnitsOfMeasure.Plugin
+--
+-- otherwise you will get mysterious unsolved constraint errors.  You
+-- will probably also need the extensions:
+--
+-- >>> :seti -XDataKinds -XQuasiQuotes -XTypeOperators
+--
+--
 -- === The 'Unit' kind
 --
 -- Units of measure, such as kilograms or metres per second, are
@@ -57,6 +70,22 @@ import Data.UnitsOfMeasure
 -- >>> :kind! [u| kg m/s |]
 -- [u|kg m/s|] :: Unit
 -- = (Base "kg" *: Base "m") /: Base "s"
+--
+--
+-- === Declaring base and derived units
+--
+-- Base and derived units need to be declared before use, otherwise
+-- you will get unsolved constraints like @'KnownUnit' ('Unpack' ('MkUnit' "m"))@.
+-- When the TH quasiquoter 'u' is used as in a declaration context, it
+-- creates new base or derived units.  Alternatively,
+-- 'declareBaseUnit' and 'declareDerivedUnit' can be used as top-level
+-- TH declaration splices.  For example:
+--
+-- > declareBaseUnit "m"
+-- > declareDerivedUnit "N" "kg m / s^2"
+-- > [u| kg, s |]
+--
+-- Note that these lines must appear in a module, not GHCi.
 --
 --
 -- === Creating quantities

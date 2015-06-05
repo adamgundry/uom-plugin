@@ -9,6 +9,8 @@
 -- nice syntax.
 module Data.UnitsOfMeasure.TH
     ( u
+    , declareBaseUnit
+    , declareDerivedUnit
     ) where
 
 import Data.Char
@@ -128,3 +130,15 @@ parseUnitDecs = go
 declareUnit :: String -> Maybe (UnitExp () String) -> Q [Dec]
 declareUnit s Nothing  = [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s)) |]
 declareUnit s (Just u) = [d| type instance MkUnit $(litT (strTyLit s)) = $(reifyUnit u)            |]
+
+-- | Declare a base unit of the given name, which must not contain any
+-- spaces, e.g. @declareBaseUnit "m"@.
+declareBaseUnit :: String -> Q [Dec]
+declareBaseUnit s = declareUnit s Nothing
+
+-- | Declare a derived unit with the given name and definition, e.g.
+-- @declareDerivedUnit "N" "kg m / s^2"@.
+declareDerivedUnit :: String -> String -> Q [Dec]
+declareDerivedUnit s d = case parseUnit universalSymbolTable d of
+                           Right e -> declareUnit s (Just e)
+                           Left _  -> reportError ("unable to parse derived unit: " ++ d) >> return []
