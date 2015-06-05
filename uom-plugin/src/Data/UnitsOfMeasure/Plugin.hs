@@ -17,6 +17,7 @@ import Plugins
 import TcEvidence
 import TcRnTypes
 import TcType
+import TcPluginM
 
 import Coercion
 import BasicTypes
@@ -39,7 +40,7 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
 
-import GHC.TcPluginM.Extra ( evByFiat )
+import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
 
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
@@ -98,7 +99,7 @@ unitsOfMeasureSolver uds givens _deriveds wanteds = do
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
 substItemToCt uds si
-      | isGiven (ctEvidence ct) = newGivenCt loc prd $ evByFiat "units" (ty1, ty2)
+      | isGiven (ctEvidence ct) = newGivenCt loc prd $ evByFiat "units" ty1 ty2
       | otherwise               = newWantedCt loc prd
       where
         prd  = mkEqPred ty1 ty2
@@ -126,7 +127,7 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
     collectType ct (ForAllTy _ t)   = collectType ct t
     collectType _  (LitTy _)        = []
 
-    unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" (ty1, ty2))
+    unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
       where
         ty1 = TyConApp (unpackTyCon uds) [a]
         ty2 = foldr promoter (mkTyConApp (promoteDataCon nilDataCon) [list_elem_ty]) xs
@@ -195,9 +196,9 @@ lookupUnitDefs = do
 -- equality constraints and our fake '(~~)' equality constraints.
 evMagic :: UnitDefs -> Ct -> EvTerm
 evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
-    EqPred NomEq t1 t2   -> evByFiat "units" (t1, t2)
+    EqPred NomEq t1 t2   -> evByFiat "units" t1 t2
     IrredPred t
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
-      , tc == equivTyCon uds -> evByFiat "units" (t1, t2) `EvCast`
+      , tc == equivTyCon uds -> evByFiat "units" t1 t2 `EvCast`
                                   TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
     _                    -> error "evMagic"

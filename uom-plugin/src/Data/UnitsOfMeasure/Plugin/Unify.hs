@@ -19,6 +19,7 @@ import Var
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import TcPluginExtras
+import TcPluginM
 
 
 -- | A substitution is essentially a list of (variable, unit) pairs,
