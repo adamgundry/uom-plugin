@@ -33,6 +33,10 @@
 -- >   type CanonicalBaseUnit "ft" = "m"
 -- >   conversionBase _ = [u| 3.28 ft/m |]
 --
+-- The above declarations can be written using the 'u' declaration
+-- quasiquoter as @['u'| m, ft = 1 % 3.28 ft/m |]@, or generated
+-- automatically using 'declareConvertibleUnit'.
+--
 -- Now it is possible to 'convert' between quantities whose units
 -- involve feet or metres.  For example:
 --
@@ -50,7 +54,6 @@ module Data.UnitsOfMeasure.Convert
     , HasCanonicalBaseUnit(..)
     ) where
 
-import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 

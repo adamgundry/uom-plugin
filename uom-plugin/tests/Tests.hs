@@ -28,6 +28,7 @@ import ErrorTests
 -- Declarations
 declareBaseUnit "byte"
 declareDerivedUnit "bps" "byte / s"
+declareConvertibleUnit "kilobyte" 1024 "byte"
 
 
 -- Some basic examples
