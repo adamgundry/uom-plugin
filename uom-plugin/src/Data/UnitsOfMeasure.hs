@@ -46,6 +46,9 @@ module Data.UnitsOfMeasure
     , declareDerivedUnit
     , declareConvertibleUnit
 
+      -- * Automatic unit conversions
+    , convert
+
       -- * Pay no attention to that man behind the curtain
     , MkUnit
 
@@ -56,6 +59,7 @@ module Data.UnitsOfMeasure
     , KnownUnit
     ) where
 
+import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Show ()
 import Data.UnitsOfMeasure.Singleton

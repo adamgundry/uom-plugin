@@ -52,6 +52,12 @@ module Data.UnitsOfMeasure.Convert
     ( convert
     , ratio
     , HasCanonicalBaseUnit(..)
+      -- * Constraints
+    , Good
+    , HasCanonical
+    , Convertible
+    , ToCanonicalUnit
+    , MapCBU
     ) where
 
 import Data.UnitsOfMeasure.Internal
@@ -77,10 +83,14 @@ class (CanonicalBaseUnit (CanonicalBaseUnit b) ~ CanonicalBaseUnit b)
   default conversionBase :: (b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (Base b /: Base b)
   conversionBase _ = 1
 
+-- | Convert a unit into its canonical representation, where units are
+-- represented as a list of (base unit, exponent) pairs.
 type family MapCBU (xs :: [(Symbol, TypeInt)]) :: [(Symbol, TypeInt)] where
   MapCBU '[]             = '[]
   MapCBU ('(b, i) ': xs) = '(CanonicalBaseUnit b, i) ': MapCBU xs
 
+-- | This constraint will be satisfied if all the base units in a list
+-- of (base unit, exponent) pairs have associated canonical representations.
 type family HasCanonical (xs :: [(Symbol, TypeInt)]) :: Constraint where
   HasCanonical '[]             = ()
   HasCanonical ('(b, i) ': xs) = (HasCanonicalBaseUnit b, HasCanonical xs)
@@ -106,8 +116,15 @@ unsafeConvertQuantity :: Quantity a u -> Quantity a v
 unsafeConvertQuantity = MkQuantity . unQuantity
 
 
+-- | A unit is "good" if all its base units have been defined, and
+-- have associated canonical base units.
 type Good            u = (u ~ Pack (Unpack u), KnownUnit (Unpack u), HasCanonical (Unpack u))
+
+-- | Two units are convertible if they are both 'Good' and they have
+-- the same canonical units (and hence the same dimension).
 type Convertible   u v = (Good u, Good v, ToCanonicalUnit u ~ ToCanonicalUnit v)
+
+-- | Converts a unit to the corresponding canonical representation.
 type ToCanonicalUnit u = Pack (MapCBU (Unpack u))
 
 -- | Automatically convert a quantity with units @u@ so that its units
