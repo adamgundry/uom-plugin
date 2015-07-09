@@ -28,15 +28,22 @@ module Data.UnitsOfMeasure
     , zero
     , mk
 
-      -- * Unit-safe arithmetic operations
+      -- * Unit-safe 'Num' operations
     , (+:)
-    , (-:)
     , (*:)
-    , (/:)
-    , sqrt'
+    , (-:)
     , negate'
+    , abs'
+    , signum'
+    , fromInteger'
+
+      -- * Unit-safe 'Fractional' operations
+    , (/:)
     , recip'
     , fromRational'
+
+      -- * Unit-safe 'Floating' operations
+    , sqrt'
 
       -- * TH constructor for quantities/units
     , u
