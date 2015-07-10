@@ -59,10 +59,13 @@ u = QuasiQuoter
 -- to the literal if one is present).
 uExp :: String -> Q Exp
 uExp s
-  | Just (ei, s') <- readNumber s = mkLiteral (either integerL rationalL ei) s'
+  | Just (ei, s') <- readNumber s = mkLiteral ei =<< parseUnitQ s'
   | otherwise                     = mkConversion =<< parseUnitQ s
   where
-    mkLiteral l s'    = [| (MkQuantity :: a -> Quantity a $(uType s'      )) $(litE l) |]
+    mkLiteral (Left  0) Unity = [| zero |]
+    mkLiteral (Right 0) Unity = [| MkQuantity 0.0 |]
+    mkLiteral ei        expr  = [| (MkQuantity :: a -> Quantity a $(reifyUnit expr))
+                                                                  $(litE (either integerL rationalL ei)) |]
     mkConversion expr = [|  MkQuantity :: a -> Quantity a $(reifyUnit expr) |]
 
 -- | Parse an integer or rational literal followed by a unit

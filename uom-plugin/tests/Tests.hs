@@ -147,6 +147,8 @@ tests = testGroup "uom-plugin"
     , testCase "in m/s"                  $ inMetresPerSecond 5             @?= [u| 5 m/s |]
     , testCase "mean"                    $ mean [ [u| 2 N |], [u| 4 N |] ] @?= [u| 3 N |]
     , testCase "tricky generalisation"   $ tricky [u| 2 s |]               @?= ([u| 6 m s |], [u| 10 kg s |])
+    , testCase "polymorphic zero"        $ [u| 0 |] @?= [u| 0 m |]
+    , testCase "polymorphic frac zero"   $ [u| 0.0 |] @?= [u| 0.0 N / m |]
     ]
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
