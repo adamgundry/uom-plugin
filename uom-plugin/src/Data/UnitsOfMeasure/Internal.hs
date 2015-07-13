@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
@@ -61,19 +62,34 @@ data Unit
 
 -- | Dimensionless unit (identity element)
 type family One :: Unit
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 -- | Base unit
 type family Base (b :: Symbol) :: Unit
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 -- | Multiplication for units of measure
 type family (u :: Unit) *: (v :: Unit) :: Unit
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 -- | Division for units of measure
 type family (u :: Unit) /: (v :: Unit) :: Unit
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 -- | Exponentiation (to a positive power) for units of measure;
 -- negative exponents are not yet supported (they require an Integer kind)
 type family (u :: Unit) ^: (n :: Nat)  :: Unit
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 infixl 6 +:, -:
 infixl 7 *:, /:
@@ -194,12 +210,18 @@ type family Pack (xs :: [(Symbol, TypeInt)]) :: Unit where
 -- the unit to be observed.  The reduction behaviour is implemented by
 -- the plugin, because we cannot define it otherwise.
 type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 
 -- | This is a bit of a hack, honestly, but a good hack.  Constraints
 -- @u ~~ v@ are just like equalities @u ~ v@, except solving them will
 -- be delayed until the plugin.  This may lead to better inferred types.
 type family (u :: Unit) ~~ (v :: Unit) :: Constraint
+#if __GLASGOW_HASKELL__ >= 711
+  where
+#endif
 
 infix 4 ~~
 
