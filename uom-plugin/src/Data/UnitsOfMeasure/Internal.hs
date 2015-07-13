@@ -55,7 +55,7 @@ module Data.UnitsOfMeasure.Internal
     ) where
 
 import GHC.Exts (Constraint)
-import GHC.TypeLits (Symbol, Nat)
+import GHC.TypeLits (Symbol, Nat, type (-))
 
 -- | (Kind) Units of measure
 data Unit
@@ -86,10 +86,10 @@ type family (u :: Unit) /: (v :: Unit) :: Unit
 
 -- | Exponentiation (to a positive power) for units of measure;
 -- negative exponents are not yet supported (they require an Integer kind)
-type family (u :: Unit) ^: (n :: Nat)  :: Unit
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type family (u :: Unit) ^: (n :: Nat)  :: Unit where
+  u ^: 0 = One
+  u ^: 1 = u
+  u ^: n = u *: (u ^: (n-1))
 
 infixl 6 +:, -:
 infixl 7 *:, /:
