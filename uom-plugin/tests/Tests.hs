@@ -125,6 +125,11 @@ tricky x = let f :: Quantity a v -> Quantity a (u *: v)
            in (f [u| 3 m |], f [u| 5 kg |])
 
 
+-- Test that basic constraints involving exponentiation work
+pow :: Quantity a (u *: (v ^: i)) -> Quantity a ((v ^: i) *: u)
+pow = id
+
+
 -- Runtime testsuite
 
 main :: IO ()

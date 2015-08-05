@@ -51,7 +51,7 @@ normaliseUnit uds (TyConApp tc tys)
   | tc == unitBaseTyCon uds, [x]    <- tys = pure $ baseUnit x
   | tc == mulTyCon      uds, [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == divTyCon      uds, [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
-  | tc == expTyCon      uds, [u, n] <- tys = (^:) <$> normaliseUnit uds u <*> isNumLitTy n
+  | tc == expTyCon      uds, [u, n] <- tys, Just i <- isNumLitTy n = (^:) <$> normaliseUnit uds u <*> pure i
   | isFamilyTyCon tc                       = pure $ famUnit tc tys
 normaliseUnit _ _ = Nothing
 
