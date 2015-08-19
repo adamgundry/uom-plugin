@@ -84,7 +84,7 @@ class (CanonicalBaseUnit (CanonicalBaseUnit b) ~ CanonicalBaseUnit b)
   conversionBase _ = 1
 
 -- | Convert a unit into its canonical representation, where units are
--- represented as a list of (base unit, exponent) pairs.
+-- represented syntactically.
 type family MapCBU (u :: UnitSyntax) :: UnitSyntax where
   MapCBU (xs :/ ys) = ListMapCBU xs :/ ListMapCBU ys
 
@@ -92,8 +92,9 @@ type family ListMapCBU (xs :: [Symbol]) :: [Symbol] where
   ListMapCBU '[]             = '[]
   ListMapCBU (x ': xs) = CanonicalBaseUnit x ': ListMapCBU xs
 
--- | This constraint will be satisfied if all the base units in a list
--- of (base unit, exponent) pairs have associated canonical representations.
+-- | This constraint will be satisfied if all the base units in a
+-- syntactically represented unit have associated canonical
+-- representations.
 type family HasCanonical (u :: UnitSyntax) :: Constraint where
   HasCanonical (xs :/ ys) = (AllHasCanonical xs, AllHasCanonical ys)
 

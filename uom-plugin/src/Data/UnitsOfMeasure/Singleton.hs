@@ -27,7 +27,9 @@ module Data.UnitsOfMeasure.Singleton
     , KnownUnit(..)
     , unitVal
 
+      -- * Singletons for lists
     , SList(..)
+    , KnownList(..)
     ) where
 
 import GHC.TypeLits
@@ -36,15 +38,16 @@ import Data.UnitsOfMeasure.Internal
 
 
 -- | Singleton type for concrete units of measure represented as lists
--- of (base unit, exponent) pairs
+-- of base units
 data SUnit (u :: UnitSyntax) where
   SUnit :: SList xs -> SList ys -> SUnit (xs :/ ys)
 
+-- | Singleton type for lists of base units
 data SList (xs :: [Symbol]) where
   SNil :: SList '[]
   SCons :: KnownSymbol x => proxy x -> SList xs -> SList (x ': xs)
 
--- | Extract the runtime (base unit, exponent) list from a singleton unit
+-- | Extract the runtime syntactic representation from a singleton unit
 forgetSUnit :: SUnit u -> ([String], [String])
 forgetSUnit (SUnit xs ys) = (forgetSList xs, forgetSList ys)
 
@@ -62,6 +65,8 @@ instance (KnownList xs, KnownList ys) => KnownUnit (xs :/ ys) where
   unitSing = SUnit listSing listSing
 
 
+-- | A constraint @'KnownList' xs@ means that @xs@ must be a list of
+-- base units that is statically known but passed at runtime
 class KnownList (xs :: [Symbol]) where
   listSing :: SList xs
 
@@ -71,6 +76,7 @@ instance KnownList '[] where
 instance (KnownSymbol x, KnownList xs) => KnownList (x ': xs) where
   listSing = SCons (undefined :: proxy x) listSing
 
--- | Extract the runtime (base unit, exponent) list from a 'KnownUnit'
+
+-- | Extract the runtime syntactic representation of a 'KnownUnit'
 unitVal :: forall proxy u . KnownUnit u => proxy u -> ([String], [String])
 unitVal _ = forgetSUnit (unitSing :: SUnit u)
