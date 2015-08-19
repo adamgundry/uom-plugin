@@ -190,7 +190,7 @@ sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 -- | Syntactic representation of a unit as a pair of lists of base
 -- units, for example 'One' is represented as @[] ':/' []@ and
 -- @'Base' "m" '/:' 'Base' "s" ^: 2@ is represented as @["m"] ':/' ["s","s"]@.
-data UnitSyntax = [Symbol] :/ [Symbol]
+data UnitSyntax s = [s] :/ [s]
 
 -- | Pack up a syntactic representation of a unit as a unit.  For example:
 --
@@ -202,7 +202,7 @@ data UnitSyntax = [Symbol] :/ [Symbol]
 -- inverse of 'Unpack' up to the equational theory of units, but it is
 -- not a right inverse (because there are multiple list
 -- representations of the same unit).
-type family Pack (u :: UnitSyntax) :: Unit where
+type family Pack (u :: UnitSyntax Symbol) :: Unit where
   Pack (xs :/ ys) = Prod xs /: Prod ys
 
 -- | Take the product of a list of base units.
@@ -222,7 +222,7 @@ type family Prod (xs :: [Symbol]) :: Unit where
 -- it does not allow the structure of the unit to be observed.  The
 -- reduction behaviour is implemented by the plugin, because we cannot
 -- define it otherwise.
-type family Unpack (u :: Unit) :: UnitSyntax
+type family Unpack (u :: Unit) :: UnitSyntax Symbol
 #if __GLASGOW_HASKELL__ >= 711
   where
 #endif

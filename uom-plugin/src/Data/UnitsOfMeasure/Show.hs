@@ -54,11 +54,11 @@ showQuantity (MkQuantity x) = show x ++ if s == "1" then "" else ' ':s
 showUnit :: forall proxy u . KnownUnit (Unpack u) => proxy u -> String
 showUnit _ = showUnitBits (unitVal (undefined :: proxy' (Unpack u)))
 
-showUnitBits :: ([String], [String]) -> String
-showUnitBits ([],[]) = "1"
-showUnitBits (xs, []) = showPos xs
-showUnitBits ([], ys) = showNeg ys
-showUnitBits (xs, ys) = showPos xs ++ " / " ++ showPos ys
+showUnitBits :: UnitSyntax String -> String
+showUnitBits ([] :/ []) = "1"
+showUnitBits (xs :/ []) = showPos xs
+showUnitBits ([] :/ ys) = showNeg ys
+showUnitBits (xs :/ ys) = showPos xs ++ " / " ++ showPos ys
 
 showPos :: [String] -> String
 showPos = intercalate " " . map (\ xs -> showAtom (head xs, length xs)) . group

@@ -131,7 +131,8 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
       where
         ty1 = TyConApp (unpackTyCon uds) [a]
         ty2 = mkTyConApp (unitSyntaxPromotedDataCon uds)
-               [ foldr promoter nil ys
+               [ typeSymbolKind
+               , foldr promoter nil ys
                , foldr promoter nil zs ]
         loc = ctLoc ct
 
