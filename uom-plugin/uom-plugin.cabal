@@ -7,9 +7,10 @@ license:             BSD3
 license-file:        LICENSE
 author:              Adam Gundry <adam@well-typed.com>
 maintainer:          Adam Gundry <adam@well-typed.com>
+homepage:            https://github.com/adamgundry/uom-plugin
 bug-reports:         https://github.com/adamgundry/uom-plugin/issues
 stability:           experimental
-copyright:           Copyright (c) 2014, Adam Gundry
+copyright:           Copyright (c) 2014-2015, Adam Gundry
 build-type:          Simple
 cabal-version:       >=1.10
 description:
@@ -57,4 +58,4 @@ test-suite test-uom-plugin
                        tasty >=0.10 && <0.11, tasty-hunit >=0.9 && <0.10
   hs-source-dirs:      tests
   default-language:    Haskell2010
-  ghc-options:         -O0 -dcore-lint
+  ghc-options:         -O0
