@@ -46,7 +46,7 @@ library
                        units-parser >=0.1 && <0.2
   hs-source-dirs:      src
   default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-unticked-promoted-constructors -dcore-lint
+  ghc-options:         -Wall -fno-warn-unticked-promoted-constructors
 
 test-suite test-uom-plugin
   type:                exitcode-stdio-1.0

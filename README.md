@@ -13,3 +13,6 @@ The library works on GHC 7.10.1, and may also work on GHC HEAD if you're lucky.
     cd uom-plugin/uom-plugin
     cabal sandbox init
     cabal install
+
+
+[![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
