@@ -34,7 +34,7 @@ module Data.UnitsOfMeasure.Show
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import Data.List (partition)
+import Data.List (intercalate, group)
 
 instance (Show a, KnownUnit (Unpack u)) => Show (Quantity a u) where
   show x = "[u| " ++ showQuantity x ++ " |]"
@@ -54,19 +54,18 @@ showQuantity (MkQuantity x) = show x ++ if s == "1" then "" else ' ':s
 showUnit :: forall proxy u . KnownUnit (Unpack u) => proxy u -> String
 showUnit _ = showUnitBits (unitVal (undefined :: proxy' (Unpack u)))
 
-showUnitBits :: [(String, Integer)] -> String
-showUnitBits [] = "1"
-showUnitBits xs
-  | null zs   = showPos ys
-  | null ys   = showPos zs
-  | otherwise = showPos ys ++ " / " ++ showPos (map (fmap negate) zs)
-  where (ys, zs) = partition ((>= 0) . snd) xs
+showUnitBits :: ([String], [String]) -> String
+showUnitBits ([],[]) = "1"
+showUnitBits (xs, []) = showPos xs
+showUnitBits ([], ys) = showNeg ys
+showUnitBits (xs, ys) = showPos xs ++ " / " ++ showPos ys
 
-showPos :: [(String, Integer)] -> String
-showPos []     = "1"
-showPos [x]    = showAtom x
-showPos (x:xs) = showAtom x ++ " " ++ showUnitBits xs
+showPos :: [String] -> String
+showPos = intercalate " " . map (\ xs -> showAtom (head xs, length xs)) . group
 
-showAtom :: (String, Integer) -> String
+showNeg :: [String] -> String
+showNeg = intercalate " " . map (\ xs -> showAtom (head xs, negate $ length xs)) . group
+
+showAtom :: (String, Int) -> String
 showAtom (s, 1) = s
 showAtom (s, i) = s ++ "^" ++ show i

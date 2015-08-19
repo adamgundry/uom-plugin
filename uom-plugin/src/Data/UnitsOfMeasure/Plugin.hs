@@ -20,7 +20,6 @@ import TcType
 import TcPluginM
 
 import Coercion
-import BasicTypes
 import DataCon
 import Type
 import TyCon
@@ -34,6 +33,7 @@ import OccName ( occName, occNameFS, mkTcOcc )
 import Module
 
 import Data.Either
+import Data.List
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
@@ -130,25 +130,18 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
     unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
       where
         ty1 = TyConApp (unpackTyCon uds) [a]
-        ty2 = foldr promoter (mkTyConApp (promoteDataCon nilDataCon) [list_elem_ty]) xs
+        ty2 = mkTyConApp (unitSyntaxPromotedDataCon uds)
+               [ foldr promoter nil ys
+               , foldr promoter nil zs ]
         loc = ctLoc ct
 
-    promoter (b, i) t = mkTyConApp cons_tycon [ list_elem_ty, mkTyConApp pair_con [typeSymbolKind, typeIntKind, mkStrLitTy b, mkTypeInt i], t]
-    list_elem_ty = mkTyConApp pair_tycon [typeSymbolKind, typeIntKind]
+        ys = concatMap (\ (s, i) -> if i > 0 then genericReplicate i s       else []) xs
+        zs = concatMap (\ (s, i) -> if i < 0 then genericReplicate (abs i) s else []) xs
+
+    nil = mkTyConApp (promoteDataCon nilDataCon) [typeSymbolKind]
+
+    promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
     cons_tycon = promoteDataCon consDataCon
-    typeIntKind = mkTyConTy $ promoteTyCon $ typeIntTyCon uds
-
-    mkTypeInt i | i >= 0    = mkTyConApp (typeIntPosTyCon uds) [mkNumLitTy i]
-                | otherwise = mkTyConApp (typeIntNegTyCon uds) [mkNumLitTy (-i)]
-
-pair_tycon, pair_con :: TyCon
-#if __GLASGOW_HASKELL__ >= 711
-pair_tycon = promotedTupleTyCon   Boxed 2
-pair_con   = promotedTupleDataCon Boxed 2
-#else
-pair_tycon = promotedTupleTyCon   BoxedTuple 2
-pair_con   = promotedTupleDataCon BoxedTuple 2
-#endif
 
 
 -- Extract the unit equality constraints
@@ -179,9 +172,9 @@ lookupUnitDefs = do
     d <- look md "/:"
     e <- look md "^:"
     x <- look md "Unpack"
-    i <- look md "TypeInt"
+    i <- look md "UnitSyntax"
     c <- look md "~~"
-    return $ UnitDefs u b o m d e x i (getDataCon i "Pos") (getDataCon i "Neg") c
+    return $ UnitDefs u b o m d e x i (getDataCon i ":/") c
   where
     getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
                        [d] -> promoteDataCon d

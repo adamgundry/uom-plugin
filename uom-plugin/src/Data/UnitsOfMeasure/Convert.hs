@@ -85,35 +85,33 @@ class (CanonicalBaseUnit (CanonicalBaseUnit b) ~ CanonicalBaseUnit b)
 
 -- | Convert a unit into its canonical representation, where units are
 -- represented as a list of (base unit, exponent) pairs.
-type family MapCBU (xs :: [(Symbol, TypeInt)]) :: [(Symbol, TypeInt)] where
-  MapCBU '[]             = '[]
-  MapCBU ('(b, i) ': xs) = '(CanonicalBaseUnit b, i) ': MapCBU xs
+type family MapCBU (u :: UnitSyntax) :: UnitSyntax where
+  MapCBU (xs :/ ys) = ListMapCBU xs :/ ListMapCBU ys
+
+type family ListMapCBU (xs :: [Symbol]) :: [Symbol] where
+  ListMapCBU '[]             = '[]
+  ListMapCBU (x ': xs) = CanonicalBaseUnit x ': ListMapCBU xs
 
 -- | This constraint will be satisfied if all the base units in a list
 -- of (base unit, exponent) pairs have associated canonical representations.
-type family HasCanonical (xs :: [(Symbol, TypeInt)]) :: Constraint where
-  HasCanonical '[]             = ()
-  HasCanonical ('(b, i) ': xs) = (HasCanonicalBaseUnit b, HasCanonical xs)
+type family HasCanonical (u :: UnitSyntax) :: Constraint where
+  HasCanonical (xs :/ ys) = (AllHasCanonical xs, AllHasCanonical ys)
+
+type family AllHasCanonical (xs :: [Symbol]) :: Constraint where
+  AllHasCanonical '[] = ()
+  AllHasCanonical (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical xs)
 
 
 conversionRatio :: forall proxy u . Good u
                => proxy u -> Quantity Rational (u /: Pack (MapCBU (Unpack u)))
 conversionRatio _ = help (unitSing :: SUnit (Unpack u))
 
-help :: forall xs . HasCanonical xs => SUnit xs -> Quantity Rational (Pack xs /: Pack (MapCBU xs))
-help SNil          = 1
-help (SCons p i x) = unsafeConvertQuantity $ power (conversionBase p) i *: help x
+help :: forall u . HasCanonical u => SUnit u -> Quantity Rational (Pack u /: Pack (MapCBU u))
+help (SUnit xs ys) = help' xs /: help' ys
 
-power :: Quantity Rational u -> STypeInt i -> Quantity Rational (u ^^: i)
-power (MkQuantity x) (SPos p) = MkQuantity (x ^^ natVal p)
-power (MkQuantity x) (SNeg p) = MkQuantity (x ^^ (- natVal p))
-
-
--- | TODO: why does 'help' still need this? It fails to deduce this:
---     (((('Base b ^^: i) *: Pack xs1) /: (('Base (CanonicalBaseUnit b) ^^: i) *: Pack (MapCBU xs1)))
---   ~ ((('Base b /: 'Base (CanonicalBaseUnit b)) ^^: i) *: (Pack xs1 /: Pack (MapCBU xs1))))
-unsafeConvertQuantity :: Quantity a u -> Quantity a v
-unsafeConvertQuantity = MkQuantity . unQuantity
+help' :: forall xs . AllHasCanonical xs => SList xs -> Quantity Rational (Prod xs /: Prod (ListMapCBU xs))
+help' SNil         = 1
+help' (SCons p xs) = conversionBase p *: help' xs
 
 
 -- | A unit is "good" if all its base units have been defined, and

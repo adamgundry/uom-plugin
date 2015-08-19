@@ -46,8 +46,9 @@ module Data.UnitsOfMeasure.Internal
     , sqrt'
 
       -- * Internal
-    , TypeInt(..)
-    , type (^^:)
+    , UnitSyntax(..)
+    , Prod
+
     , Pack
     , Unpack
     , type (~~)
@@ -185,23 +186,20 @@ sqrt' :: (Floating a, w ~~ u ^: 2) => Quantity a w -> Quantity a u
 sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 
 
--- | Type-level integers, represented as wrapped type-level naturals
--- with redundant zeros (but we won't ever use @'Neg' 0@).
-data TypeInt = Pos Nat | Neg Nat
 
--- | Unit exponentiation for type-level integers
-type family (^^:) (u :: Unit) (i :: TypeInt) :: Unit where
-  u ^^: Pos n = u ^: n
-  u ^^: Neg n = One /: (u ^: n)
+data UnitSyntax = [Symbol] :/ [Symbol]
 
 -- | Pack a list of (base unit, exponent) pairs as a unit.  This is a
 -- perfectly ordinary closed type family.  'Pack' is a left inverse of
 -- 'Unpack' up to the equational theory of units, but it is not a
 -- right inverse (because there are multiple list representations of
 -- the same unit).
-type family Pack (xs :: [(Symbol, TypeInt)]) :: Unit where
-  Pack '[]             = One
-  Pack ('(b, i) ': xs) = (Base b ^^: i) *: Pack xs
+type family Pack (u :: UnitSyntax) :: Unit where
+  Pack (xs :/ ys) = Prod xs /: Prod ys
+
+type family Prod (xs :: [Symbol]) :: Unit where
+  Prod '[]       = One
+  Prod (x ': xs) = Base x *: Prod xs
 
 -- | Unpack a unit as a list of (base unit, exponent) pairs, where the
 -- order is deterministic and the exponent is never zero.  This does
@@ -209,7 +207,7 @@ type family Pack (xs :: [(Symbol, TypeInt)]) :: Unit where
 -- unit is entirely constant, and it does not allow the structure of
 -- the unit to be observed.  The reduction behaviour is implemented by
 -- the plugin, because we cannot define it otherwise.
-type family Unpack (u :: Unit) :: [(Symbol, TypeInt)]
+type family Unpack (u :: Unit) :: UnitSyntax
 #if __GLASGOW_HASKELL__ >= 711
   where
 #endif

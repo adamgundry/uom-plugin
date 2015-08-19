@@ -58,9 +58,6 @@ module Data.UnitsOfMeasure
 
       -- * Pay no attention to that man behind the curtain
     , MkUnit
-
-    , TypeInt(..)
-    , type (^^:)
     , Pack
     , Unpack
     , KnownUnit
