@@ -85,7 +85,9 @@ import Data.UnitsOfMeasure
 -- > declareDerivedUnit "N" "kg m / s^2"
 -- > [u| kg, s |]
 --
--- Note that these lines must appear in a module, not GHCi.
+-- Note that these lines must appear in a module, not GHCi.  For
+-- experimenting interactively, "Data.UnitsOfMeasure.Defs" provides
+-- definitions of common units, but is subject to change.
 --
 --
 -- === Creating quantities
