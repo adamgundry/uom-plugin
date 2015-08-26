@@ -1,0 +1,1 @@
+:seti -XDataKinds -XQuasiQuotes -XTypeOperators -fplugin Data.UnitsOfMeasure.Plugin

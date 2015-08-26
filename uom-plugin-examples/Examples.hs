@@ -8,8 +8,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
-module Examples where
-
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Show
@@ -18,7 +16,7 @@ import Data.List
 
 
 -- Declaring some base units and derived units
-[u| ft, kg, m, s,
+[u| ft = 0.3048 m, kg, m, s,
     N = kg * m/s^2
   |]
 
@@ -71,16 +69,13 @@ y = showQuantity [u| 3 kg m/s^2 |]
 
 
 -- Conversions
-instance HasCanonicalBaseUnit "s"
-
-instance HasCanonicalBaseUnit "m"
-
-instance HasCanonicalBaseUnit "ft" where
-  type CanonicalBaseUnit "ft" = "m"
-  conversionBase _ = [u| 3.28 ft/m |]
-
 tenMetresInFeet :: Quantity Double [u| ft |]
 tenMetresInFeet = convert [u| 10m |]
 
 anotherConversion :: Quantity Double [u| m*m |]
 anotherConversion = convert [u| 5 ft^2 |]
+
+
+main = do print myMass
+          print forceOnGround
+          print tenMetresInFeet
