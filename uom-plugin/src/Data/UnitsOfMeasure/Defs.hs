@@ -38,7 +38,15 @@ import Data.UnitsOfMeasure
 
 -- Non-SI units accepted for use with them
 -- http://www.bipm.org/en/publications/si-brochure/chapter4.html
-[u| min = 60 s, h = 3600 s, d, ha, l, t, au |]
+-- hectares and liters are unable to be defined at the moment due to
+-- https://github.com/adamgundry/uom-plugin/issues/4
+[u| min = 60 s
+  , h = 3600 s
+  , d = 86400 s
+  , ha
+  , l
+  , t = 1000 kg
+  , au = 149597870700 m |]
 
 -- Some random other units
 [u| ft = 100 % 328 m, in = 0.0254 m, mi = 1609.344 m, mph = mi/h |]
