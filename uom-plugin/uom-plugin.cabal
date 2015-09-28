@@ -1,5 +1,5 @@
 name:                uom-plugin
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Units of measure as a GHC typechecker plugin
 category:            Type System
 description:         A prototype typechecker plugin for GHC with support for units of measure
