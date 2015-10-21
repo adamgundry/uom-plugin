@@ -30,6 +30,7 @@ library
                        Data.UnitsOfMeasure.Defs,
                        Data.UnitsOfMeasure.Internal,
                        Data.UnitsOfMeasure.Plugin,
+                       Data.UnitsOfMeasure.Read,
                        Data.UnitsOfMeasure.Show,
                        Data.UnitsOfMeasure.Singleton,
                        Data.UnitsOfMeasure.Tutorial
