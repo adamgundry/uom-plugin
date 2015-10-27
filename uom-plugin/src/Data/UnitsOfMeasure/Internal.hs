@@ -56,6 +56,7 @@ module Data.UnitsOfMeasure.Internal
     , MkUnit
     ) where
 
+import Foreign.Storable
 import GHC.Exts (Constraint)
 import GHC.TypeLits (Symbol, Nat, type (-))
 
@@ -121,6 +122,8 @@ deriving instance (Real       a, u ~ One) => Real       (Quantity a u)
 deriving instance (RealFloat  a, u ~ One) => RealFloat  (Quantity a u)
 deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
 
+-- To enable marshalling into FFI code.
+deriving instance Storable a => Storable (Quantity a u)
 
 -- | Extract the underlying value of a quantity
 unQuantity :: Quantity a u -> a
