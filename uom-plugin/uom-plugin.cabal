@@ -40,6 +40,7 @@ library
                        TcPluginExtras
   other-extensions:    TemplateHaskell
   build-depends:       base >=4.7 && <5,
+                       deepseq >=1.3 && <1.5,
                        ghc >= 7.9 && <7.12,
                        ghc-tcplugins-extra >=0.1 && <0.2,
                        template-haskell >=2.9 && <2.12,
