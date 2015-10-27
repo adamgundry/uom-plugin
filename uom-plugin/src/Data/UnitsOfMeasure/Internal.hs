@@ -125,6 +125,9 @@ deriving instance (RealFrac   a, u ~ One) => RealFrac   (Quantity a u)
 -- To enable marshalling into FFI code.
 deriving instance Storable a => Storable (Quantity a u)
 
+-- To enable deriving NFData for data types containing Quantity fields.
+deriving instance NFData a => NFData (Quantity a u)
+
 -- | Extract the underlying value of a quantity
 unQuantity :: Quantity a u -> a
 unQuantity (MkQuantity x) = x
