@@ -56,6 +56,7 @@ module Data.UnitsOfMeasure.Internal
     , MkUnit
     ) where
 
+import Control.DeepSeq
 import Foreign.Storable
 import GHC.Exts (Constraint)
 import GHC.TypeLits (Symbol, Nat, type (-))
