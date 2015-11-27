@@ -1,16 +1,28 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -fno-warn-partial-type-signatures #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Very very rough support for reading units of measure in the
+-- syntax used by "Data.UnitsOfMeasure.Show".
 module Data.UnitsOfMeasure.Read
    ( readQuantity
    , readUnit
+   , readWithUnit
    , Some(..)
+   , SomeQuantity(..)
    ) where
 
 import Control.Monad (join)
-import Data.List (genericReplicate)
 import GHC.TypeLits
+import Data.List (genericReplicate)
+import Data.Proxy
+import Data.Type.Equality (testEquality, (:~:)(..))
 import Text.Parse.Units (parseUnit, universalSymbolTable, UnitExp(..))
 
 import Data.UnitsOfMeasure.Internal
@@ -25,12 +37,29 @@ data Some p where
 instance Show (Some SUnit) where
   show (Some u) = show (forgetSUnit u)
 
+instance (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a) => Read (Quantity a u) where
+  readsPrec i (' ':s) = readsPrec i s
+  readsPrec _ ('[':'u':'|':s)
+   | (t, '|':']':r) <- break (== '|') s
+   , Right v <- readWithUnit (Proxy :: Proxy (Unpack u)) t = [(v, r)]
+  readsPrec _ _ = []
+
+-- | Parse a quantity and check that it has the expected units.
+readWithUnit :: forall proxy a u . (Read a, KnownUnit u) => proxy u -> String -> Either String (Quantity a (Pack u))
+readWithUnit _ s = do
+  SomeQuantity (q :: Quantity a _) v <- readQuantity s
+  case testEquality (unitSing :: SUnit u) v of
+    Just Refl -> Right q
+    Nothing   -> Left ("wrong units: got " ++ show (forgetSUnit v))
+
+-- | Parse a quantity along with its units.
 readQuantity :: Read a => String -> Either String (SomeQuantity a)
 readQuantity s = case reads s of
                    [(n, s')] -> do Some u <- readUnit s'
                                    return $ SomeQuantity (MkQuantity n) u
-                   _         -> Left "readQuantity borked"
+                   _         -> Left "reads: no parse"
 
+-- | Parse a unit.
 readUnit :: String -> Either String (Some SUnit)
 readUnit s = expToSomeUnit <$> parseUnit universalSymbolTable s
 

@@ -33,6 +33,8 @@ module Data.UnitsOfMeasure.Singleton
     ) where
 
 import GHC.TypeLits
+import Data.Type.Equality
+import Unsafe.Coerce
 
 import Data.UnitsOfMeasure.Internal
 
@@ -46,6 +48,27 @@ data SUnit (u :: UnitSyntax Symbol) where
 data SList (xs :: [Symbol]) where
   SNil :: SList '[]
   SCons :: KnownSymbol x => proxy x -> SList xs -> SList (x ': xs)
+
+instance TestEquality SUnit where
+  testEquality (SUnit xs ys) (SUnit xs' ys') = case (testEquality xs xs', testEquality ys ys') of
+                                                 (Just Refl, Just Refl) -> Just Refl
+                                                 _                      -> Nothing
+
+instance TestEquality SList where
+  testEquality SNil SNil = Just Refl
+  testEquality (SCons px xs) (SCons py ys)
+    | Just Refl <- testEqualitySymbol px py
+    , Just Refl <- testEquality xs ys = Just Refl
+  testEquality _ _ = Nothing
+
+-- | Annoyingly, base doesn't appear to export enough stuff to make it
+-- possible to write a @TestEquality SSymbol@ instance, so we cheat.
+testEqualitySymbol :: forall proxy proxy' x y . (KnownSymbol x, KnownSymbol y)
+                   => proxy x -> proxy' y -> Maybe (x :~: y)
+testEqualitySymbol px py
+  | symbolVal px == symbolVal py = Just (unsafeCoerce Refl)
+  | otherwise                    = Nothing
+
 
 -- | Extract the runtime syntactic representation from a singleton unit
 forgetSUnit :: SUnit u -> UnitSyntax String

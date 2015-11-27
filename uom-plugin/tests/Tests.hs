@@ -172,6 +172,11 @@ tests = testGroup "uom-plugin"
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
     ]
+  , testGroup "read . show"
+    [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]
+    , testCase "1.2 m/s" $ read (show [u| 1.2 m/s |]) @?= [u| 1.2 m/s |]
+    , testCase "0"       $ read (show [u| 1       |]) @?= [u| 1       |]
+    ]
   ]
 
 
