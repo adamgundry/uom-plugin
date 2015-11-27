@@ -22,7 +22,7 @@ import Control.Monad (join)
 import GHC.TypeLits
 import Data.List (genericReplicate)
 import Data.Proxy
-import Data.Type.Equality (testEquality, (:~:)(..))
+import Data.Type.Equality ((:~:)(..))
 import Text.Parse.Units (parseUnit, universalSymbolTable, UnitExp(..))
 
 import Data.UnitsOfMeasure.Internal
@@ -48,7 +48,7 @@ instance (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a) => Read (Quantity a
 readWithUnit :: forall proxy a u . (Read a, KnownUnit u) => proxy u -> String -> Either String (Quantity a (Pack u))
 readWithUnit _ s = do
   SomeQuantity (q :: Quantity a _) v <- readQuantity s
-  case testEquality (unitSing :: SUnit u) v of
+  case testEquivalentSUnit (unitSing :: SUnit u) v of
     Just Refl -> Right q
     Nothing   -> Left ("wrong units: got " ++ show (forgetSUnit v))
 

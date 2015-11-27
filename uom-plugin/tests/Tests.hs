@@ -177,6 +177,11 @@ tests = testGroup "uom-plugin"
     , testCase "1.2 m/s" $ read (show [u| 1.2 m/s |]) @?= [u| 1.2 m/s |]
     , testCase "0"       $ read (show [u| 1       |]) @?= [u| 1       |]
     ]
+  , testGroup "read normalisation"
+    [ testCase "1 m/m"       $ read "[u| 1 m/m |]"       @?= [u| 1 |]
+    , testCase "-0.3 m s^-1" $ read "[u| -0.3 m s^-1 |]" @?= [u| -0.3 m/s |]
+    , testCase "42 s m s"    $ read "[u| 42 s m s |]"    @?= [u| 42 m s^2 |]
+    ]
   ]
 
 

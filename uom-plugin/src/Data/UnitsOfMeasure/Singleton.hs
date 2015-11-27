@@ -26,6 +26,7 @@ module Data.UnitsOfMeasure.Singleton
     , forgetSUnit
     , KnownUnit(..)
     , unitVal
+    , testEquivalentSUnit
 
       -- * Singletons for lists
     , SList(..)
@@ -33,6 +34,8 @@ module Data.UnitsOfMeasure.Singleton
     ) where
 
 import GHC.TypeLits
+import Data.List (foldl')
+import qualified Data.Map as Map
 import Data.Type.Equality
 import Unsafe.Coerce
 
@@ -68,6 +71,22 @@ testEqualitySymbol :: forall proxy proxy' x y . (KnownSymbol x, KnownSymbol y)
 testEqualitySymbol px py
   | symbolVal px == symbolVal py = Just (unsafeCoerce Refl)
   | otherwise                    = Nothing
+
+-- | Test whether two 'SUnit's represent the same units, up to the
+-- equivalence relation.  TODO: this currently uses 'unsafeCoerce',
+-- but in principle it should be possible to avoid it.
+testEquivalentSUnit :: SUnit u -> SUnit v -> Maybe (Pack u :~: Pack v)
+testEquivalentSUnit su sv
+  | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
+  | otherwise = Nothing
+
+-- | Calculate a normal form of a syntactic unit: a map from base unit
+-- names to non-zero integers.
+normaliseUnitSyntax :: UnitSyntax String -> Map.Map String Integer
+normaliseUnitSyntax (xs :/ ys) =
+    Map.filter (/= 0)
+        (foldl' (\ m x -> Map.insertWith (-) x 1 m)
+            (foldl' (\ m x -> Map.insertWith (+) x 1 m) Map.empty xs) ys)
 
 
 -- | Extract the runtime syntactic representation from a singleton unit
