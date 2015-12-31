@@ -127,12 +127,14 @@ parseUnitDecs = go
     go' u (',':xs) = ((u, BaseUnit) :) <$> go xs
     go' u ('=':xs) = let (d, ys) = break (== ',') xs
                      in case readNumber d of
-                          Just (ei, s) -> case parseUnit universalSymbolTable s of
-                                        Right e -> ((u, ConversionUnit (either fromInteger id ei) e) :) <$> go ys
-                                        _                -> Nothing
-                          _        -> case parseUnit universalSymbolTable d of
-                                        Right e -> ((u, DefinedUnit e) :) <$> go ys
-                                        Left  _ -> Nothing
+                          Just (ei, s)
+                            | not (all isSpace s) -- parse "x = 1" as DefinedUnit, not ConversionUnit
+                              -> case parseUnit universalSymbolTable s of
+                                   Right e -> ((u, ConversionUnit (either fromInteger id ei) e) :) <$> go ys
+                                   _                -> Nothing
+                          _   -> case parseUnit universalSymbolTable d of
+                                   Right e -> ((u, DefinedUnit e) :) <$> go ys
+                                   Left  _ -> Nothing
     go' _ _        = Nothing
 
 -- | Given a unit name and an optional definition, create an
@@ -193,7 +195,9 @@ declareDerivedUnit s d = case parseUnit universalSymbolTable d of
 -- This can also be written @['u'| kilobyte = 1024 byte |]@.
 -- See "Data.UnitsOfMeasure.Convert" for more information about conversions.
 declareConvertibleUnit :: String -> Rational -> String -> Q [Dec]
-declareConvertibleUnit derived r base = declareUnit derived (ConversionUnit r (Unit Nothing base))
+declareConvertibleUnit derived r base =  case parseUnit universalSymbolTable base of
+    Right e -> declareUnit derived (ConversionUnit r e)
+    Left _  -> reportError ("unable to parse convertible unit: " ++ base) >> return []
 
 
 -- | Read either an integer or a rational from a string, if possible,

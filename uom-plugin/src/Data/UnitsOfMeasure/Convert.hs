@@ -49,6 +49,11 @@
 -- You are likely to get unpleasant compiler error messages if you
 -- attempt to convert without the units being fully determined by type
 -- inference, or if the units do not have the same dimension.
+--
+-- If you wish to define a dimensionless unit that requires explicit
+-- conversion to @1@, such as radians, write @['u'| rad = 1 1 |]@.
+-- The syntax @['u'| dimensionless = 1 |]@ defines @dimensionless@ as
+-- a unit synonym for @1@ that does not require conversion.
 module Data.UnitsOfMeasure.Convert
     ( convert
     , ratio
