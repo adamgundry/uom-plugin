@@ -198,6 +198,7 @@ sqrt' (MkQuantity x) = MkQuantity (sqrt x)
 -- units, for example 'One' is represented as @[] ':/' []@ and
 -- @'Base' "m" '/:' 'Base' "s" ^: 2@ is represented as @["m"] ':/' ["s","s"]@.
 data UnitSyntax s = [s] :/ [s]
+  deriving (Eq, Show)
 
 -- | Pack up a syntactic representation of a unit as a unit.  For example:
 --
