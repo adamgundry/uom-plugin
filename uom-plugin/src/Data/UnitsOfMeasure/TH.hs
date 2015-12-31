@@ -145,6 +145,8 @@ declareUnit s ud = case ud of
                             instance HasCanonicalBaseUnit $(litT (strTyLit s))
                           |]
   DefinedUnit u      -> [d| type instance MkUnit $(litT (strTyLit s)) = $(reifyUnit u) |]
+  ConversionUnit _ (Unit Nothing s') | s == s'
+                     -> reportError ("cannot define cyclic convertible unit: " ++ s) >> return []
   ConversionUnit r u -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
                             instance HasCanonicalBaseUnit $(litT (strTyLit s)) where
                               type CanonicalBaseUnit $(litT (strTyLit s)) = $(reifyUnit u)
