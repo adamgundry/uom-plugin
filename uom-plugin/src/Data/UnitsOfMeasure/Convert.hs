@@ -60,6 +60,7 @@ module Data.UnitsOfMeasure.Convert
     , HasCanonicalBaseUnit(..)
       -- * Constraints
     , Good
+    , IsCanonical
     , HasCanonical
     , Convertible
     , ToCanonicalUnit
@@ -74,8 +75,8 @@ import GHC.TypeLits
 
 -- | Class to capture the dimensions to which base units belong.  For
 -- a canonical base unit, the class instance can be left empty.
-class {- (CanonicalBaseUnit (CanonicalBaseUnit b) ~ CanonicalBaseUnit b)
-    => -} HasCanonicalBaseUnit (b :: Symbol) where
+class IsCanonical (Unpack (CanonicalBaseUnit b))
+    => HasCanonicalBaseUnit (b :: Symbol) where
   -- | The canonical base unit for this base unit.  If @b@ is
   -- canonical, then @'CanonicalBaseUnit' b = b@.  Otherwise,
   -- @'CanonicalBaseUnit' b@ must itself be canonical.
@@ -106,6 +107,15 @@ type family HasCanonical (u :: UnitSyntax Symbol) :: Constraint where
 type family AllHasCanonical (xs :: [Symbol]) :: Constraint where
   AllHasCanonical '[] = ()
   AllHasCanonical (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical xs)
+
+-- | This constraint will be satisfied if all the base units in a
+-- syntactically represented unit are in their canonical form.
+type family IsCanonical (u :: UnitSyntax Symbol) :: Constraint where
+  IsCanonical (xs :/ ys) = (AllIsCanonical xs, AllIsCanonical ys)
+
+type family AllIsCanonical (xs :: [Symbol]) :: Constraint where
+  AllIsCanonical '[] = ()
+  AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ Base x, AllIsCanonical xs)
 
 
 conversionRatio :: forall proxy u . Good u

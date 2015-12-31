@@ -29,7 +29,7 @@ import ErrorTests
 declareBaseUnit "byte"
 declareDerivedUnit "bps" "byte / s"
 declareConvertibleUnit "kilobyte" 1024 "byte"
-declareConvertibleUnit "squiggle" 2 "mi/h"
+declareConvertibleUnit "squiggle" 2 "m/s"
 
 
 -- Some basic examples
