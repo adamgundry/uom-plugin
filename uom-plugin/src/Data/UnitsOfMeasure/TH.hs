@@ -145,7 +145,7 @@ declareUnit s ud = case ud of
   DefinedUnit u      -> [d| type instance MkUnit $(litT (strTyLit s)) = $(reifyUnit u) |]
   ConversionUnit r t -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
                             instance HasCanonicalBaseUnit $(litT (strTyLit s)) where
-                              type CanonicalBaseUnit $(litT (strTyLit s)) = $(litT (strTyLit t))
+                              type CanonicalBaseUnit $(litT (strTyLit s)) = Base $(litT (strTyLit t))
                               conversionBase _ = MkQuantity $(litE (rationalL (recip r)))
                           |]
 
