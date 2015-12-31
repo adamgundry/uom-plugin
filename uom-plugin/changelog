@@ -1,0 +1,14 @@
+-*-change-log-*-
+
+0.2.0.0 Adam Gundry <adam@well-typed.com> December 2015
+	* Add Data.UnitsOfMeasure.Read module and a Read instance for Quantity
+	* Make it possible to declare derived compound units
+	* Define litres, hectares, radians and steradians
+	* Prevent cyclic definitions of convertible units
+
+0.1.1.0 Adam Gundry <adam@well-typed.com> November 2015
+	* Add more conversion ratios (thanks to Joe Hermaszewski)
+	* Add Storable and NFData instances for Quantity (thanks to Marcin Mrotek)
+
+0.1.0.0 Adam Gundry <adam@well-typed.com> August 2015
+	* First public release
