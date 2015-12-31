@@ -108,7 +108,7 @@ uDec s = case parseUnitDecs s of
 
 data UnitDecl = BaseUnit
               | DefinedUnit    (UnitExp () String)
-              | ConversionUnit Rational String
+              | ConversionUnit Rational (UnitExp () String)
 
 -- | Parse a comma-separated list of unit declarations, for example:
 --
@@ -128,7 +128,7 @@ parseUnitDecs = go
     go' u ('=':xs) = let (d, ys) = break (== ',') xs
                      in case readNumber d of
                           Just (ei, s) -> case parseUnit universalSymbolTable s of
-                                        Right (Unit _ e :: UnitExp () String) -> ((u, ConversionUnit (either fromInteger id ei) e) :) <$> go ys
+                                        Right e -> ((u, ConversionUnit (either fromInteger id ei) e) :) <$> go ys
                                         _                -> Nothing
                           _        -> case parseUnit universalSymbolTable d of
                                         Right e -> ((u, DefinedUnit e) :) <$> go ys
@@ -143,9 +143,9 @@ declareUnit s ud = case ud of
                             instance HasCanonicalBaseUnit $(litT (strTyLit s))
                           |]
   DefinedUnit u      -> [d| type instance MkUnit $(litT (strTyLit s)) = $(reifyUnit u) |]
-  ConversionUnit r t -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
+  ConversionUnit r u -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
                             instance HasCanonicalBaseUnit $(litT (strTyLit s)) where
-                              type CanonicalBaseUnit $(litT (strTyLit s)) = Base $(litT (strTyLit t))
+                              type CanonicalBaseUnit $(litT (strTyLit s)) = $(reifyUnit u)
                               conversionBase _ = MkQuantity $(litE (rationalL (recip r)))
                           |]
 
@@ -187,13 +187,13 @@ declareDerivedUnit s d = case parseUnit universalSymbolTable d of
 --
 -- > type instance MkUnit "kilobyte" = Base "kilobyte"
 -- > instance HasCanonicalBaseUnit "kilobyte" where
--- >   type CanonicalBaseUnit "kilobyte" = "byte"
+-- >   type CanonicalBaseUnit "kilobyte" = Base "byte"
 -- >   conversionBase _ = [u| 1 % 1024 kilobyte/byte |]
 --
 -- This can also be written @['u'| kilobyte = 1024 byte |]@.
 -- See "Data.UnitsOfMeasure.Convert" for more information about conversions.
 declareConvertibleUnit :: String -> Rational -> String -> Q [Dec]
-declareConvertibleUnit derived r base = declareUnit derived (ConversionUnit r base)
+declareConvertibleUnit derived r base = declareUnit derived (ConversionUnit r (Unit Nothing base))
 
 
 -- | Read either an integer or a rational from a string, if possible,
