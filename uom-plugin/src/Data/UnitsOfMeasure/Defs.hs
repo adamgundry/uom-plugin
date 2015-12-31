@@ -36,15 +36,18 @@ import Data.UnitsOfMeasure
   , ohm = V / A
  |]
 
+-- SI derived units that require explicit conversion
+[u| rad = 1 1
+  , sr  = 1 1
+  |]
+
 -- Non-SI units accepted for use with them
 -- http://www.bipm.org/en/publications/si-brochure/chapter4.html
--- hectares and liters are unable to be defined at the moment due to
--- https://github.com/adamgundry/uom-plugin/issues/4
 [u| min = 60 s
   , h = 3600 s
   , d = 86400 s
-  , ha
-  , l
+  , ha = 10000 m^2
+  , l = 0.001 m^3
   , t = 1000 kg
   , au = 149597870700 m |]
 
