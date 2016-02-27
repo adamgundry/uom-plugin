@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Data.UnitsOfMeasure.Plugin.NormalForm
   ( Atom(..)
   , BaseUnit
@@ -189,3 +190,12 @@ substUnit :: TyVar -> NormUnit -> NormUnit -> NormUnit
 substUnit a v u = case Map.lookup (VarAtom a) $ _NormUnit u of
                     Nothing -> u
                     Just i  -> (v ^: i) *: leftover a u
+
+
+#if __GLASGOW_HASKELL__ > 710
+tyVarsOfType :: Type -> TyCoVarSet
+tyVarsOfType = tyCoVarsOfType
+
+tyVarsOfTypes :: [Type] -> TyCoVarSet
+tyVarsOfTypes = tyCoVarsOfTypes
+#endif

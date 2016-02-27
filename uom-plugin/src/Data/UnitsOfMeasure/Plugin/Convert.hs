@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Data.UnitsOfMeasure.Plugin.Convert
   ( UnitDefs(..)
   , unitKind
@@ -8,8 +9,13 @@ module Data.UnitsOfMeasure.Plugin.Convert
 
 import TyCon
 import Type
-import TypeRep
 import TcType
+
+#if __GLASGOW_HASKELL__ > 710
+import TyCoRep
+#else
+import TypeRep
+#endif
 
 import Data.List
 
@@ -43,7 +49,7 @@ isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon
 -- | Try to convert a type to a unit normal form; this does not check
 -- the type has kind 'Unit', and may fail even if it does.
 normaliseUnit :: UnitDefs -> Type -> Maybe NormUnit
-normaliseUnit uds ty | Just ty1 <- tcView ty = normaliseUnit uds ty1
+normaliseUnit uds ty | Just ty1 <- coreView ty = normaliseUnit uds ty1
 normaliseUnit _   (TyVarTy v)              = pure $ varUnit v
 normaliseUnit uds (TyConApp tc tys)
   | tc == unitOneTyCon  uds                = pure one
@@ -77,3 +83,9 @@ reifyUnit uds u | null xs && null ys = oneTy
     reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [s]
     reifyAtom (VarAtom  v)    = mkTyVarTy  v
     reifyAtom (FamAtom f tys) = mkTyConApp f tys
+
+
+#if __GLASGOW_HASKELL__ > 710
+promoteTyCon :: TyCon -> TyCon
+promoteTyCon = id
+#endif

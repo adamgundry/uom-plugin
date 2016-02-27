@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ > 710
+{-# LANGUAGE PatternSynonyms #-}
+#endif
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
@@ -23,7 +26,6 @@ import Coercion
 import DataCon
 import Type
 import TyCon
-import TypeRep
 import TysWiredIn
 
 import FastString
@@ -39,6 +41,12 @@ import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
+
+#if __GLASGOW_HASKELL__ > 710
+import TyCoRep
+#else
+import TypeRep
+#endif
 
 import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
 
@@ -116,7 +124,6 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
 
     collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
 
-    collectType _  (TyVarTy _)      = []
     collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
     collectType ct (TyConApp tc [a])
       | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
@@ -125,7 +132,7 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
     collectType ct (TyConApp _ as)  = concatMap (collectType ct) as
     collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
     collectType ct (ForAllTy _ t)   = collectType ct t
-    collectType _  (LitTy _)        = []
+    collectType _  _                = [] -- TyVarTy, LitTy from 7.10, plus CastTy and CoercionTy in 8.0
 
     unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
       where
@@ -193,6 +200,29 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq t1 t2   -> evByFiat "units" t1 t2
     IrredPred t
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
-      , tc == equivTyCon uds -> evByFiat "units" t1 t2 `EvCast`
-                                  TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
+      , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
     _                    -> error "evMagic"
+
+-- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by
+-- coercing bogus evidence of type @t1 ~ t2@ (or its heterogeneous
+-- variant, in GHC 8.0).
+mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
+#if __GLASGOW_HASKELL__ >= 800
+mkFunnyEqEvidence t t1 t2 = EvDFunApp (dataConWrapId heqDataCon) [typeKind t1, typeKind t2, t1, t2] [evByFiat "units" t1 t2]
+                       `EvCast` mkUnivCo (PluginProv "units") Representational (mkHEqPred t1 t2) t
+#else
+mkFunnyEqEvidence t t1 t2 = evByFiat "units" t1 t2
+                       `EvCast` TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
+#endif
+
+
+#if __GLASGOW_HASKELL__ >= 800
+pattern FunTy :: Type -> Type -> Type
+pattern FunTy t v = ForAllTy (Anon t) v
+
+mkEqPred :: Type -> Type -> Type
+mkEqPred = mkPrimEqPred
+
+mkHEqPred :: Type -> Type -> Type
+mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
+#endif

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
 
@@ -7,6 +8,11 @@
 
 {-# OPTIONS_GHC -fdefer-type-errors #-}
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+
+#if __GLASGOW_HASKELL__ > 710
+{-# OPTIONS_GHC -fno-warn-deferred-type-errors #-}
+#endif
+
 module ErrorTests where
 
 import Data.UnitsOfMeasure

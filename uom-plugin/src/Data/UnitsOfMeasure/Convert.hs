@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -9,6 +10,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+
+#if __GLASGOW_HASKELL__ > 710
+{-# LANGUAGE UndecidableSuperClasses #-}
+#endif
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
