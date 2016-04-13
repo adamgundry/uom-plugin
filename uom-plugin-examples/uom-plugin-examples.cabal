@@ -10,6 +10,6 @@ cabal-version:       >=1.10
 
 executable Examples
   main-is:             Examples.hs
-  build-depends:       base >=4.7 && <5, uom-plugin >= 0.1 && < 0.2
+  build-depends:       base >=4.7 && <5, uom-plugin >= 0.1 && < 0.3
   default-language:    Haskell2010
   ghc-options:         -dcore-lint
