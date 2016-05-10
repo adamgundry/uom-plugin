@@ -1,5 +1,8 @@
 -*-change-log-*-
 
+0.2.0.1 Adam Gundry <adam@well-typed.com> May 2016
+	* Support building on GHC 8.0
+
 0.2.0.0 Adam Gundry <adam@well-typed.com> December 2015
 	* Add Data.UnitsOfMeasure.Read module and a Read instance for Quantity
 	* Make it possible to declare derived compound units

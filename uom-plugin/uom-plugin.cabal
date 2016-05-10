@@ -1,5 +1,5 @@
 name:                uom-plugin
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            Units of measure as a GHC typechecker plugin
 category:            Type System
 description:         A prototype typechecker plugin for GHC with support for units of measure
@@ -10,7 +10,7 @@ maintainer:          Adam Gundry <adam@well-typed.com>
 homepage:            https://github.com/adamgundry/uom-plugin
 bug-reports:         https://github.com/adamgundry/uom-plugin/issues
 stability:           experimental
-copyright:           Copyright (c) 2014-2015, Adam Gundry
+copyright:           Copyright (c) 2014-2016, Adam Gundry
 build-type:          Simple
 cabal-version:       >=1.10
 description:
