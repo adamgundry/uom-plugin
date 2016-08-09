@@ -7,12 +7,15 @@ The `uom-plugin` library adds support for units of measure to GHC using the new 
 Installation
 ============
 
-The library works on GHC 7.10.1, and may also work on GHC HEAD if you're lucky.
+The library works on GHC 7.10.3 and GHC 8.0.1.
 
-    git clone git@github.com:adamgundry/uom-plugin.git
-    cd uom-plugin/uom-plugin
+    git clone https://github.com/adamgundry/uom-plugin.git
     cabal sandbox init
-    cabal install
+    (cd uom-plugin && cabal sandbox init --sandbox=../.cabal-sandbox && cabal install)
+    cd uom-plugin-examples/
+    cabal sandbox init --sandbox=../.cabal-sandbox
+    cabal build
+    dist/build/Examples/Examples
 
 
 [![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
