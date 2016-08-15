@@ -10,6 +10,7 @@ Installation
 The library works on GHC 7.10.3 and GHC 8.0.1.
 
     git clone https://github.com/adamgundry/uom-plugin.git
+    cd uom-plugin
     cabal sandbox init
     (cd uom-plugin && cabal sandbox init --sandbox=../.cabal-sandbox && cabal install)
     cd uom-plugin-examples/
