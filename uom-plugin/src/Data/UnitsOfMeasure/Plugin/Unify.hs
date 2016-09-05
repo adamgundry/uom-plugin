@@ -2,7 +2,9 @@ module Data.UnitsOfMeasure.Plugin.Unify
   ( SubstItem(..)
   , substsSubst
   , substsUnitEquality
-  , UnitEquality
+  , UnitEquality(..)
+  , toUnitEquality
+  , fromUnitEquality
   , SimplifyState(..)
   , SimplifyResult(..)
   , simplifyUnits
@@ -11,7 +13,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
 import FastString
 import Name
 import Outputable
-import TcRnMonad ( Ct, isGiven, ctEvidence )
+import TcRnMonad ( Ct, isGiven, ctEvidence, ctEvPred )
 import TcType
 import Type
 import Var
@@ -45,7 +47,7 @@ substsSubst :: TySubst -> TySubst -> TySubst
 substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
 
 substsUnitEquality :: TySubst -> UnitEquality -> UnitEquality
-substsUnitEquality s (ct, u, v) = (ct, substsUnit s u, substsUnit s v)
+substsUnitEquality s (UnitEquality ct u v) = UnitEquality ct (substsUnit s u) (substsUnit s v)
 
 extendSubst :: SubstItem -> TySubst -> TySubst
 extendSubst si s = si : substsSubst [si] s
@@ -68,8 +70,8 @@ instance Outputable UnifyResult where
 -- substitution.  The 'Ct' is the equality between the non-normalised
 -- (and perhaps less substituted) unit type expressions.
 unifyUnits :: UnitDefs -> UnitEquality -> TcPluginM UnifyResult
-unifyUnits uds (ct, u0, v0) = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
-                                 unifyOne uds ct [] [] [] (u0 /: v0)
+unifyUnits uds (UnitEquality ct u0 v0) = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+                                            unifyOne uds ct [] [] [] (u0 /: v0)
 
 unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> TySubst -> NormUnit -> TcPluginM UnifyResult
 unifyOne uds ct tvs subst unsubst u
@@ -111,7 +113,28 @@ unifyOne uds ct tvs subst unsubst u
             return $ mkTcTyVar name kind vanillaSkolemTv
 
 
-type UnitEquality = (Ct, NormUnit, NormUnit)
+data UnitEquality = UnitEquality Ct NormUnit NormUnit
+
+instance Outputable UnitEquality where
+  ppr (UnitEquality ct u v) = text "UnitEquality" $$ ppr ct $$ ppr u $$ ppr v
+
+-- Extract the unit equality constraints
+toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
+toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
+    EqPred NomEq t1 t2
+      | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
+      , Just u1 <- normaliseUnit uds t1
+      , Just u2 <- normaliseUnit uds t2 -> Left (UnitEquality ct u1 u2)
+    IrredPred t
+      | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
+      , tc == equivTyCon uds
+      , Just u1 <- normaliseUnit uds t1
+      , Just u2 <- normaliseUnit uds t2 -> Left (UnitEquality ct u1 u2)
+    _                                   -> Right ct
+
+fromUnitEquality :: UnitEquality -> Ct
+fromUnitEquality (UnitEquality ct _ _) = ct
+
 
 data SimplifyState
   = SimplifyState { simplifyFreshVars :: [TyVar]

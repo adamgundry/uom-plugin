@@ -71,10 +71,10 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
         tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
-        return $ case sr of
+        case sr of
           -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
-          Simplified _    -> TcPluginOk [] []
-          Impossible eq _ -> TcPluginContradiction [fromUnitEquality eq]
+          Simplified _    -> return $ TcPluginOk [] []
+          Impossible eq _ -> reportContradiction uds eq
   where
     foo :: Ct -> Either UnitEquality Ct -> Either (Ct, UnitEquality) Ct
     foo ct (Left x)    = Left (ct, x)
@@ -96,13 +96,27 @@ unitsOfMeasureSolver uds givens _deriveds wanteds = do
         sr <- simplifyUnits uds unit_givens
         tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
         case sr of
-          Impossible eq _ -> return $ TcPluginContradiction [fromUnitEquality eq]
+          Impossible eq _ -> reportContradiction uds eq
           Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
                                 tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
                                 case sr' of
-                                  Impossible eq _ -> return $ TcPluginContradiction [fromUnitEquality $ substsUnitEquality (simplifyUnsubst ss) eq]
+                                  Impossible _eq _ -> return $ TcPluginOk [] [] -- Don't report a contradiction, see #22
                                   Simplified ss'  -> TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
                                                          <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) (substsSubst (simplifyUnsubst ss) (simplifySubst ss')))
+
+
+reportContradiction :: UnitDefs -> UnitEquality -> TcPluginM TcPluginResult
+reportContradiction uds eq = TcPluginContradiction . pure <$> fromUnitEqualityForContradiction uds eq
+
+-- See #22 for why we need this
+fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> TcPluginM Ct
+fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredType $ ctEvPred $ ctEvidence ct of
+    EqPred NomEq _ _ -> return ct
+    _ | isGivenCt ct -> newGivenCt  (ctLoc ct) (mkEqPred u' v') (mkFunnyEqEvidence (ctPred ct) u' v')
+      | otherwise    -> newWantedCt (ctLoc ct) (mkEqPred u' v')
+  where
+    u' = reifyUnit uds u
+    v' = reifyUnit uds v
 
 
 substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
@@ -150,24 +164,6 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
 
     promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
     cons_tycon = promoteDataCon consDataCon
-
-
--- Extract the unit equality constraints
-toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
-toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
-    EqPred NomEq t1 t2
-      | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
-      , Just u1 <- normaliseUnit uds t1
-      , Just u2 <- normaliseUnit uds t2 -> Left (ct, u1, u2)
-    IrredPred t
-      | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
-      , tc == equivTyCon uds
-      , Just u1 <- normaliseUnit uds t1
-      , Just u2 <- normaliseUnit uds t2 -> Left (ct, u1, u2)
-    _                                   -> Right ct
-
-fromUnitEquality :: UnitEquality -> Ct
-fromUnitEquality (ct, _, _) = ct
 
 
 lookupUnitDefs :: TcPluginM UnitDefs
