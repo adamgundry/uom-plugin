@@ -63,3 +63,31 @@ test-suite test-uom-plugin
   hs-source-dirs:      tests
   default-language:    Haskell2010
   ghc-options:         -O0
+
+test-suite hlint
+  type:                exitcode-stdio-1.0
+  main-is:             HLint.hs
+  hs-source-dirs:      hlint
+                       src
+                       tests
+  ghc-options:         -Wall -rtsopts -threaded -with-rtsopts=-N
+  build-depends:       base,
+                       hlint
+  other-modules:
+  other-modules:       Data.UnitsOfMeasure,
+                       Data.UnitsOfMeasure.Convert,
+                       Data.UnitsOfMeasure.Defs,
+                       Data.UnitsOfMeasure.Internal,
+                       Data.UnitsOfMeasure.Plugin,
+                       Data.UnitsOfMeasure.Read,
+                       Data.UnitsOfMeasure.Show,
+                       Data.UnitsOfMeasure.Singleton,
+                       Data.UnitsOfMeasure.Tutorial
+                       Data.UnitsOfMeasure.Plugin.Convert,
+                       Data.UnitsOfMeasure.Plugin.NormalForm,
+                       Data.UnitsOfMeasure.Plugin.Unify,
+                       Data.UnitsOfMeasure.TH,
+                       TcPluginExtras
+  default-language: Haskell2010
+
+
