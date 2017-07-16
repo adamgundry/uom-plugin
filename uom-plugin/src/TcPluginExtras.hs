@@ -7,7 +7,6 @@ module TcPluginExtras
   , newGivenCt
   ) where
 
-import TcPluginM  ( TcPluginM )
 import TcEvidence ( EvTerm )
 import TcRnTypes  ( mkNonCanonical )
 import TcRnMonad  ( Ct, CtLoc )
@@ -18,9 +17,9 @@ import GHC.TcPluginM.Extra
 #if __GLASGOW_HASKELL__ < 711
 import Unique     ( Unique )
 import qualified TcRnMonad
-import TcPluginM ( unsafeTcPluginTcM )
+import TcPluginM ( TcPluginM, unsafeTcPluginTcM )
 #else
-import TcPluginM ( newUnique )
+import TcPluginM ( TcPluginM, newUnique )
 #endif
 
 
