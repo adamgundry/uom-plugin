@@ -1,12 +1,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -34,7 +31,7 @@ module Data.UnitsOfMeasure.Show
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import Data.List (intercalate, group)
+import Data.List (group)
 
 instance (Show a, KnownUnit (Unpack u)) => Show (Quantity a u) where
   show x = "[u| " ++ showQuantity x ++ " |]"
