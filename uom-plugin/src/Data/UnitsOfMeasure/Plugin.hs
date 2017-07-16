@@ -56,10 +56,12 @@ plugin :: Plugin
 plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
 
 uomPlugin :: TcPlugin
-uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
-                                               , tcPluginSolve = unitsOfMeasureSolver
-                                               , tcPluginStop  = const $ return ()
-                                               }
+uomPlugin = tracePlugin
+                "uom-plugin"
+                TcPlugin { tcPluginInit  = lookupUnitDefs
+                         , tcPluginSolve = unitsOfMeasureSolver
+                         , tcPluginStop  = const $ return ()
+                         }
 
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
