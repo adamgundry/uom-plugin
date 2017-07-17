@@ -138,6 +138,9 @@ install:
       ;;
   esac
   set +ex
+  
+before_script: cd uom-plugin
+
 script:
 - |
   set -ex
