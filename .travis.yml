@@ -63,31 +63,6 @@ matrix:
     compiler: ": #stack nightly"
     addons: {apt: {packages: [libgmp-dev]}}
 
-  # Build on macOS in addition to Linux
-  - env: BUILD=stack ARGS=""
-    compiler: ": #stack default osx"
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-3"
-    compiler: ": #stack 7.10.2 osx"
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3 osx"
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-7"
-    compiler: ": #stack 8.0.1 osx"
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver lts-8"
-    compiler: ": #stack 8.0.2 osx"
-    os: osx
-
-  - env: BUILD=stack ARGS="--resolver nightly"
-    compiler: ": #stack nightly osx"
-    os: osx
-
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
   - env: BUILD=stack ARGS="--resolver nightly"
