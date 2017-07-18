@@ -13,6 +13,10 @@ stability:           experimental
 copyright:           Copyright (c) 2014-2016, Adam Gundry
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:
+  GHC == 7.10.3,
+  GHC == 8.0.1,
+  GHC == 8.0.2
 description:
 
     The @uom-plugin@ library adds support for units of measure to GHC
@@ -70,8 +74,14 @@ test-suite hlint
   hs-source-dirs:      hlint
                        src
                        tests
-  ghc-options:         -Wall -rtsopts -threaded -with-rtsopts=-N
-  build-depends:       base,
+  ghc-options:         -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
+  build-depends:       base >=4.7 && <5,
+                       deepseq >=1.3 && <1.5,
+                       ghc >= 7.9 && <8.2,
+                       ghc-tcplugins-extra >=0.1 && <0.3,
+                       template-haskell >=2.9 && <2.12,
+                       containers >=0.5 && <0.6,
+                       units-parser >=0.1 && <0.2,
                        hlint
   other-modules:       Data.UnitsOfMeasure,
                        Data.UnitsOfMeasure.Convert,
