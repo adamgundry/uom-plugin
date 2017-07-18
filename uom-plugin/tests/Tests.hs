@@ -16,6 +16,7 @@ import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
+import Control.Monad (unless)
 import Control.Exception
 import Data.List
 
@@ -219,5 +220,5 @@ tests = testGroup "uom-plugin"
 -- lists of substrings.
 throws :: a -> [[String]] -> Assertion
 throws v xs =
-    (evaluate v >> assertFailure "No exception!")
-  `catch` \ (e :: SomeException) -> if any (all (`isInfixOf` show e)) xs then return () else throw e
+    (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
+        unless (any (all (`isInfixOf` show e)) xs) $ throw e
