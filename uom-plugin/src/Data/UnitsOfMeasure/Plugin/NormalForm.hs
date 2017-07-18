@@ -52,7 +52,10 @@ type BaseUnit = FastString
 -- | An atom in the normal form is either a base unit, a variable or a
 -- stuck type family application (but not one of the built-in type
 -- families that correspond to group operations).
-data Atom = BaseAtom Type | VarAtom TyVar | FamAtom TyCon [Type] deriving Eq
+data Atom = BaseAtom Type | VarAtom TyVar | FamAtom TyCon [Type]
+
+instance Eq Atom where
+  a == b = a == b
 
 -- TODO: using cmpTypes here probably isn't ideal, but does it matter?
 instance Ord Atom where
