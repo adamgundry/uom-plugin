@@ -5,7 +5,9 @@ import System.Exit (exitFailure, exitSuccess)
 
 arguments :: [String]
 arguments =
-    [ "src"
+    [ "lint"
+    , "--ignore=Parse error"
+    , "src"
     , "tests"
     , "hlint"
     ]
