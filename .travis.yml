@@ -47,16 +47,16 @@ matrix:
   # https://github.com/hvr/multi-ghc-travis
 
   # The Cabal builds.
-  - env: BUILD=cabal CABALVER=1.22 GHCVER=7.10.3
+  - env: BUILD=cabal CABALVER=1.22 GHCVER=7.10.3 HAPPYVER=1.19.5 ALEXVER=3.1.7
     addons: {apt: {packages: [ghc-ppa-tools,cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
 
-  - env: BUILD=cabal CABALVER=1.24 GHCVER=8.0.1
+  - env: BUILD=cabal CABALVER=1.24 GHCVER=8.0.1 HAPPYVER=1.19.5 ALEXVER=3.1.7
     addons: {apt: {packages: [ghc-ppa-tools,cabal-install-1.24,ghc-8.0.1], sources: [hvr-ghc]}}
 
-  - env: BUILD=cabal CABALVER=head GHCVER=8.0.2
+  - env: BUILD=cabal CABALVER=head GHCVER=8.0.2 HAPPYVER=1.19.5 ALEXVER=3.1.7
     addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-8.0.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=cabal CABALVER=head GHCVER=head
+  - env: BUILD=cabal CABALVER=head GHCVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
     addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-head], sources: [hvr-ghc]}}
 
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
