@@ -43,6 +43,7 @@ before_install:
  - PKGNAME='uom-plugin'
 
 install:
+ - cd uom-plugin
  - cabal --version
  - echo "$(${HC} --version) [$(${HC} --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - BENCH=${BENCH---enable-benchmarks}
