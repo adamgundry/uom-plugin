@@ -18,6 +18,7 @@ arguments =
     , "--ignore=Use fewer imports" 
     , "--ignore=Redundant $" 
     , "--ignore=Use <$>" 
+    , "--ignore=Redundant compare"
     , "src"
     , "tests"
     , "hlint"
