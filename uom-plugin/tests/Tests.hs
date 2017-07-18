@@ -51,7 +51,7 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
   where
     _G = [u| 6.67384e-11 N*m^2/kg^2 |]
 
-sum' xs = foldr (+:) zero xs
+sum' = foldr (+:) zero
 mean xs = sum' xs /: mk (genericLength xs)
 
 foo x y = x *: y +: y *: x
@@ -117,7 +117,10 @@ baf qa qb = baz qa qb undefined
 
 -- Inferring this type used to lead to unit equations with occur-check
 -- failures, because it involves things like Pack (Unpack u) ~ u
-z q = convert q
+z :: forall a (u :: Unit) (v :: Unit).  (Fractional a, Convertible u v)
+  => Quantity a u
+  -> Quantity a v
+z = convert
 
 -- Pattern splices are supported, albeit with restricted types
 patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
