@@ -13,15 +13,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Show
 
 import Data.List
 
 
 -- Declaring some base units and derived units
-[u| ft = 0.3048 m, kg, m, s,
-    N = kg * m/s^2
-  |]
+[u| ft = 0.3048 m, kg, m, s, km, N = kg * m/s^2 |]
 
 -- An integer constant quantity with units
 myMass = [u| 65 kg |]
@@ -78,7 +77,32 @@ tenMetresInFeet = convert [u| 10m |]
 anotherConversion :: Quantity Double [u| m*m |]
 anotherConversion = convert [u| 5 ft^2 |]
 
+-- The radius of Earth as a sphere.
+radiusOfEarth :: Quantity Double [u| km |]
+radiusOfEarth = [u| 6371 km |]
 
-main = do print myMass
-          print forceOnGround
-          print tenMetresInFeet
+-- The circumference of Earth.
+circumferenceOfEarth :: Quantity Double [u| km |]
+circumferenceOfEarth = 2 * pi *: radiusOfEarth
+
+-- A degree of longitude at the equator as a distance.
+lngDegree :: Quantity Double [u| km |]
+lngDegree = circumferenceOfEarth /: 360
+
+-- A minute of longitude at the equator as a distance.
+lngMinute :: Quantity Double [u| km |]
+lngMinute = lngDegree /: 60
+
+-- A second of longitude at the equator as a distance.
+lngSecond :: Quantity Double [u| m |]
+lngSecond = convert $ lngMinute /: 60
+
+main = do
+  print myMass
+  print forceOnGround
+  print tenMetresInFeet
+  putStrLn $ "Earth radius: " ++ show radiusOfEarth
+  putStrLn $ "Earth circumference: " ++ show circumferenceOfEarth
+  putStrLn $ "At equator, a degree of longitude: " ++ show lngDegree
+  putStrLn $ "At equator, a minute of longitude: " ++ show lngMinute
+  putStrLn $ "At equator, a second of longitude: " ++ show lngSecond
