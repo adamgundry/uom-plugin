@@ -125,6 +125,7 @@ install:
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
   set -ex
+  cd uom-plugin
   case "$BUILD" in
     stack)
       stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
@@ -138,8 +139,6 @@ install:
       ;;
   esac
   set +ex
-  
-before_script: cd uom-plugin
 
 script:
 - |
