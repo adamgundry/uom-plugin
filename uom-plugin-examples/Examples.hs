@@ -8,8 +8,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Show
 
 import Data.List
