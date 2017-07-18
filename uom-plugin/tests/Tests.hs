@@ -118,10 +118,13 @@ baf qa qb = baz qa qb undefined
 
 -- Inferring this type used to lead to unit equations with occur-check
 -- failures, because it involves things like Pack (Unpack u) ~ u
-z :: forall a (u :: Unit) (v :: Unit).  (Fractional a, Convertible u v)
-  => Quantity a u
-  -> Quantity a v
-z = convert
+-- The type signature is intentionally left off here to check that the
+-- compiler can infer it.
+-- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible u v)
+--   => Quantity a u
+--   -> Quantity a v
+{-# ANN z "HLint: ignore Eta reduce" #-}
+z q = convert q
 
 -- Pattern splices are supported, albeit with restricted types
 patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
