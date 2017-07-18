@@ -73,7 +73,6 @@ test-suite hlint
   ghc-options:         -Wall -rtsopts -threaded -with-rtsopts=-N
   build-depends:       base,
                        hlint
-  other-modules:
   other-modules:       Data.UnitsOfMeasure,
                        Data.UnitsOfMeasure.Convert,
                        Data.UnitsOfMeasure.Defs,
