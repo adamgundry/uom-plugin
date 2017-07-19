@@ -40,10 +40,10 @@ lngMinuteInNM:: Quantity Double [u| NM |]
 lngMinuteInNM = convert lngMinute
 
 lngMinuteInNMRounded:: Quantity Integer [u| NM |]
-lngMinuteInNMRounded = MkQuantity $ round $ unQuantity lngMinuteInNM
+lngMinuteInNMRounded = MkQuantity . round . unQuantity $ lngMinuteInNM
 
 lngMinuteInNMCareless :: Quantity Integer [u| NM |]
-lngMinuteInNMCareless = MkQuantity $ round $ unQuantity lngMinute
+lngMinuteInNMCareless = MkQuantity . round . unQuantity $ lngMinute
 
 lngMinuteInNMRational :: Quantity Rational [u| NM |]
 lngMinuteInNMRational = convert $ toRational' lngMinute
@@ -66,8 +66,8 @@ dump = do
   putStrLn $ "  minute : " ++ show lngMinute
   putStrLn $ "  minute : " ++ show lngMinuteInNM
   putStrLn $ "  minute : " ++ show lngMinuteInNMRounded ++ ", NM rounded to NM"
-  putStrLn $ "  minute : " ++ show lngMinuteInNMCareless ++ ", km rounded carelessly as if NM"
+  putStrLn $ "  minute : " ++ show lngMinuteInNMCareless ++ ", km rounded carelessly as if NM, there's no type-safety with MkQuantity . round . unQuantity"
   putStrLn $ "  minute : " ++ show lngMinuteInNMRational ++ ", Double NM -> Rational NM"
   putStrLn ""
-  putStrLn $ "  second (m): " ++ show lngSecond
-  putStrLn $ "  second (ft): " ++ show lngSecondInFeet
+  putStrLn $ "  second : " ++ show lngSecond
+  putStrLn $ "  second : " ++ show lngSecondInFeet
