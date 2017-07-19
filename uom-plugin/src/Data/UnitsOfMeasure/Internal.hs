@@ -42,6 +42,9 @@ module Data.UnitsOfMeasure.Internal
     , recip'
     , fromRational'
 
+      -- * Unit-safe 'Real' operations
+    , toRational'
+
       -- * Unit-safe 'Floating' operations
     , sqrt'
 
@@ -186,6 +189,10 @@ recip' (MkQuantity x) = MkQuantity (recip x)
 -- | Convert a 'Rational' quantity into any 'Fractional' type ('fromRational').
 fromRational' :: Fractional a => Quantity Rational u -> Quantity a u
 fromRational' (MkQuantity x) = MkQuantity (fromRational x)
+
+-- | Convert any 'Real' quantity into a 'Rational' type ('toRational').
+toRational' :: Real a => Quantity a u -> Quantity Rational u
+toRational' (MkQuantity x) = MkQuantity (toRational x)
 
 
 -- | Taking the square root ('sqrt') of a quantity requires its units
