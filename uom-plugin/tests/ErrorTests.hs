@@ -69,3 +69,46 @@ given3_errors = [ [ "Could not deduce (a ~ Base \"s\")"
                 , [ "Could not deduce: Base \"s\" ~ a"
                   , "from the context: (a ^: 2) ~ (b ^: 3)" ]
                 ]
+
+op_a1 :: Quantity Double [u| m |]
+op_a1 = (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Double (Base "m")))
+
+op_a2 :: Quantity Double [u| m |]
+op_a2 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Double (Base "m")))
+
+op_a3 :: Quantity Double [u| m |]
+op_a3 = (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Double (Base "m")))
+
+op_b1 :: Quantity Int [u| m |]
+op_b1 = (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Int (Base "m")))
+
+op_b2 :: Quantity Int [u| m |]
+op_b2 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Int (Base "m")))
+
+op_b3 :: Quantity Int [u| m |]
+op_b3 = (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Int (Base "m")))
+
+op_c1 :: Quantity Integer [u| m |]
+op_c1 = (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Integer (Base "m")))
+
+op_c2 :: Quantity Integer [u| m |]
+op_c2 = (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Integer (Base "m")))
+
+op_c3 :: Quantity Integer [u| m |]
+op_c3 = (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Integer (Base "m")))
+
+op_d1 :: Quantity Rational [u| m |]
+op_d1 = (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Rational (Base "m")))
+
+op_d2 :: Quantity Rational [u| m |]
+op_d2 = (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Rational (Base "m")))
+
+op_d3 :: Quantity Rational [u| m |]
+op_d3 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Rational (Base "m")))
+
+op_errors :: String -> String -> String -> [[String]]
+op_errors a b c =
+  [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
+    , "Expected type: Quantity " ++ c ++ " (Base \"m\")"
+    ]
+  ]

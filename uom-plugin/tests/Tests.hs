@@ -173,6 +173,55 @@ tests = testGroup "uom-plugin"
     , testCase "polymorphic zero"        $ [u| 0 |] @?= [u| 0 m |]
     , testCase "polymorphic frac zero"   $ [u| 0.0 |] @?= [u| 0.0 N / m |]
     ]
+  , testGroup "Literal 1 (*:) Quantity _ u"
+    [ testCase "_ = Double"
+        $ 1 *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ 1 *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Integer"
+        $ 1 *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational"
+        $ 1 *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    ]
+  , testGroup "(1 :: Quantity _ One) (*:) Quantity _ u"
+    [ testCase "_ = Double"
+        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Integer"
+        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    ]
+  , testGroup "errors when a /= b, (1 :: Quantity a One) (*:) Quantity b u"
+    [ testCase "a = Int, b = Double"
+        $ op_a1 `throws` op_errors "Double" "Int" "Int"
+    , testCase "a = Integer, b = Double"
+        $ op_a2 `throws` op_errors "Double" "Integer" "Integer"
+    , testCase "a = Rational, b = Double"
+        $ op_a3 `throws` op_errors "Double" "GHC.Real.Ratio Integer" "Rational"
+
+    , testCase "a = Double, b = Int"
+        $ op_b1 `throws` op_errors "Int" "Double" "Double"
+    , testCase "a = Integer, b = Int"
+        $ op_b2 `throws` op_errors "Int" "Integer" "Integer"
+    , testCase "a = Rational, b = Int"
+        $ op_b3 `throws` op_errors "Int" "GHC.Real.Ratio Integer" "Rational"
+
+    , testCase "a = Double, b = Integer"
+        $ op_c1 `throws` op_errors "Integer" "Double" "Double"
+    , testCase "a = Int, b = Integer"
+        $ op_c2 `throws` op_errors "Integer" "Int" "Int"
+    , testCase "a = Rational, b = Integer"
+        $ op_c3 `throws` op_errors "Integer" "GHC.Real.Ratio Integer" "Rational"
+
+    , testCase "a = Double, b = Rational"
+        $ op_d1 `throws` op_errors "GHC.Real.Ratio Integer" "Double" "Double"
+    , testCase "a = Int, b = Rational"
+        $ op_d2 `throws` op_errors "GHC.Real.Ratio Integer" "Int" "Int"
+    , testCase "a = Integer, b = Rational"
+        $ op_d3 `throws` op_errors "GHC.Real.Ratio Integer" "Integer" "Integer"
+    ]
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
     , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
