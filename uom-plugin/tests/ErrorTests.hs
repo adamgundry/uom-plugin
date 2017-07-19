@@ -108,7 +108,13 @@ op_d3 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Rational (Base "
 
 op_errors :: String -> String -> String -> [[String]]
 op_errors a b c =
+#if __GLASGOW_HASKELL__ > 710 
   [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
     , "Expected type: Quantity " ++ c ++ " (Base \"m\")"
     ]
   ]
+#else
+  [ [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
+    ]
+  ]
+#endif
