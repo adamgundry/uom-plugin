@@ -13,11 +13,14 @@
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Internal (fromRational')
 import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
 import Control.Exception
 import Data.List
+import Data.Ratio ((%))
+import GHC.Real (Ratio(..))
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -180,8 +183,14 @@ tests = testGroup "uom-plugin"
         $ 1 *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
     , testCase "_ = Integer"
         $ 1 *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
-    , testCase "_ = Rational"
+    , testCase "_ = Rational, 1 *: [u| 1 m |]"
         $ 1 *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, mk (1 % 1) *: [u| 1 m |]"
+        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, 1 *: [u| 1 % 1 m |]"
+        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, mk (1 % 1) *: [u| 1 % 1 m |]"
+        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
     ]
   , testGroup "(1 :: Quantity _ One) (*:) Quantity _ u"
     [ testCase "_ = Double"
