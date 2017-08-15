@@ -213,8 +213,11 @@ mkFunnyEqEvidence t t1 t2 = evByFiat "units" t1 t2
 
 
 #if __GLASGOW_HASKELL__ >= 800
+
+#if __GLASGOW_HASKELL__ < 802
 pattern FunTy :: Type -> Type -> Type
 pattern FunTy t v = ForAllTy (Anon t) v
+#endif
 
 mkEqPred :: Type -> Type -> Type
 mkEqPred = mkPrimEqPred
