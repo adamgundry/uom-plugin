@@ -13,12 +13,15 @@
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Internal (fromRational')
 import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
 import Control.Monad (unless)
 import Control.Exception
 import Data.List
+import Data.Ratio ((%))
+import GHC.Real (Ratio(..))
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -179,6 +182,54 @@ tests = testGroup "uom-plugin"
     , testCase "tricky generalisation"   $ tricky [u| 2 s |]               @?= ([u| 6 m s |], [u| 10 kg s |])
     , testCase "polymorphic zero"        $ [u| 0 |] @?= [u| 0 m |]
     , testCase "polymorphic frac zero"   $ [u| 0.0 |] @?= [u| 0.0 N / m |]
+    ]
+  , testGroup "Literal 1 (*:) Quantity _ u"
+    [ testCase "_ = Double"
+        $ 1 *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ 1 *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Integer"
+        $ 1 *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, 1 *: [u| 1 m |]"
+        $ 1 *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, mk (1 % 1) *: [u| 1 m |]"
+        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, 1 *: [u| 1 % 1 m |]"
+        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Rational, mk (1 % 1) *: [u| 1 % 1 m |]"
+        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    ]
+  , testGroup "(1 :: Quantity _ One) (*:) Quantity _ u"
+    [ testCase "_ = Double"
+        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Integer"
+        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+    , testCase "_ = Int"
+        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+    ]
+  , testGroup "errors when a /= b, (1 :: Quantity a One) (*:) Quantity b u"
+    [ testGroup "b = Double"
+      [ testCase "a = Int" $ op_a1 `throws` op_errors "Double" "Int" "Int"
+      , testCase "a = Integer" $ op_a2 `throws` op_errors "Double" "Integer" "Integer"
+      , testCase "a = Rational" $ op_a3 `throws` op_errors "Double" "GHC.Real.Ratio Integer" "Rational"
+      ]
+    , testGroup "b = Int"
+      [ testCase "a = Double" $ op_b1 `throws` op_errors "Int" "Double" "Double"
+      , testCase "a = Integer" $ op_b2 `throws` op_errors "Int" "Integer" "Integer"
+      , testCase "a = Rational" $ op_b3 `throws` op_errors "Int" "GHC.Real.Ratio Integer" "Rational"
+      ]
+    , testGroup "b = Integer"
+      [ testCase "a = Double" $ op_c1 `throws` op_errors "Integer" "Double" "Double"
+      , testCase "a = Int" $ op_c2 `throws` op_errors "Integer" "Int" "Int"
+      , testCase "a = Rational" $ op_c3 `throws` op_errors "Integer" "GHC.Real.Ratio Integer" "Rational"
+      ]
+    , testGroup "b = Rational"
+      [ testCase "a = Double" $ op_d1 `throws` op_errors "GHC.Real.Ratio Integer" "Double" "Double"
+      , testCase "a = Int" $ op_d2 `throws` op_errors "GHC.Real.Ratio Integer" "Int" "Int"
+      , testCase "a = Integer" $ op_d3 `throws` op_errors "GHC.Real.Ratio Integer" "Integer" "Integer"
+      ]
     ]
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
