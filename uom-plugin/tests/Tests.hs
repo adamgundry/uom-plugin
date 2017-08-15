@@ -16,6 +16,7 @@ import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
+import Control.Monad (unless)
 import Control.Exception
 import Data.List
 
@@ -51,7 +52,7 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
   where
     _G = [u| 6.67384e-11 N*m^2/kg^2 |]
 
-sum' xs = foldr (+:) zero xs
+sum' = foldr (+:) zero
 mean xs = sum' xs /: mk (genericLength xs)
 
 foo x y = x *: y +: y *: x
@@ -117,6 +118,12 @@ baf qa qb = baz qa qb undefined
 
 -- Inferring this type used to lead to unit equations with occur-check
 -- failures, because it involves things like Pack (Unpack u) ~ u
+-- The type signature is intentionally left off here to check that the
+-- compiler can infer it.
+-- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible u v)
+--   => Quantity a u
+--   -> Quantity a v
+{-# ANN z "HLint: ignore Eta reduce" #-}
 z q = convert q
 
 -- Pattern splices are supported, albeit with restricted types
@@ -216,5 +223,5 @@ tests = testGroup "uom-plugin"
 -- lists of substrings.
 throws :: a -> [[String]] -> Assertion
 throws v xs =
-    (evaluate v >> assertFailure "No exception!")
-  `catch` \ (e :: SomeException) -> if any (all (`isInfixOf` show e)) xs then return () else throw e
+    (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
+        unless (any (all (`isInfixOf` show e)) xs) $ throw e

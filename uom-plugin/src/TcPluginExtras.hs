@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module TcPluginExtras
   ( -- * Wrappers
@@ -8,7 +7,6 @@ module TcPluginExtras
   , newGivenCt
   ) where
 
-import TcPluginM  ( TcPluginM )
 import TcEvidence ( EvTerm )
 import TcRnTypes  ( mkNonCanonical )
 import TcRnMonad  ( Ct, CtLoc )
@@ -19,9 +17,9 @@ import GHC.TcPluginM.Extra
 #if __GLASGOW_HASKELL__ < 711
 import Unique     ( Unique )
 import qualified TcRnMonad
-import TcPluginM ( unsafeTcPluginTcM )
+import TcPluginM ( TcPluginM, unsafeTcPluginTcM )
 #else
-import TcPluginM ( newUnique )
+import TcPluginM ( TcPluginM, newUnique )
 #endif
 
 
@@ -34,4 +32,4 @@ newWantedCt :: CtLoc -> PredType -> TcPluginM Ct
 newWantedCt loc = fmap mkNonCanonical . newWanted loc
 
 newGivenCt :: CtLoc -> PredType -> EvTerm -> TcPluginM Ct
-newGivenCt loc prd ev = fmap mkNonCanonical $ newGiven loc prd ev
+newGivenCt loc prd ev = mkNonCanonical <$> newGiven loc prd ev

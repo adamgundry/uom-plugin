@@ -55,7 +55,7 @@ type BaseUnit = FastString
 data Atom = BaseAtom Type | VarAtom TyVar | FamAtom TyCon [Type]
 
 instance Eq Atom where
-  a == b = compare a b == EQ
+  a == b = a == b
 
 -- TODO: using cmpTypes here probably isn't ideal, but does it matter?
 instance Ord Atom where

@@ -1,17 +1,13 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -34,7 +30,7 @@ module Data.UnitsOfMeasure.Show
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import Data.List (intercalate, group)
+import Data.List (group)
 
 instance (Show a, KnownUnit (Unpack u)) => Show (Quantity a u) where
   show x = "[u| " ++ showQuantity x ++ " |]"
@@ -61,10 +57,10 @@ showUnitBits ([] :/ ys) = showNeg ys
 showUnitBits (xs :/ ys) = showPos xs ++ " / " ++ showPos ys
 
 showPos :: [String] -> String
-showPos = intercalate " " . map (\ xs -> showAtom (head xs, length xs)) . group
+showPos = unwords . map (\ xs -> showAtom (head xs, length xs)) . group
 
 showNeg :: [String] -> String
-showNeg = intercalate " " . map (\ xs -> showAtom (head xs, negate $ length xs)) . group
+showNeg = unwords . map (\ xs -> showAtom (head xs, negate $ length xs)) . group
 
 showAtom :: (String, Int) -> String
 showAtom (s, 1) = s

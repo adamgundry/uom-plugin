@@ -56,10 +56,12 @@ plugin :: Plugin
 plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
 
 uomPlugin :: TcPlugin
-uomPlugin = tracePlugin "uom-plugin" $ TcPlugin { tcPluginInit  = lookupUnitDefs
-                                               , tcPluginSolve = unitsOfMeasureSolver
-                                               , tcPluginStop  = const $ return ()
-                                               }
+uomPlugin = tracePlugin
+                "uom-plugin"
+                TcPlugin { tcPluginInit  = lookupUnitDefs
+                         , tcPluginSolve = unitsOfMeasureSolver
+                         , tcPluginStop  = const $ return ()
+                         }
 
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
@@ -85,9 +87,7 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
 
 unitsOfMeasureSolver uds givens _deriveds wanteds = do
   xs <- lookForUnpacks uds givens wanteds
-  case null xs of
-   False -> return $ TcPluginOk [] xs
-   True  -> do
+  if not $ null xs then return $ TcPluginOk [] xs else do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []

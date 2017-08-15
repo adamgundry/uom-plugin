@@ -38,16 +38,15 @@ instance Outputable SubstItem where
   ppr si = ppr (siVar si) <+> text " := " <+> ppr (siUnit si) <+> text "  {" <+> ppr (siCt si) <+> text "}"
 
 -- | Apply a substitution to a single normalised unit
-substsUnit :: TySubst -> NormUnit -> NormUnit
-substsUnit []     u = u
-substsUnit (si:s) u = substsUnit s (substUnit (siVar si) (siUnit si) u)
+substsUnit :: NormUnit -> TySubst -> NormUnit
+substsUnit = foldl (\ u si -> substUnit (siVar si) (siUnit si) u)
 
 -- | Compose two substitutions
 substsSubst :: TySubst -> TySubst -> TySubst
-substsSubst s = map $ \ si -> si { siUnit = substsUnit s (siUnit si) }
+substsSubst s = map $ \ si -> si { siUnit = substsUnit (siUnit si) s }
 
 substsUnitEquality :: TySubst -> UnitEquality -> UnitEquality
-substsUnitEquality s (UnitEquality ct u v) = UnitEquality ct (substsUnit s u) (substsUnit s v)
+substsUnitEquality s (UnitEquality ct u v) = UnitEquality ct (substsUnit u s) (substsUnit v s)
 
 extendSubst :: SubstItem -> TySubst -> TySubst
 extendSubst si s = si : substsSubst [si] s
