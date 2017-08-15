@@ -12,16 +12,19 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+
+module Main (main) where
+
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Show
-
 import Data.List
+import qualified RationalExamples as RE
 
-
--- Declaring some base units and derived units
-[u| ft = 0.3048 m, kg, m, s,
-    N = kg * m/s^2
-  |]
+-- We could make some base units and derived units like this ...
+-- [u| ft = 0.3048 m, kg, m, s, km = 1000 m, N = kg * m/s^2 |]
+-- Pull in those units instead from Data.UnitsOfMeasure.Defs.
+import Data.UnitsOfMeasure.Defs ()
 
 -- An integer constant quantity with units
 myMass = [u| 65 kg |]
@@ -79,6 +82,9 @@ anotherConversion :: Quantity Double [u| m*m |]
 anotherConversion = convert [u| 5 ft^2 |]
 
 
-main = do print myMass
-          print forceOnGround
-          print tenMetresInFeet
+main = do
+  putStrLn $ show myMass ++ " my mass"
+  putStrLn $ show forceOnGround ++ " force on ground"
+  putStrLn $ show tenMetresInFeet ++ " 10 m in ft"
+  putStrLn ""
+  RE.dump
