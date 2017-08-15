@@ -15,9 +15,8 @@ module TcPluginExtras
 import TcEvidence ( EvTerm )
 import TcRnTypes  ( mkNonCanonical )
 import TcRnMonad  ( Ct, CtLoc )
-import Type       ( PredType, Type )
+import Type       ( PredType )
 import TyCon      ( TyCon )
-import Unique     ( getUnique, nonDetCmpUnique )
 
 import GHC.TcPluginM.Extra
 
@@ -30,9 +29,10 @@ import TcPluginM ( TcPluginM, newUnique )
 #endif
 
 #if __GLASGOW_HASKELL__ < 802
-import Type (cmpType, cmpTypes)
+import Type ( cmpType, cmpTypes )
 #else
-import Type (nonDetCmpType, nonDetCmpTypes)
+import Type ( Type, nonDetCmpType, nonDetCmpTypes )
+import Unique ( getUnique, nonDetCmpUnique )
 #endif
 
 
