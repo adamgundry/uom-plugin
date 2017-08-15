@@ -39,6 +39,9 @@ module Data.UnitsOfMeasure
     , recip'
     , fromRational'
 
+      -- * Unit-safe 'Real' operations
+    , toRational'
+
       -- * Unit-safe 'Floating' operations
     , sqrt'
 
