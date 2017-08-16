@@ -7,6 +7,7 @@ arguments :: [String]
 arguments =
     [ "lint"
     , "--ignore=Parse error"
+    , "--ignore=Use fewer imports"  -- This is a pain for the CPP in TcPluginExtras
     , "src"
     , "tests"
     , "hlint"

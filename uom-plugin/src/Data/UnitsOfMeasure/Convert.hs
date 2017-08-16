@@ -90,7 +90,7 @@ class IsCanonical (Unpack (CanonicalBaseUnit b))
   -- | The conversion ratio between this base unit and its canonical
   -- base unit.  If @b@ is canonical then this ratio is @1@.
   conversionBase :: proxy b -> Quantity Rational (Base b /: CanonicalBaseUnit b)
-  default conversionBase :: (Base b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (Base b /: Base b)
+  default conversionBase :: (Base b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (Base b /: CanonicalBaseUnit b)
   conversionBase _ = 1
 
 -- | Convert a unit into its canonical representation, where units are

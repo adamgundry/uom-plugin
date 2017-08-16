@@ -45,6 +45,8 @@ import Data.List ( sortBy )
 import Data.Maybe
 import Data.Ord
 
+import TcPluginExtras
+
 
 -- | Base units are just represented as strings, for simplicity
 type BaseUnit = FastString
@@ -64,7 +66,7 @@ instance Ord Atom where
   compare (VarAtom  _)    (BaseAtom _)      = GT
   compare (VarAtom  a)    (VarAtom  b)      = compare a b
   compare (VarAtom  _)    (FamAtom _ _)     = LT
-  compare (FamAtom f tys) (FamAtom f' tys') = compare f f' `thenCmp` cmpTypes tys tys'
+  compare (FamAtom f tys) (FamAtom f' tys') = cmpTyCon f f' `thenCmp` cmpTypes tys tys'
   compare (FamAtom _ _)   _                 = GT
 
 instance Outputable Atom where
