@@ -1,8 +1,0 @@
-resolver: lts-3.11
-packages:
-- '.'
-- location: '../uom-plugin/'
-  extra-deps: true
-extra-deps:
-- units-parser-0.1.0.0
-flags: {}
