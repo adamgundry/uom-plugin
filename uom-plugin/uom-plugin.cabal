@@ -2,7 +2,6 @@ name:                uom-plugin
 version:             0.2.0.1
 synopsis:            Units of measure as a GHC typechecker plugin
 category:            Type System
-description:         A prototype typechecker plugin for GHC with support for units of measure
 license:             BSD3
 license-file:        LICENSE
 author:              Adam Gundry <adam@well-typed.com>
