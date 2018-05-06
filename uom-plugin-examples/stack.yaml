@@ -5,5 +5,4 @@ packages:
   extra-deps: true
 extra-deps:
 - units-parser-0.1.0.0
-- uom-plugin-0.1.1.0
 flags: {}
