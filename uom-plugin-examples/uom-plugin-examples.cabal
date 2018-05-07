@@ -2,14 +2,14 @@ name:                uom-plugin-examples
 version:             0.1.0.0
 synopsis:            Examples of the use of uom-plugin
 description:         This package provides examples of the use of uom-plugin
-license:             PublicDomain
 author:              Adam Gundry
 maintainer:          adam@well-typed.com
+license:             PublicDomain
 build-type:          Simple
 cabal-version:       >=1.10
 
 executable Examples
   main-is:             Examples.hs
+  ghc-options:         -dcore-lint
   build-depends:       base >=4.7 && <5, uom-plugin >= 0.1 && < 0.3
   default-language:    Haskell2010
-  ghc-options:         -dcore-lint
