@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b3b084577d867700d4980d1cb356822076608e6b5cc224358e4e6fa4b4e9183d
+-- hash: e671d1e4e31bd29b0906996836777a26db0e4c37299fe8c68e62465c6ebea8d8
 
 name:           uom-plugin-examples
 version:        0.1.0.0
@@ -19,7 +19,10 @@ extra-source-files:
 executable Examples
   main-is: Examples.hs
   other-modules:
+      RationalExamples
       Paths_uom_plugin_examples
+  hs-source-dirs:
+      ./.
   ghc-options: -dcore-lint
   build-depends:
       base >=4.7 && <5
