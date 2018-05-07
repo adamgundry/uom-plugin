@@ -1,0 +1,20 @@
+# This YAML file describes your package. Stack will automatically generate a
+# Cabal file when you run `stack build`. See the hpack website for help with
+# this file: <https://github.com/sol/hpack>.
+author: Adam Gundry
+maintainer: adam@well-typed.com
+name: uom-plugin-examples
+synopsis: Examples of the use of uom-plugin
+description: This package provides examples of the use of uom-plugin
+license: PublicDomain
+version: '0.1.0.0'
+extra-source-files:
+- package.yaml
+ghc-options:
+- -dcore-lint
+executables:
+    Examples:
+      dependencies:
+      - base >=4.7 && <5
+      - uom-plugin >= 0.1 && < 0.3
+      main: Examples.hs
