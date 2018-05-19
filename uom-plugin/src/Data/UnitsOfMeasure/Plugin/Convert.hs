@@ -9,7 +9,7 @@ module Data.UnitsOfMeasure.Plugin.Convert
 
 import TyCon
 import Type
-import TcType
+import TcType ()
 
 #if __GLASGOW_HASKELL__ > 710
 import TyCoRep
