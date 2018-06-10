@@ -16,6 +16,6 @@ executables:
     Examples:
       dependencies:
       - base >=4.7 && <5
-      - uom-plugin >= 0.1 && < 0.3
+      - uom-plugin >= 0.1 && < 0.4
       main: Examples.hs
       source-dirs: .

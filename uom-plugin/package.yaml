@@ -15,7 +15,7 @@ license: BSD3
 license-file: LICENSE
 stability: experimental
 github: adamgundry/uom-plugin
-copyright: Copyright (c) 2014-2016, Adam Gundry
+copyright: Copyright (c) 2014-2018, Adam Gundry
 tested-with: >+
   GHC == 7.10.3,
   GHC == 8.0.2,
@@ -72,4 +72,4 @@ tests:
     main: HLint.hs
     source-dirs:
     - hlint
-version: '0.2.0.1'
+version: '0.3.0.0'

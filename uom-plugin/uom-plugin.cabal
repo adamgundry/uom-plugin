@@ -5,7 +5,7 @@
 -- hash: d110f2f74fb66155437b924f27283bd9b16991b4f2be45693731488d98f4938c
 
 name:           uom-plugin
-version:        0.2.0.1
+version:        0.3.0.0
 synopsis:       Units of measure as a GHC typechecker plugin
 description:    The @uom-plugin@ library adds support for units of measure to GHC
                 using the new experimental facility for typechecker plugins, which
@@ -17,7 +17,7 @@ homepage:       https://github.com/adamgundry/uom-plugin#readme
 bug-reports:    https://github.com/adamgundry/uom-plugin/issues
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2014-2016, Adam Gundry
+copyright:      Copyright (c) 2014-2018, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
 tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2
