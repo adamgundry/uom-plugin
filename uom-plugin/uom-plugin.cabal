@@ -1,79 +1,94 @@
-name:                uom-plugin
-version:             0.2.0.1
-synopsis:            Units of measure as a GHC typechecker plugin
-category:            Type System
-license:             BSD3
-license-file:        LICENSE
-author:              Adam Gundry <adam@well-typed.com>
-maintainer:          Adam Gundry <adam@well-typed.com>
-homepage:            https://github.com/adamgundry/uom-plugin
-bug-reports:         https://github.com/adamgundry/uom-plugin/issues
-stability:           experimental
-copyright:           Copyright (c) 2014-2016, Adam Gundry
-build-type:          Simple
-cabal-version:       >=1.10
-tested-with:
-  GHC == 7.10.3,
-  GHC == 8.0.2,
-  GHC == 8.2.2
-description:
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: d110f2f74fb66155437b924f27283bd9b16991b4f2be45693731488d98f4938c
 
-    The @uom-plugin@ library adds support for units of measure to GHC
-    using the new experimental facility for typechecker plugins, which
-    is available in GHC 7.10 and later.  See
-    "Data.UnitsOfMeasure.Tutorial" for an introduction to the library.
+name:           uom-plugin
+version:        0.2.0.1
+synopsis:       Units of measure as a GHC typechecker plugin
+description:    The @uom-plugin@ library adds support for units of measure to GHC
+                using the new experimental facility for typechecker plugins, which
+                is available in GHC 7.10 and later.  See
+                "Data.UnitsOfMeasure.Tutorial" for an introduction to the library.
+category:       Type System
+stability:      experimental
+homepage:       https://github.com/adamgundry/uom-plugin#readme
+bug-reports:    https://github.com/adamgundry/uom-plugin/issues
+author:         Adam Gundry <adam@well-typed.com>
+maintainer:     Adam Gundry <adam@well-typed.com>
+copyright:      Copyright (c) 2014-2016, Adam Gundry
+license:        BSD3
+license-file:   LICENSE
+tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2
 
-extra-source-files:  changelog
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    changelog
+    package.yaml
 
 source-repository head
-  type:     git
-  location: https://github.com/adamgundry/uom-plugin.git
+  type: git
+  location: https://github.com/adamgundry/uom-plugin
 
 library
-  exposed-modules:     Data.UnitsOfMeasure,
-                       Data.UnitsOfMeasure.Convert,
-                       Data.UnitsOfMeasure.Defs,
-                       Data.UnitsOfMeasure.Internal,
-                       Data.UnitsOfMeasure.Plugin,
-                       Data.UnitsOfMeasure.Read,
-                       Data.UnitsOfMeasure.Show,
-                       Data.UnitsOfMeasure.Singleton,
-                       Data.UnitsOfMeasure.Tutorial
-  other-modules:       Data.UnitsOfMeasure.Plugin.Convert,
-                       Data.UnitsOfMeasure.Plugin.NormalForm,
-                       Data.UnitsOfMeasure.Plugin.Unify,
-                       Data.UnitsOfMeasure.TH,
-                       TcPluginExtras
-  other-extensions:    TemplateHaskell
-  build-depends:       base >=4.7 && <5,
-                       deepseq >=1.3 && <1.5,
-                       ghc >= 7.9 && <8.4,
-                       ghc-tcplugins-extra >=0.1 && <0.3,
-                       template-haskell >=2.9 && <2.13,
-                       containers >=0.5 && <0.6,
-                       units-parser >=0.1 && <0.2
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-unticked-promoted-constructors
-
-test-suite units
-  type:                exitcode-stdio-1.0
-  main-is:             Tests.hs
-  other-modules:       ErrorTests
-  other-extensions:    TemplateHaskell
-  build-depends:       base,
-                       uom-plugin,
-                       tasty >=0.10 && <1.1,
-                       tasty-hunit >=0.9 && <0.10.1
-  hs-source-dirs:      tests
-  default-language:    Haskell2010
-  ghc-options:         -O0
+  exposed-modules:
+      Data.UnitsOfMeasure
+      Data.UnitsOfMeasure.Convert
+      Data.UnitsOfMeasure.Defs
+      Data.UnitsOfMeasure.Internal
+      Data.UnitsOfMeasure.Plugin
+      Data.UnitsOfMeasure.Read
+      Data.UnitsOfMeasure.Show
+      Data.UnitsOfMeasure.Singleton
+      Data.UnitsOfMeasure.Tutorial
+  other-modules:
+      Data.UnitsOfMeasure.Plugin.Convert
+      Data.UnitsOfMeasure.Plugin.NormalForm
+      Data.UnitsOfMeasure.Plugin.Unify
+      Data.UnitsOfMeasure.TH
+      TcPluginExtras
+      Paths_uom_plugin
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fno-warn-unticked-promoted-constructors
+  build-depends:
+      base >=4.7 && <5
+    , containers >=0.5 && <0.6
+    , deepseq >=1.3 && <1.5
+    , ghc >=7.9 && <8.4
+    , ghc-tcplugins-extra >=0.1 && <0.3
+    , template-haskell >=2.9 && <2.13
+    , units-parser >=0.1 && <0.2
+  default-language: Haskell2010
 
 test-suite hlint
-  type:                exitcode-stdio-1.0
-  main-is:             HLint.hs
-  hs-source-dirs:      hlint
-  ghc-options:         -Wall -O0 -rtsopts -threaded -with-rtsopts=-N
-  build-depends:       base,
-                       hlint >= 1.7 && <2.2
+  type: exitcode-stdio-1.0
+  main-is: HLint.hs
+  other-modules:
+      Paths_uom_plugin
+  hs-source-dirs:
+      hlint
+  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -Wall -O0 -rtsopts -threaded -with-rtsopts=-N
+  build-depends:
+      base
+    , hlint >=1.7 && <2.2
+  default-language: Haskell2010
+
+test-suite units
+  type: exitcode-stdio-1.0
+  main-is: Tests.hs
+  other-modules:
+      ErrorTests
+      Paths_uom_plugin
+  hs-source-dirs:
+      tests
+  other-extensions: TemplateHaskell
+  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -O0
+  build-depends:
+      base
+    , tasty >=0.10 && <1.1
+    , tasty-hunit >=0.9 && <0.10.1
+    , uom-plugin
   default-language: Haskell2010
