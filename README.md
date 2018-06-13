@@ -13,7 +13,14 @@ Grab the source.
 > cd uom-plugin
 ```
 
-Then build and run with either of these methods;
+Then build and run with any of these methods:
+
+* ### With Cabal new-build
+
+```
+> cabal new-build all
+> cabal new-exec Examples
+```
 
 * ### Within a Cabal Sandbox
 
@@ -25,7 +32,7 @@ uom-plugin-examples> cabal sandbox init --sandbox=../.cabal-sandbox
 uom-plugin-examples> cabal build
 uom-plugin-examples> dist/build/Examples/Examples
 ```
-    
+
 * ### With Stack
 
 ```
