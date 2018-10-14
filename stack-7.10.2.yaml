@@ -1,0 +1,6 @@
+resolver: lts-3.22
+packages:
+- 'uom-plugin'
+- 'uom-plugin-examples'
+extra-deps:
+- units-parser-0.1.0.0
