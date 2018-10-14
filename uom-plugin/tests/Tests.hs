@@ -14,6 +14,32 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+module Main
+    ( main
+
+    -- * Exported to avoid -Wunused-top-binds.
+    , attract
+    , foo
+    , foo'
+    , angularSpeed
+    , associativity
+    , commutativity
+    , unit
+    , inverse
+    , inverse2
+    , f
+    , g
+    , givens
+    , givens2
+    , givens3
+    , baz
+    , baf
+    , patternSplice
+    , pow
+    , dimensionless
+    , dime
+    ) where
+
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Defs ()
