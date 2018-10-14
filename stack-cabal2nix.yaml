@@ -1,0 +1,16 @@
+resolver: lts-12.5
+flags: {}
+packages: []
+# SEE: https://github.com/depressed-pho/HsOpenSSL/issues/41
+extra-include-dirs:
+- /usr/local/opt/openssl/include
+extra-lib-dirs:
+- /usr/local/opt/openssl/lib
+extra-deps:
+- cabal2nix-2.10.2
+- Cabal-2.2.0.1
+- distribution-nixpkgs-1.1.1
+- hackage-db-2.0.1
+- hpack-0.29.6
+- infer-license-0.2.0
+work-dir: .stack-work-cabal2nix
