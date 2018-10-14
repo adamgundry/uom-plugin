@@ -11,7 +11,6 @@
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main
     ( main
@@ -36,7 +35,6 @@ module Main
     , patternSplice
     , pow
     , dimensionless
-    , dime
     ) where
 
 import Data.UnitsOfMeasure
@@ -52,16 +50,9 @@ import Data.Ratio ((%))
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Defs ()
 import ErrorTests
 import Z (z)
-
-
--- Declarations
-declareBaseUnit "byte"
-declareDerivedUnit "bps" "byte / s"
-declareConvertibleUnit "kilobyte" 1024 "byte"
-declareConvertibleUnit "squiggle" 2 "m/s"
-
 
 -- Some basic examples
 
@@ -186,11 +177,6 @@ pow = id
 [u| dimensionless = 1 |]
 dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
 dimensionless = id
-
--- This declares a dimensionless unit that requires explicit conversion
-[u| dime = 1 1 |]
-dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
-dime = convert
 
 
 -- Runtime testsuite
