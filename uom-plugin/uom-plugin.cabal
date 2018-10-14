@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d110f2f74fb66155437b924f27283bd9b16991b4f2be45693731488d98f4938c
+-- hash: ea266b1e8d435bfb94ff3077fd618465b3182b21be200843bd50a9991478a517
 
 name:           uom-plugin
 version:        0.3.0.0
