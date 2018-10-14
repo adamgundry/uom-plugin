@@ -11,7 +11,6 @@
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -29,6 +28,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import ErrorTests
+import Z (z)
 
 
 -- Declarations
@@ -80,7 +80,7 @@ foo' = foo
 
 -- thanks to expipiplus1, https://github.com/adamgundry/uom-plugin/issues/14
 angularSpeed :: Quantity Rational [u|rad/s|]
-angularSpeed = convert x
+angularSpeed = z x
   where x :: Quantity Rational [u|s^-1|]
         x = undefined
 
@@ -133,16 +133,6 @@ baf qa qb = baz qa qb undefined
 
 
 -- Miscellaneous bits and bobs
-
--- Inferring this type used to lead to unit equations with occur-check
--- failures, because it involves things like Pack (Unpack u) ~ u
--- The type signature is intentionally left off here to check that the
--- compiler can infer it.
--- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible u v)
---   => Quantity a u
---   -> Quantity a v
-{-# ANN z "HLint: ignore Eta reduce" #-}
-z q = convert q
 
 -- Pattern splices are supported, albeit with restricted types
 patternSplice :: Quantity Integer [u| m |] -> Quantity Rational [u| kg/s |] -> Bool
