@@ -52,14 +52,27 @@ forceOnGround = gravityOnEarth *: myMass
 inMetresPerSecond :: a -> Quantity a [u| m/s |]
 inMetresPerSecond = [u| m/s |]
 
-attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity a [u| m |])
+attract
+    :: Fractional a
+    => Quantity a [u| kg |]
+    -> Quantity a [u| kg |]
+    -> Quantity a [u| m |]
+    -> Quantity a [u| N |]
+attract
+    (m1 :: Quantity a [u| kg |])
+    (m2 :: Quantity a [u| kg |])
+    (r :: Quantity a [u| m |])
     = _G *: m1 *: m2 /: (r *: r) :: Quantity a [u| N |]
   where
     _G = [u| 6.67384e-11 N*m^2/kg^2 |]
 
+sum' :: [Quantity Double u] -> Quantity Double u
 sum' = foldr (+:) zero
+
+mean :: [Quantity Double u] -> Quantity Double u
 mean xs = sum' xs /: mk (genericLength xs)
 
+foo :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
 foo x y = x *: y +: y *: x
 
 foo' :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
@@ -132,6 +145,7 @@ baf qa qb = baz qa qb undefined
 z q = convert q
 
 -- Pattern splices are supported, albeit with restricted types
+patternSplice :: Quantity Integer [u| m |] -> Quantity Rational [u| kg/s |] -> Bool
 patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
 patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
 patternSplice _          _                 = False
