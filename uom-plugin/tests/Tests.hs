@@ -11,7 +11,6 @@
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Main
@@ -168,10 +167,14 @@ patternSplice _          _                 = False
 
 -- Andrew's awkward generalisation example is accepted only with a
 -- type signature, even with NoMonoLocalBinds
-tricky :: forall a u . Num a => Quantity a u -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
-tricky x = let f :: Quantity a v -> Quantity a (u *: v)
-               f = (x *:)
-           in (f [u| 3 m |], f [u| 5 kg |])
+tricky
+    :: forall a u . Num a
+    => Quantity a u
+    -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
+tricky x =
+    let h :: Quantity a v -> Quantity a (u *: v)
+        h = (x *:)
+    in (h [u| 3 m |], h [u| 5 kg |])
 
 
 -- Test that basic constraints involving exponentiation work
