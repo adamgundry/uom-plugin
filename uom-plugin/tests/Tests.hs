@@ -10,6 +10,23 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+
+-- WARNING: It would be a lot of work to add type annotations to avoid type-default
+-- warnings and what is more this leads to type checking failures;
+--
+-- {-# LANGUAGE PartialTypeSignatures #-}
+--
+--   , testGroup "read normalisation"
+--     [ testCase "1 m/m"
+--         $ (read "[u| 1 m/m |]" :: _ Integer _) @?= [u| 1 |]
+--     , testCase "-0.3 m s^-1"
+--         $ (read "[u| -0.3 m s^-1 |]" :: _ Double _) @?= [u| -0.3 m/s |]
+--     , testCase "42 s m s"
+--         $ (read "[u| 42 s m s |]" :: _ Integer _)  @?= [u| 42 m s^2 |]
+--     ]
+--
+-- > cabal new-repl uom-plugin:units
+-- solveSimpleWanteds: too many iterations (limit = 4)
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
 module Main
