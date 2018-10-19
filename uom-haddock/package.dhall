@@ -28,8 +28,6 @@ in    defs
           { source-dirs =
               "src"
           , exposed-modules =
-              [ "Units"
-              , "Units.Angle"
-              ]
+              [ "Units.Angle" ]
           }
       }
