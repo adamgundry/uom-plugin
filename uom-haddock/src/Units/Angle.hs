@@ -7,8 +7,7 @@ import Data.UnitsOfMeasure (u, convert)
 import Data.UnitsOfMeasure.Internal (Quantity(..))
 import Data.UnitsOfMeasure.Convert (Convertible)
 
-[u| rad |]
-[u| deg = (5030569068109113 % 288230376151711744) rad |]
+[u| deg |]
 
 class Angle a where
     fromQuantity :: Convertible u [u| deg |] => Quantity Double u -> a
