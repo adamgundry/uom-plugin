@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c36245e5170c5a037a0d0bdd0db0512855f58397bf152f22a3e68812cb5688d3
+-- hash: 3747e7ef0fa434653f01a1faca387e828c6fb70ab4fea8285ffcb73c2f77af9a
 
 name:           uom-haddock
 version:        0.1.0
@@ -31,7 +31,6 @@ library
   exposed-modules:
       Units
       Units.Angle
-      Units.DegMinSec
   other-modules:
       Paths_uom_haddock
   hs-source-dirs:

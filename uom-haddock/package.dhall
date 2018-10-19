@@ -30,7 +30,6 @@ in    defs
           , exposed-modules =
               [ "Units"
               , "Units.Angle"
-              , "Units.DegMinSec"
               ]
           }
       }
