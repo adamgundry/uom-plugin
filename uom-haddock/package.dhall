@@ -28,8 +28,7 @@ in    defs
           { source-dirs =
               "src"
           , exposed-modules =
-              [ "Ratio"
-              , "Units"
+              [ "Units"
               , "Units.Angle"
               , "Units.DegMinSec"
               ]
