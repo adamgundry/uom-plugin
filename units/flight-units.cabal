@@ -1,0 +1,53 @@
+-- This file has been generated from package.dhall by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 88e923bfbe1b71401fa13a168972257b80b49eef3ad06023a92bb0b19a42a267
+
+name:           flight-units
+version:        0.1.0
+synopsis:       Units used in hang gliding and paragliding competitions.
+description:    Unit definitions such as m, km, rad and deg.
+category:       Flight
+homepage:       https://github.com/blockscope/flare-timing#readme
+bug-reports:    https://github.com/blockscope/flare-timing/issues
+author:         Phil de Joux
+maintainer:     phil.dejoux@blockscope.com
+copyright:      © 2017-2018 Phil de Joux, © 2017-2018 Block Scope Limited
+license:        MPL-2.0
+license-file:   LICENSE.md
+tested-with:    GHC == 8.2.2
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    changelog.md
+    package.dhall
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/blockscope/flare-timing
+  subdir: units
+
+library
+  exposed-modules:
+      Flight.Ratio
+      Flight.Units
+      Flight.Units.Angle
+      Flight.Units.DegMinSec
+  other-modules:
+      Paths_flight_units
+  hs-source-dirs:
+      library
+  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveAnyClass DerivingStrategies DisambiguateRecordFields FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving GADTs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PackageImports ParallelListComp PartialTypeSignatures PatternSynonyms QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TypeApplications TypeFamilies TypeOperators TypeSynonymInstances TupleSections UndecidableInstances
+  ghc-options: -Wall -fplugin Data.UnitsOfMeasure.Plugin
+  build-depends:
+      base >=4.9.1.0 && <5
+    , bifunctors
+    , fixed
+    , formatting
+    , numbers
+    , siggy-chardust
+    , text
+    , uom-plugin
+  default-language: Haskell2010
