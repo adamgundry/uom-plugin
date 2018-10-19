@@ -11,19 +11,12 @@ in    defs
       , category =
           "Flight"
       , github =
-          "blockscope/uom-plugin/uom-plugin-haddock"
+          "blockscope/uom-plugin/uom-haddock"
       , ghc-options =
           [ "-Wall" ]
       , dependencies =
             defs.dependencies
-          # [ "numbers"
-            , "fixed"
-            , "bifunctors"
-            , "text"
-            , "formatting"
-            , "uom-plugin"
-            , "siggy-chardust"
-            ]
+          # [ "uom-plugin" ]
       , library =
           { source-dirs =
               "src"
