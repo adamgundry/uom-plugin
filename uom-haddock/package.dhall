@@ -13,7 +13,7 @@ in    defs
       , github =
           "blockscope/uom-plugin/uom-plugin-haddock"
       , ghc-options =
-          [ "-Wall", "-fplugin Data.UnitsOfMeasure.Plugin" ]
+          [ "-Wall" ]
       , dependencies =
             defs.dependencies
           # [ "numbers"
