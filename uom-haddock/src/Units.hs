@@ -1,6 +1,6 @@
 ﻿{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Flight.Units
+module Units
     ( abs
     , showRadian
     , realToFrac'
@@ -11,7 +11,7 @@ import Data.UnitsOfMeasure.Internal (Quantity(..))
 import Data.Bifunctor.Flip (Flip(..))
 import Data.Ratio.Rounding (dpRound)
 
-import Flight.Units.Angle ()
+import Units.Angle ()
 
 [u| s, m |]
 

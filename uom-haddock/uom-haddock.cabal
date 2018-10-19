@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d939147316fc960343d3e38714b7c1016a7f431a56354b4641a2e4a963aa876c
+-- hash: d287fc47006d35997baedd5392b08feb8600ba680d567adf124ecb36cd69a825
 
 name:           uom-haddock
 version:        0.1.0
@@ -29,14 +29,14 @@ source-repository head
 
 library
   exposed-modules:
-      Flight.Ratio
-      Flight.Units
-      Flight.Units.Angle
-      Flight.Units.DegMinSec
+      Ratio
+      Units
+      Units.Angle
+      Units.DegMinSec
   other-modules:
       Paths_uom_haddock
   hs-source-dirs:
-      library
+      src
   default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveAnyClass DerivingStrategies DisambiguateRecordFields FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving GADTs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PackageImports ParallelListComp PartialTypeSignatures PatternSynonyms QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TypeApplications TypeFamilies TypeOperators TypeSynonymInstances TupleSections UndecidableInstances
   ghc-options: -Wall -fplugin Data.UnitsOfMeasure.Plugin
   build-depends:

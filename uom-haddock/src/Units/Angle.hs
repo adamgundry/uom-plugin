@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Flight.Units.Angle (Angle(..)) where
+module Units.Angle (Angle(..)) where
 
 import Data.Fixed (mod')
 import Data.UnitsOfMeasure ((+:), u, convert)

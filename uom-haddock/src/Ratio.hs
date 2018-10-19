@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Flight.Ratio (pattern (:%)) where
+module Ratio (pattern (:%)) where
 
 import Data.Ratio (Ratio, numerator, denominator)
 

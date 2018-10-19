@@ -26,12 +26,12 @@ in    defs
             ]
       , library =
           { source-dirs =
-              "library"
+              "src"
           , exposed-modules =
-              [ "Flight.Ratio"
-              , "Flight.Units"
-              , "Flight.Units.Angle"
-              , "Flight.Units.DegMinSec"
+              [ "Ratio"
+              , "Units"
+              , "Units.Angle"
+              , "Units.DegMinSec"
               ]
           }
       }

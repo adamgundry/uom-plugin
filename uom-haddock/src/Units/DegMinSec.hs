@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
-module Flight.Units.DegMinSec
+module Units.DegMinSec
     ( DMS(..)
     , toDeg
     , toQDeg
@@ -17,7 +17,7 @@ import Data.UnitsOfMeasure ((+:), u, convert)
 import Data.UnitsOfMeasure.Internal (Quantity(..))
 import Data.UnitsOfMeasure.Convert (Convertible)
 
-import Flight.Units.Angle (Angle(..))
+import Units.Angle (Angle(..))
 
 newtype DMS = DMS (Int, Int, Double) deriving Eq
 
