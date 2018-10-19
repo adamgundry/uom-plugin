@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3887cc0c2ba24777e1865764cd2d064986143fdf9122ef02bd873c15b8cab894
+-- hash: c3590b887a533566a750e1b50b7b2869de28adb895726c405d8deb215e5b85eb
 
 name:           uom-haddock
 version:        0.1.0
@@ -34,7 +34,7 @@ library
       Paths_uom_haddock
   hs-source-dirs:
       src
-  default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveAnyClass DerivingStrategies DisambiguateRecordFields FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving GADTs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PackageImports ParallelListComp PartialTypeSignatures PatternSynonyms QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TypeApplications TypeFamilies TypeOperators TypeSynonymInstances TupleSections UndecidableInstances
+  default-extensions: DataKinds FlexibleContexts FlexibleInstances QuasiQuotes TemplateHaskell TypeApplications TypeFamilies TypeOperators TypeSynonymInstances UndecidableInstances
   ghc-options: -Wall
   build-depends:
       base >=4.9.1.0 && <5
