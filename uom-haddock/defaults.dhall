@@ -16,8 +16,6 @@
     [ "package.dhall" ]
 , ghc-options =
     [ "-Wall" ]
-, default-extensions =
-    [ "PackageImports" ]
 , dependencies =
     [ "base >=4.9.1.0 && <5" ]
 }

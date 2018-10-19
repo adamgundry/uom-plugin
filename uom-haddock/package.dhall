@@ -12,8 +12,6 @@ in    defs
           "Flight"
       , github =
           "blockscope/uom-plugin/uom-haddock"
-      , ghc-options =
-          [ "-Wall" ]
       , dependencies =
             defs.dependencies
           # [ "uom-plugin" ]
