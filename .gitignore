@@ -3,5 +3,6 @@ cabal.sandbox.config
 cabal.project.local
 dist/
 dist-newstyle/
-.stack-work
+.stack-work*
 .ghc.environment*
+__build

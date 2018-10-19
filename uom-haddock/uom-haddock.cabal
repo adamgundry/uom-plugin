@@ -2,15 +2,15 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 88e923bfbe1b71401fa13a168972257b80b49eef3ad06023a92bb0b19a42a267
+-- hash: d939147316fc960343d3e38714b7c1016a7f431a56354b4641a2e4a963aa876c
 
-name:           flight-units
+name:           uom-haddock
 version:        0.1.0
-synopsis:       Units used in hang gliding and paragliding competitions.
-description:    Unit definitions such as m, km, rad and deg.
+synopsis:       Reproduction of haddock type rename error.
+description:    Reproduction of haddock type rename error.
 category:       Flight
-homepage:       https://github.com/blockscope/flare-timing#readme
-bug-reports:    https://github.com/blockscope/flare-timing/issues
+homepage:       https://github.com/blockscope/uom-plugin#readme
+bug-reports:    https://github.com/blockscope/uom-plugin/issues
 author:         Phil de Joux
 maintainer:     phil.dejoux@blockscope.com
 copyright:      © 2017-2018 Phil de Joux, © 2017-2018 Block Scope Limited
@@ -20,14 +20,12 @@ tested-with:    GHC == 8.2.2
 build-type:     Simple
 cabal-version:  >= 1.10
 extra-source-files:
-    changelog.md
     package.dhall
-    README.md
 
 source-repository head
   type: git
-  location: https://github.com/blockscope/flare-timing
-  subdir: units
+  location: https://github.com/blockscope/uom-plugin
+  subdir: uom-plugin-haddock
 
 library
   exposed-modules:
@@ -36,7 +34,7 @@ library
       Flight.Units.Angle
       Flight.Units.DegMinSec
   other-modules:
-      Paths_flight_units
+      Paths_uom_haddock
   hs-source-dirs:
       library
   default-extensions: DataKinds DeriveFunctor DeriveGeneric DeriveAnyClass DerivingStrategies DisambiguateRecordFields FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving GADTs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PackageImports ParallelListComp PartialTypeSignatures PatternSynonyms QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TemplateHaskell TypeApplications TypeFamilies TypeOperators TypeSynonymInstances TupleSections UndecidableInstances

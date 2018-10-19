@@ -1,0 +1,11 @@
+resolver: lts-12.5
+flags: {}
+packages: []
+extra-deps:
+- dhall-1.16.1
+- hpack-dhall-0.3.0
+- dhall-nix-1.1.5
+- hnix-0.5.2
+- serialise-0.2.0.0
+local-bin-path: __build
+work-dir: .stack-work-dhall

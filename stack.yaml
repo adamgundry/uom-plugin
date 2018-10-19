@@ -1,8 +1,8 @@
 resolver: lts-11.7
 packages:
+- 'uom-haddock'
 - 'uom-plugin'
 - 'uom-plugin-examples'
-- 'units'
 extra-deps:
 - units-parser-0.1.0.0
 - siggy-chardust-1.0.0

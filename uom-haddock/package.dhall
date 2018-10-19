@@ -3,15 +3,15 @@
 in    defs
     ⫽ ./default-extensions.dhall
     ⫽ { name =
-          "flight-units"
+          "uom-haddock"
       , synopsis =
-          "Units used in hang gliding and paragliding competitions."
+          "Reproduction of haddock type rename error."
       , description =
-          "Unit definitions such as m, km, rad and deg."
+          "Reproduction of haddock type rename error."
       , category =
           "Flight"
       , github =
-          "blockscope/flare-timing/units"
+          "blockscope/uom-plugin/uom-plugin-haddock"
       , ghc-options =
           [ "-Wall", "-fplugin Data.UnitsOfMeasure.Plugin" ]
       , dependencies =
@@ -34,6 +34,4 @@ in    defs
               , "Flight.Units.DegMinSec"
               ]
           }
-      , tests =
-          ./default-tests.dhall
       }
