@@ -75,7 +75,10 @@ module GhcApi
     , typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
 
     -- * From Unique
-    , getUnique, nonDetCmpUnique
+    , getUnique
+#if __GLASGOW_HASKELL__ >= 802
+    , nonDetCmpUnique
+#endif
 
     -- * From Util
     , thenCmp
@@ -135,7 +138,12 @@ import Type
 #endif
     )
 import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
-import Unique (getUnique, nonDetCmpUnique)
+import Unique
+    ( getUnique
+#if __GLASGOW_HASKELL__ >= 802
+    , nonDetCmpUnique
+#endif
+    )
 import Util (thenCmp)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)
