@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module GhcApi
     (
     -- * From Coercion
@@ -52,6 +54,9 @@ module GhcApi
 
     -- * From TyCoRep
     , UnivCoProvenance(PluginProv), Type(..), Kind
+#if __GLASGOW_HASKELL__ <= 800
+    , TyBinder(Anon)
+#endif
     , mkTyVarTy
 
     -- * From Type
@@ -62,7 +67,9 @@ module GhcApi
     , isNumLitTy, isStrLitTy
     , coreView
     , mkPrimEqPred, mkStrLitTy
+#if __GLASGOW_HASKELL__ >= 802
     , nonDetCmpType, nonDetCmpTypes
+#endif
 
     -- * From TysWiredIn
     , typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
@@ -108,7 +115,13 @@ import TcRnTypes
     )
 import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
 import TyCon (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
-import TyCoRep (UnivCoProvenance(PluginProv), Type(..), Kind, mkTyVarTy)
+import TyCoRep
+    ( UnivCoProvenance(PluginProv), Type(..), Kind
+#if __GLASGOW_HASKELL__ <= 800
+    , TyBinder(Anon)
+#endif
+    , mkTyVarTy
+    )
 import Type
     ( EqRel(..), PredTree(..), PredType
     , splitTyConApp_maybe, typeKind, classifyPredType
@@ -117,7 +130,9 @@ import Type
     , isNumLitTy, isStrLitTy
     , coreView
     , mkPrimEqPred, mkStrLitTy
+#if __GLASGOW_HASKELL__ >= 802
     , nonDetCmpType, nonDetCmpTypes
+#endif
     )
 import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
 import Unique (getUnique, nonDetCmpUnique)

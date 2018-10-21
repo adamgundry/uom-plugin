@@ -8,17 +8,29 @@ module GhcApi.Compare
   ) where
 
 import GhcApi
-
 #if __GLASGOW_HASKELL__ < 802
+import qualified Type (cmpType, cmpTypes)
+#endif
+
 cmpTyCon :: TyCon -> TyCon -> Ordering
-cmpTyCon = compare
+#if __GLASGOW_HASKELL__ >= 802
+cmpTyCon a b = getUnique a `nonDetCmpUnique` getUnique b
 #else
+cmpTyCon = compare
+#endif
+
 cmpType :: Type -> Type -> Ordering
-cmpType = nonDetCmpType
+cmpType =
+#if __GLASGOW_HASKELL__ >= 802
+    nonDetCmpType
+#else
+    Type.cmpType
+#endif
 
 cmpTypes :: [Type] -> [Type] -> Ordering
-cmpTypes = nonDetCmpTypes
-
-cmpTyCon :: TyCon -> TyCon -> Ordering
-cmpTyCon a b = getUnique a `nonDetCmpUnique` getUnique b
+cmpTypes =
+#if __GLASGOW_HASKELL__ >= 802
+    nonDetCmpTypes
+#else
+    Type.cmpTypes
 #endif
