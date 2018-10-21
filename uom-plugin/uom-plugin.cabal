@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c0d039e259be8c066e0401676c3e54256542e1f5f8a6cfe48b5f9227b8f67d69
+-- hash: e6157a4fb72f9dc704925f3a06f0c93b5db1d9d896d21b8a5580443b5ed59d10
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -50,7 +50,9 @@ library
       Data.UnitsOfMeasure.Plugin.Unify
       Data.UnitsOfMeasure.TH
       GhcApi
-      TcPluginExtras
+      GhcApi.Compare
+      GhcApi.Shim
+      GhcApi.Wrap
       Paths_uom_plugin
   hs-source-dirs:
       src

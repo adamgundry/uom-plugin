@@ -16,13 +16,14 @@ module Data.UnitsOfMeasure.Plugin
   ) where
 
 import GhcApi
+import GhcApi.Shim
+import GhcApi.Wrap
 import Data.Either
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
-import TcPluginExtras
 
 
 import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
@@ -189,16 +190,3 @@ mkFunnyEqEvidence t t1 t2 = evByFiat "units" t1 t2
 #endif
 
 
-#if __GLASGOW_HASKELL__ >= 800
-
-#if __GLASGOW_HASKELL__ < 802
-pattern FunTy :: Type -> Type -> Type
-pattern FunTy t v = ForAllTy (Anon t) v
-#endif
-
-mkEqPred :: Type -> Type -> Type
-mkEqPred = mkPrimEqPred
-
-mkHEqPred :: Type -> Type -> Type
-mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
-#endif
