@@ -1,7 +1,56 @@
 module GhcApi
-    ( -- * From TyCon
-      TyCon(..)
-    , isFamilyTyCon
+    (
+    -- * From Coercion
+      mkUnivCo
+
+    -- * From DataCon
+    , dataConName, promoteDataCon, dataConWrapId
+
+    -- * From FastString
+    , FastString(..)
+    , fsLit
+
+    -- * From Module
+    , mkModuleName
+
+    -- * From Name
+    , mkSysTvName
+
+    -- * From OccName
+    , occName, occNameFS, mkTcOcc
+
+    -- * From Outputable
+    , Outputable(..)
+    , (<>), (<+>), ($$)
+    , text
+
+    -- * From Plugins
+    , Plugin(..)
+    , defaultPlugin
+
+    -- * From TcEvidence
+    , EvTerm(..)
+
+    -- * From TcPluginM
+    , TcPluginM
+    , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
+    , tcLookupTyCon, zonkCt
+
+    -- * From TcRnTypes
+    , Ct(..), TcPlugin(..), TcPluginResult(..)
+    , ctLoc, ctEvidence, ctEvPred, ctPred
+    , isGiven, isWanted, isGivenCt
+
+    -- * From TcType
+    , tcSplitTyConApp_maybe, vanillaSkolemTv
+
+    -- * From TyCon
+    , TyCon(..), Role(..)
+    , isFamilyTyCon, tyConDataCons
+
+    -- * From TyCoRep
+    , UnivCoProvenance(PluginProv), Type(..), Kind
+    , mkTyVarTy
 
     -- * From Type
     , EqRel(..), PredTree(..)
@@ -10,16 +59,10 @@ module GhcApi
     , mkNumLitTy, mkTyConApp
     , isNumLitTy, isStrLitTy
     , coreView
+    , mkPrimEqPred, mkStrLitTy
 
-    -- * From TcType
-    , tcSplitTyConApp_maybe, vanillaSkolemTv
-
-    -- * From TyCoRep
-    , Type(..), Kind
-    , mkTyVarTy
-
-    -- * From Name
-    , mkSysTvName
+    -- * From TysWiredIn
+    , typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
 
     -- * From Var
     , TyVar
@@ -28,25 +71,30 @@ module GhcApi
     -- * From VarSet
     , TyCoVarSet
     , elemVarSet
-
-    -- * From FastString
-    , FastString(..)
-    , fsLit
-
-    -- * From Outputable
-    , Outputable(..)
-    , (<>), (<+>), ($$)
-    , text
-
-    -- * From TcRnMonad
-    , Ct
-    , isGiven, ctEvidence, ctEvPred
-
-    -- * From TcPluginM
-    , TcPluginM
-    , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
     ) where
 
+import Coercion (mkUnivCo)
+import DataCon (dataConName, promoteDataCon, dataConWrapId)
+import FastString (FastString(..), fsLit)
+import Module (mkModuleName)
+import Name (mkSysTvName)
+import OccName (occName, occNameFS, mkTcOcc)
+import Outputable (Outputable(..), (<>), (<+>), ($$), text)
+import Plugins (Plugin(..), defaultPlugin)
+import TcEvidence (EvTerm(..))
+import TcPluginM
+    ( TcPluginM
+    , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
+    , tcLookupTyCon, zonkCt
+    )
+import TcRnTypes
+    ( Ct(..), TcPlugin(..), TcPluginResult(..)
+    , ctLoc, ctEvidence, ctEvPred, ctPred
+    , isGiven, isWanted, isGivenCt
+    )
+import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
+import TyCon (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
+import TyCoRep (UnivCoProvenance(PluginProv), Type(..), Kind, mkTyVarTy)
 import Type
     ( EqRel(..), PredTree(..)
     , splitTyConApp_maybe, typeKind, classifyPredType
@@ -54,16 +102,8 @@ import Type
     , mkNumLitTy, mkTyConApp
     , isNumLitTy, isStrLitTy
     , coreView
+    , mkPrimEqPred, mkStrLitTy
     )
-import TyCon (TyCon(..), isFamilyTyCon)
-import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
-import TyCoRep (Type(..), Kind, mkTyVarTy)
-import Name (mkSysTvName)
+import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)
-import FastString (FastString(..), fsLit)
-import Outputable (Outputable(..), (<>), (<+>), ($$), text)
-import TcRnMonad (Ct, isGiven, ctEvidence, ctEvPred)
-import TcPluginM (TcPluginM, tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM)
-
-

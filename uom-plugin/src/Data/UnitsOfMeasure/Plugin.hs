@@ -15,25 +15,7 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import Plugins
-
-import TcEvidence
-import TcRnTypes
-import TcType
-import TcPluginM
-
-import Coercion
-import DataCon
-import Type
-import TyCon
-import TysWiredIn
-
-import FastString
-import Outputable
-
-import OccName ( occName, occNameFS, mkTcOcc )
-import Module
-
+import GhcApi
 import Data.Either
 import Data.List
 
@@ -42,11 +24,6 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 import TcPluginExtras
 
-#if __GLASGOW_HASKELL__ > 710
-import TyCoRep
-#else
-import TypeRep
-#endif
 
 import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
 
