@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e6157a4fb72f9dc704925f3a06f0c93b5db1d9d896d21b8a5580443b5ed59d10
+-- hash: fde8c8941d3cf969e00bf17c77c44c30e385468ed064df94496368cde64663a7
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -84,7 +84,9 @@ test-suite units
   type: exitcode-stdio-1.0
   main-is: Tests.hs
   other-modules:
+      Defs
       ErrorTests
+      Z
       Paths_uom_plugin
   hs-source-dirs:
       tests
