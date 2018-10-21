@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Data.UnitsOfMeasure.Plugin.NormalForm
   ( Atom(..)
   , BaseUnit
@@ -36,9 +37,8 @@ import GhcApi.Shim
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
-import Data.List ( sortBy )
+import Data.List ( sortOn )
 import Data.Maybe
-import Data.Ord
 
 -- | Base units are just represented as strings, for simplicity
 type BaseUnit = FastString
@@ -139,7 +139,7 @@ isConstant = all isBaseLiteral . Map.keys . _NormUnit
 maybeConstant :: NormUnit -> Maybe [(BaseUnit, Integer)]
 maybeConstant = mapM getBase . Map.toList . _NormUnit
   where
-    getBase (BaseAtom ty, i) = (\ b -> (b, i)) <$> isStrLitTy ty
+    getBase (BaseAtom ty, i) = (, i) <$> isStrLitTy ty
     getBase _                = Nothing
 
 -- | Test whether an atom is a base unit (but not necessarily a
@@ -169,7 +169,7 @@ occurs a = any occursAtom . Map.keys . _NormUnit
 
 -- | View a unit as a list of atoms in order of ascending absolute exponent
 ascending :: NormUnit -> [(Atom, Integer)]
-ascending = sortBy (comparing (abs . snd)) . Map.toList . _NormUnit
+ascending = sortOn (abs . snd) . Map.toList . _NormUnit
 
 -- | Drop a variable from a unit
 leftover :: TyVar -> NormUnit -> NormUnit
