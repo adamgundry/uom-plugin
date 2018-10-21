@@ -70,6 +70,9 @@ module GhcApi
     -- * From Unique
     , getUnique, nonDetCmpUnique
 
+    -- * From Util
+    , thenCmp
+
     -- * From Var
     , TyVar
     , mkTcTyVar
@@ -118,6 +121,7 @@ import Type
     )
 import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
 import Unique (getUnique, nonDetCmpUnique)
+import Util (thenCmp)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)
 import GHC.TcPluginM.Extra (evByFiat, tracePlugin, lookupModule, lookupName )

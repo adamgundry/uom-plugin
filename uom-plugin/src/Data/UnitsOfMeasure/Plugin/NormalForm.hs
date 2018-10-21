@@ -33,7 +33,6 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 import GhcApi
 import GhcApi.Compare
 import GhcApi.Shim
-import Util ( thenCmp )
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
