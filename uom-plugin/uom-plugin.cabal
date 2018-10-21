@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d110f2f74fb66155437b924f27283bd9b16991b4f2be45693731488d98f4938c
+-- hash: c0d039e259be8c066e0401676c3e54256542e1f5f8a6cfe48b5f9227b8f67d69
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -23,10 +25,9 @@ license-file:   LICENSE
 tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2
 
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
-    changelog
     package.yaml
+    changelog
 
 source-repository head
   type: git
@@ -48,6 +49,7 @@ library
       Data.UnitsOfMeasure.Plugin.NormalForm
       Data.UnitsOfMeasure.Plugin.Unify
       Data.UnitsOfMeasure.TH
+      GhcApi
       TcPluginExtras
       Paths_uom_plugin
   hs-source-dirs:

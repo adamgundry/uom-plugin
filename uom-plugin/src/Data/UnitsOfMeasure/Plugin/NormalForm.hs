@@ -31,12 +31,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , substUnit
   ) where
 
-import Type
-import TyCon
-import VarSet
-
-import FastString
-import Outputable
+import GhcApi
 import Util ( thenCmp )
 
 import qualified Data.Foldable as Foldable

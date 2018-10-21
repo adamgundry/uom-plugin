@@ -7,20 +7,7 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnit
   ) where
 
-import TyCon
-import Type
-#if __GLASGOW_HASKELL__ > 802
-import TcType ()
-#else
-import TcType
-#endif
-
-#if __GLASGOW_HASKELL__ > 710
-import TyCoRep
-#else
-import TypeRep
-#endif
-
+import GhcApi
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
