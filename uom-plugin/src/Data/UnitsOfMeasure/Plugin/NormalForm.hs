@@ -32,8 +32,8 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   ) where
 
 import GhcApi
-import GhcApi.Compare
-import GhcApi.Shim
+import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
+import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map

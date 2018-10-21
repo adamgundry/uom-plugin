@@ -11,8 +11,8 @@ module Data.UnitsOfMeasure.Plugin
   ) where
 
 import GhcApi
-import GhcApi.Shim
-import GhcApi.Wrap
+import GhcApi.Shim (mkEqPred, mkFunnyEqEvidence)
+import GhcApi.Wrap (newGivenCt, newWantedCt)
 import Data.Either
 import Data.List
 

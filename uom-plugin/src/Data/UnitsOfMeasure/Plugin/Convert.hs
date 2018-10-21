@@ -7,7 +7,7 @@ module Data.UnitsOfMeasure.Plugin.Convert
   ) where
 
 import GhcApi
-import GhcApi.Shim
+import GhcApi.Shim (promoteTyCon)
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
