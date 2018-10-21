@@ -12,12 +12,7 @@ module TcPluginExtras
   , cmpTyCon
   ) where
 
-import TcEvidence ( EvTerm )
-import TcRnTypes  ( mkNonCanonical )
-import TcRnMonad  ( Ct, CtLoc )
-import Type       ( PredType )
-import TyCon      ( TyCon )
-
+import GhcApi
 import GHC.TcPluginM.Extra
 
 #if __GLASGOW_HASKELL__ < 711

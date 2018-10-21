@@ -37,9 +37,10 @@ module GhcApi
     , tcLookupTyCon, zonkCt
 
     -- * From TcRnTypes
-    , Ct(..), TcPlugin(..), TcPluginResult(..)
+    , Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
     , ctLoc, ctEvidence, ctEvPred, ctPred
     , isGiven, isWanted, isGivenCt
+    , mkNonCanonical
 
     -- * From TcType
     , tcSplitTyConApp_maybe, vanillaSkolemTv
@@ -53,7 +54,7 @@ module GhcApi
     , mkTyVarTy
 
     -- * From Type
-    , EqRel(..), PredTree(..)
+    , EqRel(..), PredTree(..), PredType
     , splitTyConApp_maybe, typeKind, classifyPredType
     , tyCoVarsOfType, tyCoVarsOfTypes
     , mkNumLitTy, mkTyConApp
@@ -88,15 +89,16 @@ import TcPluginM
     , tcLookupTyCon, zonkCt
     )
 import TcRnTypes
-    ( Ct(..), TcPlugin(..), TcPluginResult(..)
+    ( Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
     , ctLoc, ctEvidence, ctEvPred, ctPred
     , isGiven, isWanted, isGivenCt
+    , mkNonCanonical
     )
 import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
 import TyCon (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
 import TyCoRep (UnivCoProvenance(PluginProv), Type(..), Kind, mkTyVarTy)
 import Type
-    ( EqRel(..), PredTree(..)
+    ( EqRel(..), PredTree(..), PredType
     , splitTyConApp_maybe, typeKind, classifyPredType
     , tyCoVarsOfType, tyCoVarsOfTypes
     , mkNumLitTy, mkTyConApp
