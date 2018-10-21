@@ -17,7 +17,6 @@ stability: experimental
 github: adamgundry/uom-plugin
 copyright: Copyright (c) 2014-2018, Adam Gundry
 tested-with: >+
-  GHC == 7.10.3,
   GHC == 8.0.2,
   GHC == 8.2.2
 extra-source-files:
