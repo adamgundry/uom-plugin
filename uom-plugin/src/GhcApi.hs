@@ -77,6 +77,9 @@ module GhcApi
     -- * From VarSet
     , TyCoVarSet
     , elemVarSet
+
+    -- * From GHC.TcPluginM.Extra
+    , evByFiat, tracePlugin, lookupModule, lookupName
     ) where
 
 import Coercion (mkUnivCo)
@@ -117,3 +120,4 @@ import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
 import Unique (getUnique, nonDetCmpUnique)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)
+import GHC.TcPluginM.Extra (evByFiat, tracePlugin, lookupModule, lookupName )

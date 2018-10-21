@@ -1,8 +1,3 @@
-{-# LANGUAGE CPP #-}
-#if __GLASGOW_HASKELL__ > 710
-{-# LANGUAGE PatternSynonyms #-}
-#endif
-
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
 --
@@ -25,8 +20,6 @@ import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 
-
-import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
 
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
@@ -176,17 +169,3 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
       , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
     _                    -> error "evMagic"
-
--- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by
--- coercing bogus evidence of type @t1 ~ t2@ (or its heterogeneous
--- variant, in GHC 8.0).
-mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
-#if __GLASGOW_HASKELL__ >= 800
-mkFunnyEqEvidence t t1 t2 = EvDFunApp (dataConWrapId heqDataCon) [typeKind t1, typeKind t2, t1, t2] [evByFiat "units" t1 t2]
-                       `EvCast` mkUnivCo (PluginProv "units") Representational (mkHEqPred t1 t2) t
-#else
-mkFunnyEqEvidence t t1 t2 = evByFiat "units" t1 t2
-                       `EvCast` TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
-#endif
-
-
