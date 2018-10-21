@@ -13,7 +13,6 @@ module Data.UnitsOfMeasure.Plugin.Unify
 import GhcApi
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
-import TcPluginExtras
 
 
 -- | A substitution is essentially a list of (variable, unit) pairs,

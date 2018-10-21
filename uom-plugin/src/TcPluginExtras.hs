@@ -16,22 +16,6 @@ import GhcApi
 import GHC.TcPluginM.Extra
 
 #if __GLASGOW_HASKELL__ < 711
-import Unique     ( Unique )
-import qualified TcRnMonad
-import TcPluginM ( TcPluginM, unsafeTcPluginTcM )
-#else
-import TcPluginM ( TcPluginM, newUnique )
-#endif
-
-#if __GLASGOW_HASKELL__ < 802
-import Type ( cmpType, cmpTypes )
-#else
-import Type ( Type, nonDetCmpType, nonDetCmpTypes )
-import Unique ( getUnique, nonDetCmpUnique )
-#endif
-
-
-#if __GLASGOW_HASKELL__ < 711
 newUnique :: TcPluginM Unique
 newUnique = unsafeTcPluginTcM TcRnMonad.newUnique
 #endif

@@ -35,6 +35,7 @@ module GhcApi
     , TcPluginM
     , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
     , tcLookupTyCon, zonkCt
+    , newUnique
 
     -- * From TcRnTypes
     , Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
@@ -61,9 +62,13 @@ module GhcApi
     , isNumLitTy, isStrLitTy
     , coreView
     , mkPrimEqPred, mkStrLitTy
+    , nonDetCmpType, nonDetCmpTypes
 
     -- * From TysWiredIn
     , typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
+
+    -- * From Unique
+    , getUnique, nonDetCmpUnique
 
     -- * From Var
     , TyVar
@@ -87,6 +92,7 @@ import TcPluginM
     ( TcPluginM
     , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
     , tcLookupTyCon, zonkCt
+    , newUnique
     )
 import TcRnTypes
     ( Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
@@ -105,7 +111,9 @@ import Type
     , isNumLitTy, isStrLitTy
     , coreView
     , mkPrimEqPred, mkStrLitTy
+    , nonDetCmpType, nonDetCmpTypes
     )
 import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
+import Unique (getUnique, nonDetCmpUnique)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)
