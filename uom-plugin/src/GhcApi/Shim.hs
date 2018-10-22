@@ -46,10 +46,6 @@ mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
 evDFunApp' :: DFunId -> [Type] -> [EvExpr] -> EvTerm
 evDFunApp' x ks ts =
     evDFunApp x ks ts
-#elif __GLASGOW_HASKELL__ >= 802
-evDFunApp' :: DFunId -> [Type] -> [EvTerm] -> EvTerm
-evDFunApp' x ks ts =
-    EvDFunApp x ks ts
 #else
 evDFunApp' :: DFunId -> [Type] -> [EvTerm] -> EvTerm
 evDFunApp' x ks ts =
@@ -70,72 +66,40 @@ evCast' = EvCast
 -- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by
 -- coercing bogus evidence of type @t1 ~ t2@ (or its heterogeneous
 -- variant, in GHC 8.0).
-#if __GLASGOW_HASKELL__ >= 806
-mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
-mkFunnyEqEvidence t t1 t2 =
-    let (EvExpr e) = castFrom in e `evCast'` castTo
-    where
-        funId :: Id
-        funId = dataConWrapId heqDataCon
-
-        tys :: [Kind]
-        tys = [typeKind t1, typeKind t2, t1, t2]
-
-        terms :: [EvExpr]
-        terms = [let (EvExpr e) = evByFiat "units" t1 t2 in e]
-
-        from :: UnivCoProvenance
-        from = PluginProv "units"
-
-        role :: Role
-        role = Representational
-
-        tySource :: Type
-        tySource = mkHEqPred t1 t2
-
-        castFrom :: EvTerm
-        castFrom = evDFunApp' funId tys terms
-
-        castTo :: Coercion
-        castTo = mkUnivCo from role tySource t
-#elif __GLASGOW_HASKELL__ >= 800
 mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
 mkFunnyEqEvidence t t1 t2 =
     castFrom `evCast'` castTo
     where
-        funId :: Id
-        funId = dataConWrapId heqDataCon
-
-        tys :: [Kind]
-        tys = [typeKind t1, typeKind t2, t1, t2]
-
-        terms :: [EvTerm]
-        terms = [evByFiat "units" t1 t2]
-
-        from :: UnivCoProvenance
-        from = PluginProv "units"
-
-        role :: Role
-        role = Representational
-
-        tySource :: Type
-        tySource = mkHEqPred t1 t2
-
+#if __GLASGOW_HASKELL__ >= 806
+        castFrom :: EvExpr
+        castFrom =
+            let (EvExpr e) = evDFunApp' funId tys terms in e
+#else
         castFrom :: EvTerm
-        castFrom = evDFunApp' funId tys terms
+        castFrom =
+            evDFunApp' funId tys terms
+#endif
+            where
+                funId :: Id
+                funId = dataConWrapId heqDataCon
+
+                tys :: [Kind]
+                tys = [typeKind t1, typeKind t2, t1, t2]
+
+#if __GLASGOW_HASKELL__ >= 806
+                terms :: [EvExpr]
+                terms = [let (EvExpr e) = evByFiat "units" t1 t2 in e]
+#else
+                terms :: [EvTerm]
+                terms = [evByFiat "units" t1 t2]
+#endif
 
         castTo :: Coercion
-        castTo = mkUnivCo from role tySource t
-#else
-mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
-mkFunnyEqEvidence t t1 t2 =
-    evByFiat "units" t1 t2
-    `evCast'`
-    TcCoercion
-        (mkUnivCo
-            (fsLit "units")
-            Representational
-            (mkTyConApp eqTyCon [typeKind t1, t1, t2])
-            t
-        )
-#endif
+        castTo =
+            mkUnivCo from Representational tySource t
+            where
+                from :: UnivCoProvenance
+                from = PluginProv "units"
+
+                tySource :: Type
+                tySource = mkHEqPred t1 t2
