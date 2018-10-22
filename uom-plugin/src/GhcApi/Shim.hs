@@ -44,12 +44,10 @@ mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
 
 #if __GLASGOW_HASKELL__ >= 806
 evDFunApp' :: DFunId -> [Type] -> [EvExpr] -> EvTerm
-evDFunApp' x ks ts =
-    evDFunApp x ks ts
+evDFunApp' = evDFunApp
 #else
 evDFunApp' :: DFunId -> [Type] -> [EvTerm] -> EvTerm
-evDFunApp' x ks ts =
-    EvDFunApp x ks ts
+evDFunApp' = EvDFunApp
 #endif
 
 #if __GLASGOW_HASKELL__ >= 806
