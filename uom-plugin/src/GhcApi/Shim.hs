@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module GhcApi.Shim
     (
@@ -44,15 +45,17 @@ mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
 
 #if __GLASGOW_HASKELL__ >= 806
 evDFunApp' :: DFunId -> [Type] -> [EvExpr] -> EvTerm
-evDFunApp' = evDFunApp
+evDFunApp' f ts es = evDFunApp f ts es
 #else
 evDFunApp' :: DFunId -> [Type] -> [EvTerm] -> EvTerm
 evDFunApp' = EvDFunApp
 #endif
 
 #if __GLASGOW_HASKELL__ >= 806
-evCast' :: EvExpr -> TcCoercion -> EvTerm
-evCast' = evCast
+evCast' :: EvTerm -> TcCoercion -> EvTerm
+evCast' (EvExpr e)  = evCast e
+evCast' (EvTypeable _ _) = fail "Can't evCast (EvTypeable _ _)"
+evCast' (EvFun _ _ _ _) = fail "Can't evCast (EvFun _ _ _ _)"
 #elif __GLASGOW_HASKELL__ >= 802
 evCast' :: EvTerm -> TcCoercion -> EvTerm
 evCast' = EvCast
@@ -66,16 +69,8 @@ evCast' = EvCast
 -- variant, in GHC 8.0).
 mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
 mkFunnyEqEvidence t t1 t2 =
-    f castFrom `evCast'` castTo
+    castFrom `evCast'` castTo
     where
-#if __GLASGOW_HASKELL__ >= 806
-        f :: EvTerm -> EvExpr
-        f x = let (EvExpr e) = x in e
-#else
-        f :: a -> a
-        f = id
-#endif
-
         castFrom :: EvTerm
         castFrom = evDFunApp' funId tys terms
             where
@@ -93,7 +88,8 @@ mkFunnyEqEvidence t t1 t2 =
                 terms = [evByFiat "units" t1 t2]
 #endif
 
-        castTo :: Coercion
+
+        castTo :: TcCoercion
         castTo =
             mkUnivCo from Representational tySource t
             where

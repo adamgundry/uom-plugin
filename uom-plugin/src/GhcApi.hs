@@ -39,6 +39,7 @@ module GhcApi
     , EvExpr
     , evCast
     , evDFunApp
+    , evCoercion
 #endif
 
     -- * From TcPluginM
@@ -131,6 +132,7 @@ import TcEvidence
     , EvExpr
     , evCast
     , evDFunApp
+    , evCoercion
 #endif
     )
 
