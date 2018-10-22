@@ -66,17 +66,18 @@ evCast' = EvCast
 -- variant, in GHC 8.0).
 mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
 mkFunnyEqEvidence t t1 t2 =
-    castFrom `evCast'` castTo
+    f castFrom `evCast'` castTo
     where
 #if __GLASGOW_HASKELL__ >= 806
-        castFrom :: EvExpr
-        castFrom =
-            let (EvExpr e) = evDFunApp' funId tys terms in e
+        f :: EvTerm -> EvExpr
+        f x = let (EvExpr e) = x in e
 #else
-        castFrom :: EvTerm
-        castFrom =
-            evDFunApp' funId tys terms
+        f :: a -> a
+        f = id
 #endif
+
+        castFrom :: EvTerm
+        castFrom = evDFunApp' funId tys terms
             where
                 funId :: Id
                 funId = dataConWrapId heqDataCon
