@@ -53,7 +53,13 @@ module GhcApi
     , isFamilyTyCon, tyConDataCons
 
     -- * From TyCoRep
-    , UnivCoProvenance(PluginProv), Type(..), Kind
+    , UnivCoProvenance(PluginProv)
+    , Kind
+#if __GLASGOW_HASKELL__ >= 802
+    , Type(TyConApp, TyVarTy, AppTy, ForAllTy, FunTy)
+#elif __GLASGOW_HASKELL__ >= 800
+    , Type(TyConApp, TyVarTy, AppTy, ForAllTy)
+#endif
 #if __GLASGOW_HASKELL__ <= 800
     , TyBinder(Anon)
 #endif
@@ -118,13 +124,21 @@ import TcRnTypes
     )
 import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
 import TyCon (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
+
 import TyCoRep
-    ( UnivCoProvenance(PluginProv), Type(..), Kind
+    ( UnivCoProvenance(PluginProv)
+    , Kind
+#if __GLASGOW_HASKELL__ >= 802
+    , Type(TyConApp, TyVarTy, AppTy, ForAllTy, FunTy)
+#elif __GLASGOW_HASKELL__ >= 800
+    , Type(TyConApp, TyVarTy, AppTy, ForAllTy)
+#endif
 #if __GLASGOW_HASKELL__ <= 800
     , TyBinder(Anon)
 #endif
     , mkTyVarTy
     )
+
 import Type
     ( EqRel(..), PredTree(..), PredType
     , splitTyConApp_maybe, typeKind, classifyPredType
@@ -137,13 +151,16 @@ import Type
     , nonDetCmpType, nonDetCmpTypes
 #endif
     )
+
 import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
+
 import Unique
     ( getUnique
 #if __GLASGOW_HASKELL__ >= 802
     , nonDetCmpUnique
 #endif
     )
+
 import Util (thenCmp)
 import Var (TyVar, mkTcTyVar)
 import VarSet (TyCoVarSet, elemVarSet)

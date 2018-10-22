@@ -1,3 +1,6 @@
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE PatternSynonyms #-}
+
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
 --
@@ -11,7 +14,12 @@ module Data.UnitsOfMeasure.Plugin
   ) where
 
 import GhcApi
-import GhcApi.Shim (mkEqPred, mkFunnyEqEvidence)
+import GhcApi.Shim
+    ( mkEqPred, mkFunnyEqEvidence
+#if __GLASGOW_HASKELL__ < 802
+    , pattern FunTy
+#endif
+    )
 import GhcApi.Wrap (newGivenCt, newWantedCt)
 import Data.Either
 import Data.List
