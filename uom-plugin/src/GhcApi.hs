@@ -4,6 +4,7 @@ module GhcApi
     (
     -- * From Coercion
       mkUnivCo
+    , Coercion
 
     -- * From DataCon
     , dataConName, promoteDataCon, dataConWrapId
@@ -32,6 +33,13 @@ module GhcApi
 
     -- * From TcEvidence
     , EvTerm(..)
+    , TcCoercion
+    , TcCoercionR
+#if __GLASGOW_HASKELL__ >= 806
+    , EvExpr
+    , evCast
+    , evDFunApp
+#endif
 
     -- * From TcPluginM
     , TcPluginM
@@ -90,7 +98,7 @@ module GhcApi
     , thenCmp
 
     -- * From Var
-    , TyVar
+    , Id, DFunId, TyVar
     , mkTcTyVar
 
     -- * From VarSet
@@ -101,7 +109,12 @@ module GhcApi
     , evByFiat, tracePlugin, lookupModule, lookupName
     ) where
 
-import Coercion (mkUnivCo)
+#if __GLASGOW_HASKELL__ >= 804
+import Prelude hiding ((<>))
+#endif
+
+import Coercion (mkUnivCo, Coercion)
+
 import DataCon (dataConName, promoteDataCon, dataConWrapId)
 import FastString (FastString(..), fsLit)
 import Module (mkModuleName)
@@ -109,7 +122,18 @@ import Name (mkSysTvName)
 import OccName (occName, occNameFS, mkTcOcc)
 import Outputable (Outputable(..), (<>), (<+>), ($$), text)
 import Plugins (Plugin(..), defaultPlugin)
-import TcEvidence (EvTerm(..))
+
+import TcEvidence
+    ( EvTerm(..)
+    , TcCoercion
+    , TcCoercionR
+#if __GLASGOW_HASKELL__ >= 806
+    , EvExpr
+    , evCast
+    , evDFunApp
+#endif
+    )
+
 import TcPluginM
     ( TcPluginM
     , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
@@ -162,6 +186,13 @@ import Unique
     )
 
 import Util (thenCmp)
-import Var (TyVar, mkTcTyVar)
+
+import Var
+    ( TyVar
+    , DFunId
+    , Id
+    , mkTcTyVar
+    )
+
 import VarSet (TyCoVarSet, elemVarSet)
 import GHC.TcPluginM.Extra (evByFiat, tracePlugin, lookupModule, lookupName )

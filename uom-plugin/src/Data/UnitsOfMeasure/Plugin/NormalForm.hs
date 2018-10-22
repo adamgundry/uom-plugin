@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
+
 module Data.UnitsOfMeasure.Plugin.NormalForm
   ( Atom(..)
   , BaseUnit
@@ -31,6 +33,9 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , substUnit
   ) where
 
+#if __GLASGOW_HASKELL__ >= 804
+import Prelude hiding ((<>))
+#endif
 import GhcApi
 import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
 import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
