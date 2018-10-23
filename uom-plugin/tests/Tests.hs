@@ -11,9 +11,51 @@
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
+-- WARNING: It would be a lot of work to add type annotations to avoid type-default
+-- warnings and what is more this leads to type checking failures;
+--
+-- {-# LANGUAGE PartialTypeSignatures #-}
+--
+--   , testGroup "read normalisation"
+--     [ testCase "1 m/m"
+--         $ (read "[u| 1 m/m |]" :: _ Integer _) @?= [u| 1 |]
+--     , testCase "-0.3 m s^-1"
+--         $ (read "[u| -0.3 m s^-1 |]" :: _ Double _) @?= [u| -0.3 m/s |]
+--     , testCase "42 s m s"
+--         $ (read "[u| 42 s m s |]" :: _ Integer _)  @?= [u| 42 m s^2 |]
+--     ]
+--
+-- > cabal new-repl uom-plugin:units
+-- solveSimpleWanteds: too many iterations (limit = 4)
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
+
+module Main
+    ( main
+
+    -- * Exported to avoid -Wunused-top-binds.
+    , attract
+    , foo
+    , foo'
+    , angularSpeed
+    , associativity
+    , commutativity
+    , unit
+    , inverse
+    , inverse2
+    , f
+    , g
+    , givens
+    , givens2
+    , givens3
+    , baz
+    , baf
+    , patternSplice
+    , pow
+    , dimensionless
+    ) where
+
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
-import Data.UnitsOfMeasure.Internal (fromRational')
 import Data.UnitsOfMeasure.Defs ()
 import Data.UnitsOfMeasure.Show
 
@@ -21,20 +63,13 @@ import Control.Monad (unless)
 import Control.Exception
 import Data.List
 import Data.Ratio ((%))
-import GHC.Real (Ratio(..))
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Defs ()
 import ErrorTests
-
-
--- Declarations
-declareBaseUnit "byte"
-declareDerivedUnit "bps" "byte / s"
-declareConvertibleUnit "kilobyte" 1024 "byte"
-declareConvertibleUnit "squiggle" 2 "m/s"
-
+import Z (z)
 
 -- Some basic examples
 
@@ -50,14 +85,27 @@ forceOnGround = gravityOnEarth *: myMass
 inMetresPerSecond :: a -> Quantity a [u| m/s |]
 inMetresPerSecond = [u| m/s |]
 
-attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity a [u| m |])
+attract
+    :: Fractional a
+    => Quantity a [u| kg |]
+    -> Quantity a [u| kg |]
+    -> Quantity a [u| m |]
+    -> Quantity a [u| N |]
+attract
+    (m1 :: Quantity a [u| kg |])
+    (m2 :: Quantity a [u| kg |])
+    (r :: Quantity a [u| m |])
     = _G *: m1 *: m2 /: (r *: r) :: Quantity a [u| N |]
   where
     _G = [u| 6.67384e-11 N*m^2/kg^2 |]
 
+sum' :: [Quantity Double u] -> Quantity Double u
 sum' = foldr (+:) zero
+
+mean :: [Quantity Double u] -> Quantity Double u
 mean xs = sum' xs /: mk (genericLength xs)
 
+foo :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
 foo x y = x *: y +: y *: x
 
 foo' :: Num a => Quantity a u -> Quantity a v -> Quantity a (u *: v)
@@ -65,7 +113,7 @@ foo' = foo
 
 -- thanks to expipiplus1, https://github.com/adamgundry/uom-plugin/issues/14
 angularSpeed :: Quantity Rational [u|rad/s|]
-angularSpeed = convert x
+angularSpeed = z x
   where x :: Quantity Rational [u|s^-1|]
         x = undefined
 
@@ -119,27 +167,22 @@ baf qa qb = baz qa qb undefined
 
 -- Miscellaneous bits and bobs
 
--- Inferring this type used to lead to unit equations with occur-check
--- failures, because it involves things like Pack (Unpack u) ~ u
--- The type signature is intentionally left off here to check that the
--- compiler can infer it.
--- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible u v)
---   => Quantity a u
---   -> Quantity a v
-{-# ANN z "HLint: ignore Eta reduce" #-}
-z q = convert q
-
 -- Pattern splices are supported, albeit with restricted types
+patternSplice :: Quantity Integer [u| m |] -> Quantity Rational [u| kg/s |] -> Bool
 patternSplice [u| 2 m |] [u| 0.0 kg / s |] = True
 patternSplice [u| 1 m |] [u| 0.1 kg / s |] = True
 patternSplice _          _                 = False
 
 -- Andrew's awkward generalisation example is accepted only with a
 -- type signature, even with NoMonoLocalBinds
-tricky :: forall a u . Num a => Quantity a u -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
-tricky x = let f :: Quantity a v -> Quantity a (u *: v)
-               f = (x *:)
-           in (f [u| 3 m |], f [u| 5 kg |])
+tricky
+    :: forall a u . Num a
+    => Quantity a u
+    -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
+tricky x =
+    let h :: Quantity a v -> Quantity a (u *: v)
+        h = (x *:)
+    in (h [u| 3 m |], h [u| 5 kg |])
 
 
 -- Test that basic constraints involving exponentiation work
@@ -151,11 +194,6 @@ pow = id
 [u| dimensionless = 1 |]
 dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
 dimensionless = id
-
--- This declares a dimensionless unit that requires explicit conversion
-[u| dime = 1 1 |]
-dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
-dime = convert
 
 
 -- Runtime testsuite

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ea266b1e8d435bfb94ff3077fd618465b3182b21be200843bd50a9991478a517
+-- hash: b560f0805923b4e4d63984036ab852a6fb5aa62ba5fe0bd0cf13846fe7b77343
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -80,7 +80,9 @@ test-suite units
   type: exitcode-stdio-1.0
   main-is: Tests.hs
   other-modules:
+      Defs
       ErrorTests
+      Z
       Paths_uom_plugin
   hs-source-dirs:
       tests
