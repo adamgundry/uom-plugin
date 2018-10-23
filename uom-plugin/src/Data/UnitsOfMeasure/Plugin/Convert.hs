@@ -9,10 +9,8 @@ module Data.UnitsOfMeasure.Plugin.Convert
 
 import TyCon
 import Type
-#if __GLASGOW_HASKELL__ > 802
-import TcType ()
-#else
-import TcType
+#if __GLASGOW_HASKELL__ <= 800
+import TcType (tcSplitTyConApp_maybe)
 #endif
 
 #if __GLASGOW_HASKELL__ > 710

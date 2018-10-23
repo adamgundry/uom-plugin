@@ -35,9 +35,12 @@ uom-plugin-examples> dist/build/Examples/Examples
 
 * ### With Stack
 
+From the set of `stack-<ghc-version>.yaml` provided files, picking the one that
+corresponds to ghc-8.2.2;
+
 ```
-> stack build
-> stack exec Examples
+> stack build --stack-yaml=stack-8.2.2.yaml
+> stack exec Examples --stack-yaml=stack-8.2.2.yaml
 ```
 
 [![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
