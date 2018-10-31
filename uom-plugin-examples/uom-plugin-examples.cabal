@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 836b907502b9764add4fa7954400eb252fd0b3fb1ca8cd925bc54a5db7b857f2
+-- hash: 0b7356c93e1491eb8ebb0a65d1e3546436e7dfa7e45855e0719d51af3e9e134c
 
 name:           uom-plugin-examples
 version:        0.1.0.0
@@ -13,6 +13,8 @@ description:    This package provides examples of the use of uom-plugin
 author:         Adam Gundry
 maintainer:     adam@well-typed.com
 license:        PublicDomain
+tested-with:    GHC == 8.0.2, GHC == 8.2.2
+
 build-type:     Simple
 extra-source-files:
     package.yaml

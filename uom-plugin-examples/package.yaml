@@ -8,6 +8,9 @@ synopsis: Examples of the use of uom-plugin
 description: This package provides examples of the use of uom-plugin
 license: PublicDomain
 version: '0.1.0.0'
+tested-with: >+
+  GHC == 8.0.2,
+  GHC == 8.2.2
 extra-source-files:
 - package.yaml
 ghc-options:
