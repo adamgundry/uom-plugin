@@ -10,18 +10,9 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , simplifyUnits
   ) where
 
-import FastString
-import Name
-import Outputable
-import TcRnMonad ( Ct, isGiven, ctEvidence, ctEvPred )
-import TcType
-import Type
-import Var
-
+import GhcApi
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
-import TcPluginExtras
-import TcPluginM
 
 
 -- | A substitution is essentially a list of (variable, unit) pairs,

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
+
 module Data.UnitsOfMeasure.Plugin.NormalForm
   ( Atom(..)
   , BaseUnit
@@ -32,21 +33,17 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , substUnit
   ) where
 
-import Type
-import TyCon
-import VarSet
-
-import FastString
-import Outputable
-import Util ( thenCmp )
+#if __GLASGOW_HASKELL__ >= 804
+import Prelude hiding ((<>))
+#endif
+import GhcApi
+import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
+import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import Data.List ( sortOn )
 import Data.Maybe
-
-import TcPluginExtras
-
 
 -- | Base units are just represented as strings, for simplicity
 type BaseUnit = FastString
@@ -192,12 +189,3 @@ substUnit :: TyVar -> NormUnit -> NormUnit -> NormUnit
 substUnit a v u = case Map.lookup (VarAtom a) $ _NormUnit u of
                     Nothing -> u
                     Just i  -> (v ^: i) *: leftover a u
-
-
-#if __GLASGOW_HASKELL__ > 710
-tyVarsOfType :: Type -> TyCoVarSet
-tyVarsOfType = tyCoVarsOfType
-
-tyVarsOfTypes :: [Type] -> TyCoVarSet
-tyVarsOfTypes = tyCoVarsOfTypes
-#endif

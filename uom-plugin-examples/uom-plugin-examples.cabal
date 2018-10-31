@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b3e6e3b11681ba3b4f00cb9dc90c66f5e1acdd6a8f9e566a43886537348e266d
+-- hash: 836b907502b9764add4fa7954400eb252fd0b3fb1ca8cd925bc54a5db7b857f2
 
 name:           uom-plugin-examples
 version:        0.1.0.0
@@ -12,7 +14,6 @@ author:         Adam Gundry
 maintainer:     adam@well-typed.com
 license:        PublicDomain
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     package.yaml
 
