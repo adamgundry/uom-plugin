@@ -1,4 +1,4 @@
-resolver: nightly-2018-10-12
+resolver: nightly-2018-10-31
 packages:
 - 'uom-plugin'
 - 'uom-plugin-examples'
