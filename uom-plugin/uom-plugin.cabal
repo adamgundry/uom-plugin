@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 82a3da94a670ceb702932a17897f1ddcb19997adba4a251cb2b5d3e3ec39c0f9
+-- hash: dd3cc75480f361b7dec4773a98b432b28402507c41b4f4de207419f4dd12fe82
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -22,7 +22,7 @@ maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
-tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.3 GHC == 8.6.1
+tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.3, GHC == 8.6.1
 
 build-type:     Simple
 extra-source-files:
