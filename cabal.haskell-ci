@@ -4,13 +4,13 @@
 -- jobs: 2:2
 
 -- travis Caching
--- cache: True
+cache: True
 
 -- remove cabal noise from test output
 -- cabal-noise: False
 
 -- Run cabal check
--- cabal-check: True
+cabal-check: False
 
 -- Install dependencies in a separate step
 -- If your project has inplace packages, you want to disable this.
