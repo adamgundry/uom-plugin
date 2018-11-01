@@ -24,3 +24,6 @@ executables:
       - uom-plugin >= 0.1 && < 0.4
       main: Examples.hs
       source-dirs: .
+      when:
+        - condition: impl(ghc > 8.2.2)
+          buildable: false

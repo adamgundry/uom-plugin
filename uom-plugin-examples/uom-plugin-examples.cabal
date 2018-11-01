@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 08e35965d21c8c124f383bfb34f78c274e35b03dceb8776599bf697d5e49f1d4
+-- hash: 53fc4994f850a40280103c74ba71c0a9f1d4ad84557e848e1ea823419ee15d76
 
 name:           uom-plugin-examples
 version:        0.1.0.0
@@ -30,4 +30,6 @@ executable Examples
   build-depends:
       base >=4.7 && <5
     , uom-plugin >=0.1 && <0.4
+  if impl(ghc > 8.2.2)
+    buildable: False
   default-language: Haskell2010

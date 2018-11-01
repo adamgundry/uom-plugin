@@ -60,6 +60,9 @@ tests:
     main: Tests.hs
     source-dirs:
     - tests
+    when:
+      - condition: impl(ghc > 8.2.2)
+        buildable: false
   hlint:
     dependencies:
     - base
