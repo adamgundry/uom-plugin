@@ -71,7 +71,15 @@ corresponds to ghc-8.2.2;
 
 [![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
 
-Generate the `.travis.yml` setup with;
+If installing tooling from the master branch of haskell-ci then generate the
+`.travis.yml` setup with;
+
+```
+> make-travis-yml --output=.travis.yml --config=cabal.haskell-ci cabal.project
+```
+
+If installing tooling from the package branch of haskell-ci then generate the
+`.travis.yml` setup with;
 
 ```
 > haskell-ci --output=.travis.yml --config=cabal.haskell-ci cabal.project
