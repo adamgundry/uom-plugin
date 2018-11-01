@@ -27,6 +27,8 @@ Then build and run with any of these methods:
 The default compiler is set in `./nix/config.nix` as `compiler ? "ghc822"`;
 
 ```
+> nix-shell
+
 [nix-shell:]$ cabal new-build all
 Resolving dependencies...
 Up to date
