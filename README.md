@@ -43,4 +43,12 @@ corresponds to ghc-8.2.2;
 > stack exec Examples --stack-yaml=stack-8.2.2.yaml
 ```
 
+### Continuous Integration
+
 [![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
+
+Generate the `.travis.yml` setup with;
+
+```
+> haskell-ci --output=.travis.yml --config=cabal.haskell-ci cabal.project
+```
