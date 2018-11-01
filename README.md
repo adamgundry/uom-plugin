@@ -22,6 +22,28 @@ Then build and run with any of these methods:
 > cabal new-exec Examples
 ```
 
+* ### With Nix and Cabal
+
+The default compiler is set in `./nix/config.nix` as `compiler ? "ghc822"`;
+
+```
+[nix-shell:]$ cabal new-build all
+Resolving dependencies...
+Up to date
+```
+
+With `GHC >= 8.4.3` only the plugin itself builds, not its tests or the
+examples;
+
+```
+> nix-shell -p haskell.compiler.ghc843 -p haskell.packages.ghc843.cabal-install
+
+[nix-shell:]$ cabal new-build uom-plugin --disable-tests
+Resolving dependencies...
+Build profile: -w ghc-8.4.3 -O1
+...
+```
+
 * ### Within a Cabal Sandbox
 
 ```
