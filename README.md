@@ -34,8 +34,21 @@ Resolving dependencies...
 Up to date
 ```
 
-With `GHC >= 8.4.3` only the plugin itself builds, not its tests or the
-examples;
+With `GHC > 8.2.2` only the plugin itself builds, not its tests or the
+examples. There are conditionals for this in the `package.yaml` files;
+
+```
+# package.yaml
+    when:
+      - condition: impl(ghc > 8.2.2)
+        buildable: false
+
+# .cabal
+    if impl(ghc > 8.2.2)
+      buildable: False
+```
+
+If the conditions were not in place then what they do is equivalent to;
 
 ```
 > nix-shell -p haskell.compiler.ghc843 -p haskell.packages.ghc843.cabal-install
