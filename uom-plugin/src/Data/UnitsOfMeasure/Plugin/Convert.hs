@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Data.UnitsOfMeasure.Plugin.Convert
   ( UnitDefs(..)
   , unitKind
@@ -7,18 +6,8 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnit
   ) where
 
-import TyCon
-import Type
-#if __GLASGOW_HASKELL__ <= 800
-import TcType (tcSplitTyConApp_maybe)
-#endif
-
-#if __GLASGOW_HASKELL__ > 710
-import TyCoRep
-#else
-import TypeRep
-#endif
-
+import GhcApi
+import GhcApi.Shim (promoteTyCon)
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
@@ -85,9 +74,3 @@ reifyUnit uds u | null xs && null ys = oneTy
     reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [s]
     reifyAtom (VarAtom  v)    = mkTyVarTy  v
     reifyAtom (FamAtom f tys) = mkTyConApp f tys
-
-
-#if __GLASGOW_HASKELL__ > 710
-promoteTyCon :: TyCon -> TyCon
-promoteTyCon = id
-#endif

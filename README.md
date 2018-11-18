@@ -22,6 +22,43 @@ Then build and run with any of these methods:
 > cabal new-exec Examples
 ```
 
+* ### With Nix and Cabal
+
+The default compiler is set in `./nix/config.nix` as `compiler ? "ghc822"`;
+
+```
+> nix-shell
+
+[nix-shell:]$ cabal new-build all
+Resolving dependencies...
+Up to date
+```
+
+With `GHC > 8.2.2` only the plugin itself builds, not its tests or the
+examples. There are conditionals for this in the `package.yaml` files;
+
+```
+# package.yaml
+    when:
+      - condition: impl(ghc > 8.2.2)
+        buildable: false
+
+# .cabal
+    if impl(ghc > 8.2.2)
+      buildable: False
+```
+
+If the conditions were not in place then what they do is equivalent to;
+
+```
+> nix-shell -p haskell.compiler.ghc843 -p haskell.packages.ghc843.cabal-install
+
+[nix-shell:]$ cabal new-build uom-plugin --disable-tests
+Resolving dependencies...
+Build profile: -w ghc-8.4.3 -O1
+...
+```
+
 * ### Within a Cabal Sandbox
 
 ```
@@ -43,4 +80,20 @@ corresponds to ghc-8.2.2;
 > stack exec Examples --stack-yaml=stack-8.2.2.yaml
 ```
 
+### Continuous Integration
+
 [![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
+
+If installing tooling from the master branch of haskell-ci then generate the
+`.travis.yml` setup with;
+
+```
+> make-travis-yml --output=.travis.yml --config=cabal.haskell-ci cabal.project
+```
+
+If installing tooling from the package branch of haskell-ci then generate the
+`.travis.yml` setup with;
+
+```
+> haskell-ci --output=.travis.yml --config=cabal.haskell-ci cabal.project
+```

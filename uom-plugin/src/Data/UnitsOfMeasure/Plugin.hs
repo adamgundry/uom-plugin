@@ -1,7 +1,5 @@
 {-# LANGUAGE CPP #-}
-#if __GLASGOW_HASKELL__ > 710
 {-# LANGUAGE PatternSynonyms #-}
-#endif
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
@@ -15,40 +13,21 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import Plugins
-
-import TcEvidence
-import TcRnTypes
-import TcType
-import TcPluginM
-
-import Coercion
-import DataCon
-import Type
-import TyCon
-import TysWiredIn
-
-import FastString
-import Outputable
-
-import OccName ( occName, occNameFS, mkTcOcc )
-import Module
-
+import GhcApi
+import GhcApi.Shim
+    ( mkEqPred, mkFunnyEqEvidence
+#if __GLASGOW_HASKELL__ < 802
+    , pattern FunTy
+#endif
+    )
+import GhcApi.Wrap (newGivenCt, newWantedCt)
 import Data.Either
 import Data.List
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
-import TcPluginExtras
 
-#if __GLASGOW_HASKELL__ > 710
-import TyCoRep
-#else
-import TypeRep
-#endif
-
-import GHC.TcPluginM.Extra ( evByFiat, tracePlugin, lookupModule, lookupName )
 
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
@@ -198,30 +177,3 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
       , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
     _                    -> error "evMagic"
-
--- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by
--- coercing bogus evidence of type @t1 ~ t2@ (or its heterogeneous
--- variant, in GHC 8.0).
-mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
-#if __GLASGOW_HASKELL__ >= 800
-mkFunnyEqEvidence t t1 t2 = EvDFunApp (dataConWrapId heqDataCon) [typeKind t1, typeKind t2, t1, t2] [evByFiat "units" t1 t2]
-                       `EvCast` mkUnivCo (PluginProv "units") Representational (mkHEqPred t1 t2) t
-#else
-mkFunnyEqEvidence t t1 t2 = evByFiat "units" t1 t2
-                       `EvCast` TcCoercion (mkUnivCo (fsLit "units") Representational (mkTyConApp eqTyCon [typeKind t1, t1, t2]) t)
-#endif
-
-
-#if __GLASGOW_HASKELL__ >= 800
-
-#if __GLASGOW_HASKELL__ < 802
-pattern FunTy :: Type -> Type -> Type
-pattern FunTy t v = ForAllTy (Anon t) v
-#endif
-
-mkEqPred :: Type -> Type -> Type
-mkEqPred = mkPrimEqPred
-
-mkHEqPred :: Type -> Type -> Type
-mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
-#endif

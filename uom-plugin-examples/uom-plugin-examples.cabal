@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b3e6e3b11681ba3b4f00cb9dc90c66f5e1acdd6a8f9e566a43886537348e266d
+-- hash: 34b490ef7ac228da720237d8afa34e504008281930d0ac23a967b96620344a3e
 
 name:           uom-plugin-examples
 version:        0.1.0.0
@@ -11,8 +13,9 @@ description:    This package provides examples of the use of uom-plugin
 author:         Adam Gundry
 maintainer:     adam@well-typed.com
 license:        PublicDomain
+tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.1, GHC == 8.6.2
+
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     package.yaml
 
@@ -27,4 +30,6 @@ executable Examples
   build-depends:
       base >=4.7 && <5
     , uom-plugin >=0.1 && <0.4
+  if impl(ghc > 8.2.2)
+    buildable: False
   default-language: Haskell2010
