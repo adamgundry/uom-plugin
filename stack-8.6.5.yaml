@@ -1,4 +1,4 @@
-resolver: lts-7.24
+resolver: lts-14.27
 packages:
 - 'uom-plugin'
 - 'uom-plugin-examples'
