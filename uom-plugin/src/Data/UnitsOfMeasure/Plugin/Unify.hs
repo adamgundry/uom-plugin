@@ -78,7 +78,7 @@ unifyOne uds ct tvs subst unsubst u
             case () of
                 () | tch && divisible i u -> return $ if occurs a r then Draw tvs subst unsubst
                                                                     else Win tvs (extendSubst (SubstItem a r ct) subst) unsubst
-                   | tch && any (not . isBase . fst) xs -> do beta <- newUnitVar
+                   | tch && not (all (isBase . fst) xs) -> do beta <- newUnitVar
                                                               let subst'   = extendSubst (SubstItem a    (varUnit beta *: r) ct) subst
                                                                   unsubst' = extendSubst (SubstItem beta (varUnit a    /: r) ct) unsubst
                                                               unifyOne uds ct (beta:tvs) subst' unsubst' $ substUnit a (varUnit beta *: r) u
