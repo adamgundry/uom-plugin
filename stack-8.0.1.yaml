@@ -1,6 +1,0 @@
-resolver: lts-7.24
-packages:
-- 'uom-plugin'
-- 'uom-plugin-examples'
-extra-deps:
-- units-parser-0.1.0.0
