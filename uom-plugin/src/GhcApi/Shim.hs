@@ -54,8 +54,8 @@ evDFunApp' = EvDFunApp
 #if __GLASGOW_HASKELL__ >= 806
 evCast' :: EvTerm -> TcCoercion -> EvTerm
 evCast' (EvExpr e)  = evCast e
-evCast' (EvTypeable _ _) = fail "Can't evCast (EvTypeable _ _)"
-evCast' (EvFun _ _ _ _) = fail "Can't evCast (EvFun _ _ _ _)"
+evCast' (EvTypeable _ _) = error "Can't evCast (EvTypeable _ _)"
+evCast' (EvFun _ _ _ _) = error "Can't evCast (EvFun _ _ _ _)"
 #elif __GLASGOW_HASKELL__ >= 802
 evCast' :: EvTerm -> TcCoercion -> EvTerm
 evCast' = EvCast
