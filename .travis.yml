@@ -60,6 +60,7 @@ before_install:
   - set -o pipefail
   - TEST=--enable-tests
   - BENCH=--enable-benchmarks
+  - BENCH=--disable-benchmarks
   - HEADHACKAGE=false
   - rm -f $CABALHOME/config
   - |
@@ -133,8 +134,6 @@ script:
   - ${CABAL} v2-build $WITHCOMPILER ${TEST} ${BENCH} all
   # Testing...
   - ${CABAL} v2-test $WITHCOMPILER ${TEST} ${BENCH} all
-  # haddock...
-  - ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all
   # Building without installed constraints for packages in global-db...
   - rm -f cabal.project.local
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all

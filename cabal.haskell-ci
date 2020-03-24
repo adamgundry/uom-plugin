@@ -18,7 +18,8 @@ cabal-check: False
 
 -- --no-tests --no-benchmarks build is useful to verify that package
 -- builds when less constrained
--- no-tests-no-bench: True
+benchmarks: False
+haddock: False
 
 -- By default `installed` constraints are used for packages
 -- in global db. Unconstrained step is a build without them.
