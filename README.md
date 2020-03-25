@@ -4,6 +4,10 @@ The `uom-plugin` library adds support for units of measure to GHC using the new 
 
 The library has been tested with GHC `7.10.3`, `8.0.2` & `8.2.2`.
 
+:warning: Please don't use this plugin with later versions of GHC as it will likely fail to solve constraints, [#43][i43].
+
+[i43]: https://github.com/adamgundry/uom-plugin/issues/43
+
 ## Installation
 
 Grab the source.
