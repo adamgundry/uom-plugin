@@ -79,6 +79,9 @@ myMass = [u| 65 kg |]
 gravityOnEarth :: Quantity Double [u| m/s^2 |]
 gravityOnEarth = [u| 9.808 m/(s*s) |]
 
+readMass :: Read a => String -> Quantity a (Base "kg")
+readMass = fmap [u| kg |] read
+
 forceOnGround :: Quantity Double [u| N |]
 forceOnGround = gravityOnEarth *: myMass
 
@@ -222,7 +225,8 @@ tests = testGroup "uom-plugin"
     , testCase "m s^-1 3" $ [u| m s^-1 |] 3 @?= [u| 3 m s^-1 |]
     , testCase "s^2 3" $ [u| s^2 |] 3 @?= [u| 3 s^2 |]
     , testCase "1 $ 3" $ [u|dimensionless|] 3 @?= [u| 3 |]
-    , testCase "1 $ 3" $ ([u|dimensionless|] :: Double -> Quantity Double [u| 1 |]) 3 @?= [u| 3 |]
+    , testCase "fmap [u| kg |] read $ \"3\"" $ readMass "3" @?= [u| 3 kg |]
+    , testCase "fmap [u| kg |] read $ \"3.0\"" $ readMass "3" @?= [u| 3.0 kg |]
     ]
   , testGroup "Showing constants"
     [ testCase "show 3m"                 $ show [u| 3 m |]                @?= "[u| 3 m |]"
