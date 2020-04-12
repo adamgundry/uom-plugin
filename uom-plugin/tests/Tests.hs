@@ -214,37 +214,14 @@ tests = testGroup "uom-plugin"
     , testCase "unQuantity 1 s^-1"             $ unQuantity [u| 1 s^-1 |]         @?= 1
     , testCase "unQuantity 2 1 / kg s"         $ unQuantity [u| 2 1 / kg s |]     @?= 2
     , testCase "unQuantity (1 % 2) kg"         $ unQuantity [u| 1 % 2 kg |]       @?= 0.5
-
-    -- TODO: Find out why can't use unQuantity with m/s?
-    -- solveSimpleWanteds: too many iterations (limit = 4)
-    --, testCase "unQuantity 3 m/s" $ unQuantity [u| 3 m/s |] @?= 3
     ]
   , testGroup "Attach units by applying the quasiquoter without a numeric value"
     [ testCase "m 3" $ [u| m |] 3 @?= [u| 3 m |]
-    , testCase "m $ 3" $ ([u| m |] $ 3) @?= [u| 3 m |]
     , testCase "m <$> [3..5]" $ ([u| m |] <$> [3..5]) @?= [[u| 3 m |],[u| 4 m |],[u| 5 m |]]
     , testCase "m/s 3" $ [u| m/s |] 3 @?= [u| 3 m/s |]
     , testCase "m s^-1 3" $ [u| m s^-1 |] 3 @?= [u| 3 m s^-1 |]
     , testCase "s^2 3" $ [u| s^2 |] 3 @?= [u| 3 s^2 |]
-
-    -- TODO: Find out why I can't parse 1/s as s^1.
-    -- • unable to parse unit expression "/s ": (line 1, column 1):
-    -- unexpected /
-    -- expecting end of input
-    --    • In the quasi-quotation: [u| 1/s |]
-    --, testCase "1/s 3" $ [u| 1/s |] 3 @?= [u| 3 1/s |]
-
-    -- TODO: Find out why I can't attach dimensionless units.
-    -- • Couldn't match expected type ‘Integer -> Quantity Integer One’
-    --               with actual type ‘Quantity Integer One’
-    -- , testCase "1 $ 3" $ [u| 1 |] 3 @?= [u| 3 |]
     , testCase "1 $ 3" $ [u|dimensionless|] 3 @?= [u| 3 |]
-
-    -- TODO: Find out why I can't attach dimensionless units even with a type
-    -- annotation.
-    -- • Couldn't match expected type ‘Double -> Quantity Double One’
-    --               with actual type ‘Quantity Integer One’
-    --, testCase "1 $ 3" $ ([u| 1 |] :: Double -> Quantity Double [u| 1 |]) 3 @?= [u| 3 |]
     , testCase "1 $ 3" $ ([u|dimensionless|] :: Double -> Quantity Double [u| 1 |]) 3 @?= [u| 3 |]
     ]
   , testGroup "Showing constants"
