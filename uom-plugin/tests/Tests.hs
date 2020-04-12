@@ -219,14 +219,14 @@ tests = testGroup "uom-plugin"
     , testCase "unQuantity (1 % 2) kg"         $ unQuantity [u| 1 % 2 kg |]       @?= 0.5
     ]
   , testGroup "Attach units by applying the quasiquoter without a numeric value"
-    [ testCase "m 3" $ [u| m |] 3 @?= [u| 3 m |]
-    , testCase "m <$> [3..5]" $ ([u| m |] <$> [3..5]) @?= [[u| 3 m |],[u| 4 m |],[u| 5 m |]]
-    , testCase "m/s 3" $ [u| m/s |] 3 @?= [u| 3 m/s |]
-    , testCase "m s^-1 3" $ [u| m s^-1 |] 3 @?= [u| 3 m s^-1 |]
-    , testCase "s^2 3" $ [u| s^2 |] 3 @?= [u| 3 s^2 |]
-    , testCase "1 $ 3" $ [u|dimensionless|] 3 @?= [u| 3 |]
-    , testCase "fmap [u| kg |] read $ \"3\"" $ readMass "3" @?= [u| 3 kg |]
-    , testCase "fmap [u| kg |] read $ \"3.0\"" $ readMass "3" @?= [u| 3.0 kg |]
+    [ testCase "m 3"                           $ [u| m |] 3            @?= [u| 3 m |]
+    , testCase "m <$> [3..5]"                  $ ([u| m |] <$> [3..5]) @?= [[u| 3 m |],[u| 4 m |],[u| 5 m |]]
+    , testCase "m/s 3"                         $ [u| m/s |] 3          @?= [u| 3 m/s |]
+    , testCase "m s^-1 3"                      $ [u| m s^-1 |] 3       @?= [u| 3 m s^-1 |]
+    , testCase "s^2 3"                         $ [u| s^2 |] 3          @?= [u| 3 s^2 |]
+    , testCase "1 $ 3"                         $ [u|dimensionless|] 3  @?= [u| 3 |]
+    , testCase "fmap [u| kg |] read $ \"3\""   $ readMass "3"          @?= [u| 3 kg |]
+    , testCase "fmap [u| kg |] read $ \"3.0\"" $ readMass "3"          @?= [u| 3.0 kg |]
     ]
   , testGroup "Showing constants"
     [ testCase "show 3m"                 $ show [u| 3 m |]                @?= "[u| 3 m |]"
