@@ -65,10 +65,10 @@ import Data.UnitsOfMeasure
 --
 -- >>> :kind! [u| m^2 |]
 -- [u| m^2 |] :: Unit
--- = Base "m" ^: 2
+-- = Base "m" *: Base "m"
 --
 -- >>> :kind! [u| kg m/s |]
--- [u|kg m/s|] :: Unit
+-- [u| kg m/s |] :: Unit
 -- = (Base "kg" *: Base "m") /: Base "s"
 --
 --
@@ -169,3 +169,6 @@ import Data.UnitsOfMeasure
 --  * <http://adam.gundry.co.uk/pub/typechecker-plugins/ Paper about uom-plugin>
 --
 --  * <https://ghc.haskell.org/trac/ghc/wiki/Plugins/TypeChecker Plugins on the GHC wiki>
+
+-- $setup
+-- >>> import Data.UnitsOfMeasure.Defs ()
