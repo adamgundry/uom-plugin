@@ -49,6 +49,20 @@ library:
   - Data.UnitsOfMeasure.Singleton
   - Data.UnitsOfMeasure.Tutorial
 tests:
+  doctest:
+    dependencies:
+    - base
+    - uom-plugin
+    - doctest
+    ghc-options:
+    - -O0
+    other-extensions: TemplateHaskell
+    main: DocTest.hs
+    source-dirs:
+    - test-suite-doctest
+    when:
+      - condition: impl(ghc > 8.2.2)
+        buildable: false
   units:
     dependencies:
     - base
@@ -60,7 +74,7 @@ tests:
     other-extensions: TemplateHaskell
     main: Tests.hs
     source-dirs:
-    - tests
+    - test-suite-units
     when:
       - condition: impl(ghc > 8.2.2)
         buildable: false
@@ -76,5 +90,5 @@ tests:
     - -with-rtsopts=-N
     main: HLint.hs
     source-dirs:
-    - hlint
+    - test-suite-hlint
 version: '0.3.0.0'
