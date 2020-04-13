@@ -6,15 +6,15 @@ import Development.Shake.FilePath ((<.>), (</>))
 
 main :: IO ()
 main = shakeArgs shakeOptions $ do
-    want allWants
-    allRules
+    want ["cabal-files"]
 
-allWants :: [ String ]
-allWants = ["cabal-files"]
-
-allRules :: Rules ()
-allRules = do
-    buildRules
+    sequence_ $ formatRoot <$> dhallRootImports
+    sequence_ $ formatPkg <$> dhallPkgs
+    sequence_ $ hpack <$> dhallPkgs
+    sequence_ $ cabal <$> dhallCabal
+    phony "dhall-format" $ need $ (\x -> "dhall-format-" ++ x) <$> dhallPkgs ++ dhallRootImports
+    phony "hpack-dhall" $ need $ (\x -> "hpack-dhall-" ++ x) <$> dhallPkgs
+    phony "cabal-files" $ need $ (\(x, y) -> x </> y <.> "cabal") <$> dhallCabal
 
 type Folder = String
 type Pkg = String
@@ -55,13 +55,3 @@ hpack folder =
 cabal :: (Folder, Pkg) -> Rules ()
 cabal (folder, pkg) =
     folder </> pkg <.> "cabal" %> \_ -> need ["hpack-dhall-" ++ folder]
-
-buildRules :: Rules ()
-buildRules = do
-    sequence_ $ formatRoot <$> dhallRootImports
-    sequence_ $ formatPkg <$> dhallPkgs
-    sequence_ $ hpack <$> dhallPkgs
-    sequence_ $ cabal <$> dhallCabal
-    phony "dhall-format" $ need $ (\x -> "dhall-format-" ++ x) <$> dhallPkgs ++ dhallRootImports
-    phony "hpack-dhall" $ need $ (\x -> "hpack-dhall-" ++ x) <$> dhallPkgs
-    phony "cabal-files" $ need $ (\(x, y) -> x </> y <.> "cabal") <$> dhallCabal
