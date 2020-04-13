@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: be8bb42a304baf43571d2f2fe864ba79a80be11458320657c670e4b0cd7c878a
+-- hash: 2e2b641c76861e50fa91123e6269cb2649f956e52b3c9d84ced2f20ac158e279
 
 name:           build-uom-plugin
 version:        0.3.0.0
@@ -19,12 +19,12 @@ build-type:     Simple
 extra-source-files:
     package.dhall
 
-executable build-flare-timing
+executable build-uom-plugin
   main-is: Main.hs
   other-modules:
       Paths_build_uom_plugin
   hs-source-dirs:
-      src
+      ./.
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
       ansi-terminal

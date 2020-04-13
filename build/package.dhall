@@ -8,7 +8,7 @@
   , category =
       "Build"
   , executables =
-      { build-flare-timing =
+      { build-uom-plugin =
           { dependencies =
               [ "base"
               , "ansi-terminal"
@@ -23,7 +23,7 @@
           , main =
               "Main.hs"
           , source-dirs =
-              "src"
+              "."
           }
       }
   }
