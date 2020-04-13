@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -78,6 +79,9 @@ myMass = [u| 65 kg |]
 
 gravityOnEarth :: Quantity Double [u| m/s^2 |]
 gravityOnEarth = [u| 9.808 m/(s*s) |]
+
+readMass :: Read a => String -> Quantity a (Base "kg")
+readMass = fmap [u| kg |] read
 
 forceOnGround :: Quantity Double [u| N |]
 forceOnGround = gravityOnEarth *: myMass
@@ -203,7 +207,37 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "uom-plugin"
-  [ testGroup "Showing constants"
+  [ testGroup "Get the underlying value with unQuantity"
+    [ testCase "unQuantity 3 m"                $ unQuantity [u| 3 m |]            @?= 3
+    , testCase "unQuantity 3 s^2"              $ unQuantity [u| 3 s^2 |]          @?= 3
+#if __GLASGOW_HASKELL__ > 802
+    -- TODO: Find out why unQuantity (3 m s^-1) fails with ghc-8.0.2.
+    -- solveSimpleWanteds: too many iterations (limit = 4)
+    , testCase "unQuantity 3 m s^-1"           $ unQuantity [u| 3 m s^-1 |]       @?= 3
+#endif
+    , testCase "unQuantity 3.0 kg m^2 / m s^2" $ unQuantity [u| 3.0 kg m / s^2 |] @?= 3
+    , testCase "unQuantity 1"                  $ unQuantity (mk 1)                @?= 1
+    , testCase "unQuantity 1 (1/s)"            $ unQuantity [u| 1 (1/s) |]        @?= 1
+    , testCase "unQuantity 1 1/s"              $ unQuantity [u| 1 1/s |]          @?= 1
+    , testCase "unQuantity 1 s^-1"             $ unQuantity [u| 1 s^-1 |]         @?= 1
+    , testCase "unQuantity 2 1 / kg s"         $ unQuantity [u| 2 1 / kg s |]     @?= 2
+    , testCase "unQuantity (1 % 2) kg"         $ unQuantity [u| 1 % 2 kg |]       @?= 0.5
+    ]
+  , testGroup "Attach units by applying the quasiquoter without a numeric value"
+    [ testCase "m 3"                           $ [u| m |] 3           @?= [u| 3 m |]
+    , testCase "m <$> [3..5]"                  $ [u| m |] <$> [3..5]  @?= [[u| 3 m |],[u| 4 m |],[u| 5 m |]]
+    , testCase "m/s 3"                         $ [u| m/s |] 3         @?= [u| 3 m/s |]
+#if __GLASGOW_HASKELL__ > 802
+    -- TODO: Find out why (m s^-1 3) fails with ghc-8.0.2.
+    -- solveSimpleWanteds: too many iterations (limit = 4)
+    , testCase "m s^-1 3"                      $ [u| m s^-1 |] 3      @?= [u| 3 m s^-1 |]
+#endif
+    , testCase "s^2 3"                         $ [u| s^2 |] 3         @?= [u| 3 s^2 |]
+    , testCase "1 $ 3"                         $ [u|dimensionless|] 3 @?= [u| 3 |]
+    , testCase "fmap [u| kg |] read $ \"3\""   $ readMass "3"         @?= [u| 3 kg |]
+    , testCase "fmap [u| kg |] read $ \"3.0\"" $ readMass "3"         @?= [u| 3.0 kg |]
+    ]
+  , testGroup "Showing constants"
     [ testCase "show 3m"                 $ show [u| 3 m |]                @?= "[u| 3 m |]"
     , testCase "show 3m/s"               $ show [u| 3 m/s |]              @?= "[u| 3 m / s |]"
     , testCase "show 3.2 s^2"            $ show [u| 3.2 s^2 |]            @?= "[u| 3.2 s^2 |]"
