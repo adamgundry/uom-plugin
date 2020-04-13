@@ -130,7 +130,7 @@ import Data.UnitsOfMeasure
 -- ...
 -- ... Couldn't match type `Base "m"' with `One'
 -- ...
---   
+--
 --
 -- >>> [u| 2 m/s |] + [u| 5 m/s |]
 -- <BLANKLINE>

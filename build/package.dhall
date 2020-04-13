@@ -23,7 +23,7 @@
           , main =
               "Main.hs"
           , source-dirs =
-              [ "app-cmd", "library" ]
+              "src"
           }
       }
   }

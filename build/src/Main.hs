@@ -1,15 +1,20 @@
-module Pkg (buildRules) where
-
 import Development.Shake
-    ( Rules
-    , CmdOption(Cwd, Shell)
-    , (%>)
-    , phony
-    , cmd
-    , need
+    ( Rules, CmdOption(Cwd, Shell), (%>)
+    , phony, cmd, need, shakeArgs, shakeOptions, want
     )
-
 import Development.Shake.FilePath ((<.>), (</>))
+
+main :: IO ()
+main = shakeArgs shakeOptions $ do
+    want allWants
+    allRules
+
+allWants :: [ String ]
+allWants = ["cabal-files"]
+
+allRules :: Rules ()
+allRules = do
+    buildRules
 
 type Folder = String
 type Pkg = String
