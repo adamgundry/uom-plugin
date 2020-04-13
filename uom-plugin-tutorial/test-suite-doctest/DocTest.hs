@@ -5,7 +5,7 @@ import Test.DocTest (doctest)
 arguments :: [String]
 arguments =
     [ "-isrc"
-    , "../src/Data/UnitsOfMeasure/Tutorial.hs"
+    , "../uom-plugin/doc/Data/UnitsOfMeasure/Tutorial.hs"
     ]
 
 main :: IO ()

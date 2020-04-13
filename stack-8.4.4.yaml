@@ -1,6 +1,8 @@
 resolver: lts-12.16
 packages:
-- 'uom-plugin'
-- 'uom-plugin-examples'
+- build
+- uom-plugin
+- uom-plugin-tutorial
+- uom-plugin-examples
 extra-deps:
 - units-parser-0.1.0.0

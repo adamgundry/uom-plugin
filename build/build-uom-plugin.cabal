@@ -1,0 +1,41 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.dhall by hpack version 0.31.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 978c0d8cdb17f91b7baa2a55f353f0c01ee06dafe51f347a8db0e6f45ec336e4
+
+name:           build-uom-plugin
+version:        0.3.0.0
+synopsis:       A shake build of uom-plugin.
+description:    Builds the packages making up uom-plugin.
+category:       Build
+author:         Adam Gundry <adam@well-typed.com>
+maintainer:     Adam Gundry <adam@well-typed.com>
+copyright:      Copyright (c) 2014-2018, Adam Gundry
+tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
+build-type:     Simple
+extra-source-files:
+    package.dhall
+
+executable build-flare-timing
+  main-is: Main.hs
+  other-modules:
+      Driver
+      Pkg
+      Target
+      Paths_build_uom_plugin
+  hs-source-dirs:
+      app-cmd
+      library
+  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
+  build-depends:
+      ansi-terminal
+    , base
+    , dhall
+    , raw-strings-qq
+    , shake
+    , text
+    , time
+  default-language: Haskell2010
