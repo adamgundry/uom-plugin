@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 94f34f779db1b0352931416ce4a06c02aa8fb11bdfc4213a4057db1930bcd24e
+-- hash: ffd20ff5e8493b5b2add98124f945a01841d686bd57e586a8f1d1b470f7129d9
 
 name:           uom-plugin-tutorial
 version:        0.3.0.0
@@ -24,9 +24,11 @@ test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
+      Data.UnitsOfMeasure.Tutorial
       Paths_uom_plugin_tutorial
   hs-source-dirs:
       test-suite-doctest
+      doc
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N -fplugin Data.UnitsOfMeasure.Plugin
   build-depends:
       base

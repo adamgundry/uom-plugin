@@ -27,7 +27,7 @@ in    defs
               , main =
                   "DocTest.hs"
               , source-dirs =
-                  [ "test-suite-doctest" ]
+                  [ "test-suite-doctest", "doc" ]
               , when =
                   { condition = "impl(ghc > 8.2.2)", buildable = False }
               }
