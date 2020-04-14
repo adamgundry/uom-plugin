@@ -29,7 +29,11 @@ in    defs
               , source-dirs =
                   [ "test-suite-doctest", "doc" ]
               , when =
-                  { condition = "impl(ghc > 8.2.2)", buildable = False }
+                  { condition =
+                      "impl(ghc < 8.2.2) || impl(ghc > 8.2.2)"
+                  , buildable =
+                      False
+                  }
               }
           }
       }

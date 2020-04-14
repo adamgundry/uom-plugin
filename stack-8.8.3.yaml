@@ -1,6 +1,5 @@
 resolver: lts-15.5
 packages:
-- build
 - uom-plugin
 - uom-plugin-tutorial
 - uom-plugin-examples

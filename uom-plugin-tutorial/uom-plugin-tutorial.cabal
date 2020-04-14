@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ffd20ff5e8493b5b2add98124f945a01841d686bd57e586a8f1d1b470f7129d9
+-- hash: 01dc8d97f55f30b4458060f240f25223b63e03afa68e56a7b6d01f8cd17356e4
 
 name:           uom-plugin-tutorial
 version:        0.3.0.0
@@ -34,6 +34,6 @@ test-suite doctest
       base
     , doctest
     , uom-plugin
-  if impl(ghc > 8.2.2)
+  if impl(ghc < 8.2.2) || impl(ghc > 8.2.2)
     buildable: False
   default-language: Haskell2010
