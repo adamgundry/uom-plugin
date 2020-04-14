@@ -128,14 +128,14 @@ import Data.UnitsOfMeasure
 -- >>> 2 * [u| 5 m |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type `Base "m"' with `One'
+-- ... Couldn't match type ‘Base "m"’ with ‘One’
 -- ...
 --
 --
 -- >>> [u| 2 m/s |] + [u| 5 m/s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type `Base "m" /: Base "s"' with `One'
+-- ... Couldn't match type ‘Base "m" /: Base "s"’ with ‘One’
 -- ...
 --
 -- Instead, "Data.UnitsOfMeasure" provides more general arithmetic
@@ -153,7 +153,7 @@ import Data.UnitsOfMeasure
 -- >>>  [u| 3 m |] -: [u| 1 s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type `Base "m"' with `Base "s"'
+-- ... Couldn't match type ‘Base "m"’ with ‘Base "s"’
 -- ...
 --
 --
