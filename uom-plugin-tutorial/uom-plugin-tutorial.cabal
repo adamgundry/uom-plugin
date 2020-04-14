@@ -4,28 +4,21 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1779e40f00524a472eaf644ba87424e024f81845b085b5abfc92e7bf07cdb28a
+-- hash: 94f34f779db1b0352931416ce4a06c02aa8fb11bdfc4213a4057db1930bcd24e
 
 name:           uom-plugin-tutorial
 version:        0.3.0.0
 synopsis:       A tutorial for the Units of measure typechecker plugin
 description:    A tutorial for the units of measure typechecker plugin, checked with doctest.
 category:       Type System
-homepage:       https://github.com/adamgundry/uom-plugin#readme
-bug-reports:    https://github.com/adamgundry/uom-plugin/issues
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
 license:        BSD3
-license-file:   LICENSE
 tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 build-type:     Simple
 extra-source-files:
     package.dhall
-
-source-repository head
-  type: git
-  location: https://github.com/adamgundry/uom-plugin
 
 test-suite doctest
   type: exitcode-stdio-1.0

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8bb413c2cd0138a641ef00ecce7d58ded263867771f878d5207250e7c84be89a
+-- hash: 22aa76cce752ebcd4873b2f0588f71a898b9c2a2266a9f39f1efb73c27e5a905
 
 name:           uom-plugin
 version:        0.3.0.0
@@ -27,6 +27,7 @@ build-type:     Simple
 extra-source-files:
     changelog
     README.md
+    LICENSE
 
 source-repository head
   type: git

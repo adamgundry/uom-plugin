@@ -16,12 +16,8 @@ in    defs
           "A tutorial for the units of measure typechecker plugin, checked with doctest."
       , category =
           "Type System"
-      , github =
-          "adamgundry/uom-plugin"
       , license =
           "BSD3"
-      , license-file =
-          "LICENSE"
       , tests =
           { doctest =
               { dependencies =

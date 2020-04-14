@@ -24,7 +24,7 @@ in    defs
       , stability =
           "experimental"
       , extra-source-files =
-          [ "changelog", "README.md" ]
+          [ "changelog", "README.md", "LICENSE" ]
       , library =
           { source-dirs =
               [ "doc", "src" ]
