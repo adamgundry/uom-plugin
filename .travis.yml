@@ -4,7 +4,7 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.9.20200321
+# version: 0.9.20200406
 #
 version: ~> 1.0
 language: c
@@ -30,19 +30,19 @@ before_cache:
 jobs:
   include:
     - compiler: ghc-8.8.3
-      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.8.3","cabal-install-3.0"]}}
+      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.8.3","cabal-install-3.2"]}}
       os: linux
     - compiler: ghc-8.6.5
-      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.6.5","cabal-install-3.0"]}}
+      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.6.5","cabal-install-3.2"]}}
       os: linux
     - compiler: ghc-8.4.4
-      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.4.4","cabal-install-3.0"]}}
+      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.4.4","cabal-install-3.2"]}}
       os: linux
     - compiler: ghc-8.2.2
-      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.2.2","cabal-install-3.0"]}}
+      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.2.2","cabal-install-3.2"]}}
       os: linux
     - compiler: ghc-8.0.2
-      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.0.2","cabal-install-3.0"]}}
+      addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.0.2","cabal-install-3.2"]}}
       os: linux
 before_install:
   - HC=$(echo "/opt/$CC/bin/ghc" | sed 's/-/\//')
@@ -93,12 +93,24 @@ install:
   - touch cabal.project
   - |
     echo "packages: uom-plugin" >> cabal.project
+    echo "packages: uom-plugin-tutorial" >> cabal.project
+    echo "packages: build" >> cabal.project
     echo "packages: uom-plugin-examples" >> cabal.project
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin-tutorial' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package build-uom-plugin' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin-examples' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(uom-plugin|uom-plugin-examples)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(build-uom-plugin|uom-plugin|uom-plugin-examples|uom-plugin-tutorial)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "uom-plugin/configure.ac" ]; then (cd "uom-plugin" && autoreconf -i); fi
+  - if [ -f "uom-plugin-tutorial/configure.ac" ]; then (cd "uom-plugin-tutorial" && autoreconf -i); fi
+  - if [ -f "build/configure.ac" ]; then (cd "build" && autoreconf -i); fi
   - if [ -f "uom-plugin-examples/configure.ac" ]; then (cd "uom-plugin-examples" && autoreconf -i); fi
   - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH}
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
@@ -115,15 +127,27 @@ script:
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec tar -xvf '{}' \;
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec rm       '{}' \;
   - PKGDIR_uom_plugin="$(find . -maxdepth 1 -type d -regex '.*/uom-plugin-[0-9.]*')"
+  - PKGDIR_uom_plugin_tutorial="$(find . -maxdepth 1 -type d -regex '.*/uom-plugin-tutorial-[0-9.]*')"
+  - PKGDIR_build_uom_plugin="$(find . -maxdepth 1 -type d -regex '.*/build-uom-plugin-[0-9.]*')"
   - PKGDIR_uom_plugin_examples="$(find . -maxdepth 1 -type d -regex '.*/uom-plugin-examples-[0-9.]*')"
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
   - |
     echo "packages: ${PKGDIR_uom_plugin}" >> cabal.project
+    echo "packages: ${PKGDIR_uom_plugin_tutorial}" >> cabal.project
+    echo "packages: ${PKGDIR_build_uom_plugin}" >> cabal.project
     echo "packages: ${PKGDIR_uom_plugin_examples}" >> cabal.project
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin-tutorial' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package build-uom-plugin' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
+  - if [ $HCNUMVER -ge 80200 ] ; then echo 'package uom-plugin-examples' >> cabal.project ; fi
+  - "if [ $HCNUMVER -ge 80200 ] ; then echo '  ghc-options: -Werror=missing-methods' >> cabal.project ; fi"
   - |
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(uom-plugin|uom-plugin-examples)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(build-uom-plugin|uom-plugin|uom-plugin-examples|uom-plugin-tutorial)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -138,5 +162,5 @@ script:
   - rm -f cabal.project.local
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all
 
-# REGENDATA ("0.9.20200321",["--output=.travis.yml","--config=cabal.haskell-ci","cabal.project"])
+# REGENDATA ("0.9.20200406",["--output=.travis.yml","--config=cabal.haskell-ci","cabal.project"])
 # EOF

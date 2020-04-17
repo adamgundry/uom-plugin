@@ -4,32 +4,34 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7dbdbfefb25b6a75cdfcf2055da1f652095e65766a0329edf073c10f82dff101
+-- hash: bec7aa84478fcff5a44bca8fd75597ac24f83c51fd414ba6f9fbd0cf9bd4f97d
 
-name:           uom-plugin-examples
+name:           build-uom-plugin
 version:        0.3.0.1
-synopsis:       Examples of the use of uom-plugin
-description:    This package provides examples of the use of uom-plugin
+synopsis:       A shake build of uom-plugin.
+description:    Builds the packages making up uom-plugin.
+category:       Build
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
-license:        PublicDomain
 tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 build-type:     Simple
 extra-source-files:
     package.dhall
 
-executable Examples
-  main-is: Examples.hs
+executable build-uom-plugin
+  main-is: Main.hs
   other-modules:
-      RationalExamples
-      Paths_uom_plugin_examples
+      Paths_build_uom_plugin
   hs-source-dirs:
       ./.
-  ghc-options: -dcore-lint
+  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
-      base >=4.9.1.0 && <5
-    , uom-plugin
-  if impl(ghc > 8.2.2)
-    buildable: False
+      ansi-terminal
+    , base
+    , dhall
+    , raw-strings-qq
+    , shake
+    , text
+    , time
   default-language: Haskell2010

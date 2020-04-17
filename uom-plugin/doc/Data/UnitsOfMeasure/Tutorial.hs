@@ -65,10 +65,10 @@ import Data.UnitsOfMeasure
 --
 -- >>> :kind! [u| m^2 |]
 -- [u| m^2 |] :: Unit
--- = Base "m" ^: 2
+-- = Base "m" *: Base "m"
 --
 -- >>> :kind! [u| kg m/s |]
--- [u|kg m/s|] :: Unit
+-- [u| kg m/s |] :: Unit
 -- = (Base "kg" *: Base "m") /: Base "s"
 --
 --
@@ -126,10 +126,17 @@ import Data.UnitsOfMeasure
 -- using them directly on quantities with units will result in errors:
 --
 -- >>> 2 * [u| 5 m |]
---   Couldn't match type ‘Base "m"’ with ‘One’...
+-- <BLANKLINE>
+-- ...
+-- ... Couldn't match type ‘Base "m"’ with ‘One’
+-- ...
+--
 --
 -- >>> [u| 2 m/s |] + [u| 5 m/s |]
---   Couldn't match type ‘Base "m" /: Base "s"’ with ‘One’...
+-- <BLANKLINE>
+-- ...
+-- ... Couldn't match type ‘Base "m" /: Base "s"’ with ‘One’
+-- ...
 --
 -- Instead, "Data.UnitsOfMeasure" provides more general arithmetic
 -- operators including ('+:'), ('-:'), ('*:') and ('/:').  These may
@@ -144,7 +151,10 @@ import Data.UnitsOfMeasure
 -- However, unit errors will be detected by the type system:
 --
 -- >>>  [u| 3 m |] -: [u| 1 s |]
---   Couldn't match type ‘Base "s"’ with ‘Base "m"’...
+-- <BLANKLINE>
+-- ...
+-- ... Couldn't match type ‘Base "m"’ with ‘Base "s"’
+-- ...
 --
 --
 -- === Unit polymorphism
@@ -157,7 +167,7 @@ import Data.UnitsOfMeasure
 --
 -- >>> let cube x = x *: x *: x
 -- >>> :t cube
--- cube :: Num a => Quantity a v -> Quantity a (v ^: 3)
+-- cube :: Num a => Quantity a v -> Quantity a (v *: (v *: v))
 --
 -- >>> let f x y = (x *: y) +: (y *: x)
 -- >>> :t f
@@ -169,3 +179,6 @@ import Data.UnitsOfMeasure
 --  * <http://adam.gundry.co.uk/pub/typechecker-plugins/ Paper about uom-plugin>
 --
 --  * <https://ghc.haskell.org/trac/ghc/wiki/Plugins/TypeChecker Plugins on the GHC wiki>
+
+-- $setup
+-- >>> import Data.UnitsOfMeasure.Defs ()
