@@ -1,5 +1,5 @@
 { version =
-          "0.3.0.0"
+          "0.3.0.1"
 , author =
     "Adam Gundry <adam@well-typed.com>"
 , maintainer =
@@ -14,5 +14,5 @@
     , "-fno-warn-unticked-promoted-constructors"
     ]
 , dependencies =
-    [ "base >=4.7 && <5" ]
+    [ "base >=4.9.1.0 && <5" ]
 }

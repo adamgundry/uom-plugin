@@ -42,7 +42,7 @@ in    defs
           , dependencies =
                 defs.dependencies
               # [ "deepseq >=1.3 && <1.5"
-                , "ghc >= 8.0.1 && <8.9"
+                , "ghc >= 8.0.2 && <8.9"
                 , "ghc-tcplugins-extra >=0.1"
                 , "template-haskell >=2.9"
                 , "containers >=0.5"
@@ -53,9 +53,9 @@ in    defs
           { units =
               { dependencies =
                   [ "base"
+                  , "tasty >= 0.11.3"
+                  , "tasty-hunit >= 0.9.2"
                   , "uom-plugin"
-                  , "tasty >=0.10 && <1.1"
-                  , "tasty-hunit >=0.9 && <0.10.1"
                   ]
               , ghc-options =
                   testopts
@@ -68,7 +68,7 @@ in    defs
               }
           , hlint =
               { dependencies =
-                  [ "base", "hlint >=1.7 && <2.3" ]
+                  [ "base", "hlint >= 2.0.11" ]
               , ghc-options =
                   testopts
               , main =

@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 01dc8d97f55f30b4458060f240f25223b63e03afa68e56a7b6d01f8cd17356e4
+-- hash: 653c169a74854a68d066766533489e500facc219b8966eb17ad9fec11c52ec77
 
 name:           uom-plugin-tutorial
-version:        0.3.0.0
+version:        0.3.0.1
 synopsis:       A tutorial for the Units of measure typechecker plugin
 description:    A tutorial for the units of measure typechecker plugin, checked with doctest.
 category:       Type System
@@ -31,8 +31,8 @@ test-suite doctest
       doc
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N -fplugin Data.UnitsOfMeasure.Plugin
   build-depends:
-      base
-    , doctest
+      base >=4.9.1.0 && <5
+    , doctest >=0.13.0
     , uom-plugin
   if impl(ghc < 8.2.2) || impl(ghc > 8.2.2)
     buildable: False

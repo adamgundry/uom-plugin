@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2e2b641c76861e50fa91123e6269cb2649f956e52b3c9d84ced2f20ac158e279
+-- hash: bec7aa84478fcff5a44bca8fd75597ac24f83c51fd414ba6f9fbd0cf9bd4f97d
 
 name:           build-uom-plugin
-version:        0.3.0.0
+version:        0.3.0.1
 synopsis:       A shake build of uom-plugin.
 description:    Builds the packages making up uom-plugin.
 category:       Build

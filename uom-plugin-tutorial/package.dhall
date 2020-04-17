@@ -21,7 +21,7 @@ in    defs
       , tests =
           { doctest =
               { dependencies =
-                  [ "base", "uom-plugin", "doctest" ]
+                  defs.dependencies # [ "uom-plugin", "doctest >= 0.13.0" ]
               , ghc-options =
                   testopts
               , main =

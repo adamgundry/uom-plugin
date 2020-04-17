@@ -15,7 +15,7 @@ in    defs
       , executables =
           { Examples =
               { dependencies =
-                  defs.dependencies # [ "uom-plugin >= 0.1 && < 0.4" ]
+                  defs.dependencies # [ "uom-plugin" ]
               , source-dirs =
                   "."
               , main =
