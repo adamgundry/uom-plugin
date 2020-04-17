@@ -1,5 +1,2 @@
-packages:
-  uom-plugin/uom-plugin.cabal
-  uom-plugin-examples/uom-plugin-examples.cabal
-  uom-plugin-tutorial/uom-plugin-tutorial.cabal
+packages: */*.cabal
 tests: True
