@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0.1] Unreleased
+### Added
+* Doctest the tutorial
+
 ## [0.3.0.0] 2018-07-13
 ### Added
 * Support building on GHC 8.2 (but not yet 8.4)
