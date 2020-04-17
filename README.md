@@ -53,11 +53,11 @@ examples. There are conditionals for this in the `package.dhall` files;
 If the conditions were not in place then what they do is equivalent to;
 
 ```
-> nix-shell -p haskell.compiler.ghc843 -p haskell.packages.ghc843.cabal-install
+> nix-shell -p haskell.compiler.ghc822 -p haskell.packages.ghc822.cabal-install
 
 [nix-shell:]$ cabal new-build uom-plugin --disable-tests
 Resolving dependencies...
-Build profile: -w ghc-8.4.3 -O1
+Build profile: -w ghc-8.2.2 -O1
 ...
 ```
 
