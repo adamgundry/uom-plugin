@@ -39,13 +39,11 @@ Up to date
 ```
 
 With `GHC > 8.2.2` only the plugin itself builds, not its tests or the
-examples. There are conditionals for this in the `package.yaml` files;
+examples. There are conditionals for this in the `package.dhall` files;
 
 ```
-# package.yaml
-    when:
-      - condition: impl(ghc > 8.2.2)
-        buildable: false
+# package.dhall
+    when = { condition = "impl(ghc > 8.2.2)", buildable = False }
 
 # .cabal
     if impl(ghc > 8.2.2)
