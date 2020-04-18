@@ -94,9 +94,11 @@ import Data.UnitsOfMeasure
 -- Base "m" /: Base "s" :: Unit
 --
 -- The template Haskell quasiquoter 'u' gives a nice syntax for units (see
--- @Text.Parse.Units@ from the @units-parser@ package for details of the
--- syntax).  When used in a type, the quasiquoter produces an expression of
--- kind 'Unit'.
+-- module
+-- @[Text.Parse.Units](http://hackage.haskell.org/package/units-parser/docs/Text-Parse-Units.html)@
+-- from the @[units-parser](http://hackage.haskell.org/package/units-parser)@
+-- package for details of the syntax).  When used in a type, the quasiquoter
+-- produces an expression of kind 'Unit'.
 --
 -- >>> :kind! [u| m^2 |]
 -- [u| m^2 |] :: Unit
