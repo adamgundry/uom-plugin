@@ -40,7 +40,7 @@ module Data.UnitsOfMeasure.Tutorial
   -- * Operations on Quantities
   -- $ops
 
-  -- * Unit polymorphism
+  -- * Unit Polymorphism
   -- $polymorphism
 
   -- * Further Reading
@@ -163,6 +163,19 @@ import Data.UnitsOfMeasure
 --
 -- >>> [u| 1.1 m / s |] :: Quantity Double [u| m / s |]
 -- [u| 1.1 m / s |]
+--
+-- The units parser handles various number formats.
+--
+-- >>> [u| 0o1327 Hz |]
+-- [u| 727 s^-1 |]
+-- >>> [u| 0x2d7 Hz |]
+-- [u| 727 s^-1 |]
+-- >>> [u| 325e-2 in |]
+-- [u| 3.25 in |]
+-- >>> [u| 36E+2 s |]
+-- [u| 3600.0 s |]
+-- >>> [u| 14.67e1 mi |]
+-- [u| 146.7 mi |]
 
 -- $dimless
 --
