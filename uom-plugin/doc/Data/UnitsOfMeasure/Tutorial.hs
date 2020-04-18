@@ -178,6 +178,19 @@ import Data.UnitsOfMeasure
 -- >>> :type 1.0 :: Quantity _ One
 -- 1.0 :: Quantity _ One :: Fractional w => Quantity w One
 --
+-- Quoted rationals are fine but type annotating them as dimensionless
+-- quantities will not work.
+--
+-- >>> :type [u| 1 % 1 |]
+-- [u| 1 % 1 |] :: Fractional a => Quantity a One
+-- >>> import Data.Ratio ((%))
+-- >>> :type (1 % 1) :: Quantity _ One
+-- <BLANKLINE>
+-- ...
+-- ...Couldn't match expected type...Quantity w1 One...
+-- ...with actual type...GHC.Real.Ratio Integer...
+-- ...
+--
 -- Things get a little weird when not being explicit about Quantity.
 --
 -- >>> :type 1 :: _ _ [u| 1 |]
