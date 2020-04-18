@@ -7,11 +7,11 @@ module Data.UnitsOfMeasure.Tutorial
   -- * Introduction
   -- $intro
 
-  -- * Prerequisites
-  -- $prereqs
+  -- * Setup
+  -- $ghc-setup
 
-  -- * Interactive Use
-  -- $ghci
+  -- * Interactive Setup
+  -- $ghci-setup
 
   -- * The 'Unit' Kind
   -- $units
@@ -54,76 +54,67 @@ import Data.UnitsOfMeasure
 
 -- $intro
 --
--- The @uom-plugin@ adds support for type safe units of measure.
+-- The @uom-plugin@ adds support for type safe units of measure. Its
+-- typechecker plugin automatically solves equality constraints between units
+-- of measure.
 
--- $prereqs
+-- $ghc-setup
 --
--- To use the @uom-plugin@ library, simply import "Data.UnitsOfMeasure"
--- and pass the option @-fplugin Data.UnitsOfMeasure.Plugin@ to GHC, for
--- example by adding the following above the module header of your source
--- files:
+-- To use the @uom-plugin@ library, import "Data.UnitsOfMeasure" after making
+-- GHC aware of the plugin and enabling language extensions.
 --
--- > {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+-- >>> {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+-- >>> {-# LANGUAGE DataKinds, QuasiQuotes, TypeOperators #-}
+-- >>> import Data.UnitsOfMeasure
 --
--- This will enable the typechecker plugin, which automatically solves
--- equality constraints between units of measure.  You will also need
--- some language extensions:
---
--- > {-# LANGUAGE DataKinds, QuasiQuotes, TypeOperators #-}
---
--- In order to declare new units, you will need:
---
--- > {-# LANGUAGE TypeFamilies, UndecidableInstances #-}
+-- In a module that imports the library but has not enabled the plugin or
+-- enabled the required extensions you will likely get mysterious unsolved
+-- constraint errors when working with units. It is only with the plugin
+-- enabled that GHC can solve these.
 
--- $ghci
+-- $ghci-setup
 --
--- If experimenting with @uom-plugin@ in GHCi you will need to
--- activate the plugin with the command
+-- To start experimenting with @uom-plugin@ in GHCi you will need to do the
+-- equivalent setup.
 --
--- >>> :seti -fplugin Data.UnitsOfMeasure.Plugin
---
--- otherwise you will get mysterious unsolved constraint errors.  You
--- will probably also need the extensions:
---
--- >>> :seti -XDataKinds -XQuasiQuotes -XTypeOperators
+-- >>> :seti -fplugin Data.UnitsOfMeasure.Plugin -XDataKinds -XQuasiQuotes -XTypeOperators
+-- >>> import Data.UnitsOfMeasure
 
 -- $units
 --
--- Units of measure, such as kilograms or metres per second, are
--- represented by the abstract kind 'Unit'.  They can be built out of
--- 'One', 'Base', ('Data.UnitsOfMeasure.Internal.*:'),
--- ('Data.UnitsOfMeasure.Internal./:') and
+-- Units of measure, such as kilograms or metres per second, are represented by
+-- the abstract kind 'Unit'.  They can be built out of 'One', 'Base',
+-- ('Data.UnitsOfMeasure.Internal.*:'), ('Data.UnitsOfMeasure.Internal./:') and
 -- ('Data.UnitsOfMeasure.Internal.^:').  Base units are represented as
--- type-level strings (with kind 'Symbol').  For example,
+-- type-level strings (with kind 'Symbol').
 --
 -- >>> :kind One
 -- One :: Unit
---
 -- >>> :kind Base "m" /: Base "s"
 -- Base "m" /: Base "s" :: Unit
 --
--- The TH quasiquoter 'u' is provided to give a nice syntax for units
--- (see @Text.Parse.Units@ from the @units-parser@ package for details
--- of the syntax).  When used in a type, the quasiquoter produces an
--- expression of kind 'Unit', for example
+-- The template Haskell quasiquoter 'u' gives a nice syntax for units (see
+-- @Text.Parse.Units@ from the @units-parser@ package for details of the
+-- syntax).  When used in a type, the quasiquoter produces an expression of
+-- kind 'Unit'.
 --
 -- >>> :kind! [u| m^2 |]
 -- [u| m^2 |] :: Unit
 -- = Base "m" *: Base "m"
---
 -- >>> :kind! [u| kg m/s |]
 -- [u| kg m/s |] :: Unit
 -- = (Base "kg" *: Base "m") /: Base "s"
 
 -- $decls
 --
--- Base and derived units need to be declared before use, otherwise
--- you will get unsolved constraints like @'KnownUnit' ('Unpack' ('MkUnit' "m"))@.
--- When the TH quasiquoter 'u' is used as in a declaration context, it
--- creates new base or derived units.  Alternatively,
--- 'declareBaseUnit' and 'declareDerivedUnit' can be used as top-level
--- TH declaration splices.  For example:
+-- Base and derived units need to be declared before use, otherwise you will
+-- get unsolved constraints like @'KnownUnit' ('Unpack' ('MkUnit' "m"))@.  When
+-- the TH quasiquoter 'u' is used in a declaration context, it creates new base
+-- or derived units.  Alternatively, 'declareBaseUnit' and 'declareDerivedUnit'
+-- can be used as top-level TH declaration splices. Where declaring new units,
+-- you will also need a couple more extensions.
 --
+-- >>> {-# LANGUAGE TypeFamilies, UndecidableInstances #-}
 -- > declareBaseUnit "m"
 -- > declareDerivedUnit "N" "kg m / s^2"
 -- > [u| kg, s |]
