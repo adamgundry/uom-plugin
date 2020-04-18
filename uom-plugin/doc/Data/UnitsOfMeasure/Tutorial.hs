@@ -115,6 +115,7 @@ import Data.UnitsOfMeasure
 -- you will also need a couple more extensions.
 --
 -- >>> {-# LANGUAGE TypeFamilies, UndecidableInstances #-}
+--
 -- > declareBaseUnit "m"
 -- > declareDerivedUnit "N" "kg m / s^2"
 -- > [u| kg, s |]
@@ -163,13 +164,17 @@ import Data.UnitsOfMeasure
 
 -- $dimless
 --
--- The same can be done without putting the value in the quote and without
--- templating altogether for dimensionless units, those with units of 'One'.
+-- Without putting the numeric value in a quotation and without templating
+-- altogether we can create dimensionless units, those with units of 'One'.
 --
+-- >>> 1 :: Quantity Int One
+-- [u| 1 |]
+-- >>> [u| 1 |]
+-- [u| 1 |]
+-- >>> :type [u| 1 |]
+-- [u| 1 |] :: Num a => Quantity a One
 -- >>> :type 1 :: Quantity _ [u| 1 |]
 -- 1 :: Quantity _ [u| 1 |] :: Num w => Quantity w One
--- >>> :type 1.0 :: Quantity _ One
--- 1.0 :: Quantity _ One :: Fractional w => Quantity w One
 -- >>> :type 1.0 :: Quantity _ One
 -- 1.0 :: Quantity _ One :: Fractional w => Quantity w One
 --
@@ -181,13 +186,6 @@ import Data.UnitsOfMeasure
 -- 1 :: _ _ One :: Num (w1 w2 One) => w1 w2 One
 -- >>> :type 1.0 :: _ _ One
 -- 1.0 :: _ _ One :: Fractional (w1 w2 One) => w1 w2 One
---
--- >>> 2 :: Quantity Int One
--- [u| 2 |]
--- >>> [u| 2 |]
--- [u| 2 |]
--- >>> :type [u| 2 |]
--- [u| 2 |] :: Num a => Quantity a One
 
 -- $multiplication-by-one
 --
