@@ -75,8 +75,71 @@ testEquivalentSUnit su sv
   | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
   | otherwise = Nothing
 
--- | Calculate a normal form of a syntactic unit: a map from base unit
--- names to non-zero integers.
+-- | Calculate a normal form of a syntactic unit: a map from base unit names to
+-- non-zero integers.
+--
+-- >>> normaliseUnitSyntax ([] :/ [])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m"] :/ [])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ [])
+-- fromList [("m",2)]
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ [])
+-- fromList [("m",3)]
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m", "m"])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m", "m", "m"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["m"])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m"])
+-- fromList [("m",-1)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["m", "m"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
+-- fromList [("m",2)]
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m"])
+-- fromList [("m",3)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m", "m"])
+-- fromList [("m",-1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m", "m"])
+-- fromList [("m",-2)]
+--
+-- >>> normaliseUnitSyntax (replicate 3 "m" :/ [])
+-- fromList [("m",3)]
+--
+-- >>> normaliseUnitSyntax ([] :/ replicate 3 "m")
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (replicate 3 "m" :/ replicate 3 "m")
+-- fromList [("m",-2)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["s"])
+-- fromList [("m",1),("s",1)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["s", "s"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ []) == normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
+-- True
+--
+-- >>> normaliseUnitSyntax (["m"] :/ []) == normaliseUnitSyntax (["m"] :/ ["m", "m"])
+-- True
 normaliseUnitSyntax :: UnitSyntax String -> Map.Map String Integer
 normaliseUnitSyntax (xs :/ ys) =
     Map.filter (/= 0)
@@ -117,3 +180,6 @@ instance (KnownSymbol x, KnownList xs) => KnownList (x ': xs) where
 -- | Extract the runtime syntactic representation of a 'KnownUnit'
 unitVal :: forall proxy u . KnownUnit u => proxy u -> UnitSyntax String
 unitVal _ = forgetSUnit (unitSing :: SUnit u)
+
+-- $setup
+-- >>> :set -XExplicitNamespaces -XDataKinds -XTypeOperators
