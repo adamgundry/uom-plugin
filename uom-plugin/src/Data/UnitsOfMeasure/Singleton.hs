@@ -143,7 +143,7 @@ testEquivalentSUnit su sv
 normaliseUnitSyntax :: UnitSyntax String -> Map.Map String Integer
 normaliseUnitSyntax (xs :/ ys) =
     Map.filter (/= 0)
-        (foldl' (\ m x -> Map.insertWith (-) x 1 m)
+        (foldl' (\ m x -> Map.insertWith (+) x (negate 1) m)
             (foldl' (\ m x -> Map.insertWith (+) x 1 m) Map.empty xs) ys)
 
 
