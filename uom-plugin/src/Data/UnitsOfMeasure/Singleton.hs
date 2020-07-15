@@ -91,55 +91,55 @@ testEquivalentSUnit su sv
 -- fromList [("m",3)]
 --
 -- >>> normaliseUnitSyntax ([] :/ ["m"])
--- fromList [("m",1)]
+-- fromList [("m",-1)]
 --
 -- >>> normaliseUnitSyntax ([] :/ ["m", "m"])
--- fromList []
+-- fromList [("m",-2)]
 --
 -- >>> normaliseUnitSyntax ([] :/ ["m", "m", "m"])
--- fromList [("m",1)]
+-- fromList [("m",-3)]
 --
 -- >>> normaliseUnitSyntax (["m"] :/ ["m"])
 -- fromList []
 --
 -- >>> normaliseUnitSyntax (["m", "m"] :/ ["m"])
--- fromList [("m",-1)]
---
--- >>> normaliseUnitSyntax (["m"] :/ ["m", "m"])
 -- fromList [("m",1)]
 --
+-- >>> normaliseUnitSyntax (["m"] :/ ["m", "m"])
+-- fromList [("m",-1)]
+--
 -- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
--- fromList [("m",2)]
+-- fromList []
 --
 -- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m"])
--- fromList [("m",3)]
+-- fromList [("m",1)]
 --
 -- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m", "m"])
 -- fromList [("m",-1)]
 --
 -- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m", "m"])
--- fromList [("m",-2)]
+-- fromList []
 --
 -- >>> normaliseUnitSyntax (replicate 3 "m" :/ [])
 -- fromList [("m",3)]
 --
 -- >>> normaliseUnitSyntax ([] :/ replicate 3 "m")
--- fromList [("m",1)]
+-- fromList [("m",-3)]
 --
 -- >>> normaliseUnitSyntax (replicate 3 "m" :/ replicate 3 "m")
--- fromList [("m",-2)]
+-- fromList []
 --
 -- >>> normaliseUnitSyntax (["m"] :/ ["s"])
--- fromList [("m",1),("s",1)]
+-- fromList [("m",1),("s",-1)]
 --
 -- >>> normaliseUnitSyntax (["m"] :/ ["s", "s"])
--- fromList [("m",1)]
+-- fromList [("m",1),("s",-2)]
 --
 -- >>> normaliseUnitSyntax (["m", "m"] :/ []) == normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
--- True
+-- False
 --
 -- >>> normaliseUnitSyntax (["m"] :/ []) == normaliseUnitSyntax (["m"] :/ ["m", "m"])
--- True
+-- False
 normaliseUnitSyntax :: UnitSyntax String -> Map.Map String Integer
 normaliseUnitSyntax (xs :/ ys) =
     Map.filter (/= 0)
