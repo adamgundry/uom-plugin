@@ -180,6 +180,3 @@ instance (KnownSymbol x, KnownList xs) => KnownList (x ': xs) where
 -- | Extract the runtime syntactic representation of a 'KnownUnit'
 unitVal :: forall proxy u . KnownUnit u => proxy u -> UnitSyntax String
 unitVal _ = forgetSUnit (unitSing :: SUnit u)
-
--- $setup
--- >>> :set -XExplicitNamespaces -XDataKinds -XTypeOperators
