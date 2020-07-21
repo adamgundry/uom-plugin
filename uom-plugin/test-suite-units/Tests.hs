@@ -339,13 +339,19 @@ tests = testGroup "uom-plugin"
     , testCase "42 s m s"    $ read "[u| 42 s m s |]"    @?= [u| 42 m s^2 |]
     ]
   , testGroup "read equality (avoid false equivalences)"
-    [ testCase "1 m/m^2 /= 1 m"  $ read "[u| 1 m/m^2 |]"  @?/= [u| 1 m |]
-    , testCase "1 m /= 1 m/m^2"  $ read "[u| 1 m |]"  @?/= [u| 1 m/m^2 |]
-    , testCase "1 m/m^2 /= 1 m"  $ read "[u| 1 m/m^2 |]"  @/=? [u| 1 m |]
-    , testCase "1 m /= 1 m/m^2"  $ read "[u| 1 m |]"  @/=? [u| 1 m/m^2 |]
+    [ testCase "1 m/m^2 /= 1 m" $
+        (read "[u| 1 m/m^2 |]" :: Quantity Double [u| m |]) `throws` noParse
+
+    , testCase "1 m /= 1 m/m^2" $
+        (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
+
+    , testCase "1 m/m^2 /= 1 m" $
+        (read "[u| 1 m/m^2 |]" :: Quantity Double [u| m |]) `throws` noParse
+
+    , testCase "1 m /= 1 m/m^2" $
+        (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
     ]
   ]
-
 
 -- | Assert that evaluation of the first argument (to WHNF) will throw
 -- an exception whose string representation contains one of the given
@@ -355,18 +361,5 @@ throws v xs =
     (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
         unless (any (all (`isInfixOf` show e)) xs) $ throw e
 
-assertNEQ
-  :: (Show a, Eq a, HasCallStack)
-  => a -- ^ The expected value
-  -> a -- ^ The actual value
-  -> Assertion
-assertNEQ expected actual = unless (actual /= expected) (assertFailure msg) where
-    msg = "expected: " ++ show actual ++ " /= " ++ show expected
-
-infix 1 @?/=, @/=?
-
-(@?/=) :: (HasCallStack, Eq a, Show a) => a -> a -> Assertion
-(@?/=) = flip assertNEQ
-
-(@/=?) :: (HasCallStack, Eq a, Show a) => a -> a -> Assertion
-(@/=?) = assertNEQ
+noParse :: [[String]]
+noParse = [["Prelude.read: no parse"]]
