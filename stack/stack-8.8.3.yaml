@@ -1,4 +1,4 @@
-resolver: lts-15.5
+resolver: lts-16.6
 packages:
 - ../uom-plugin
 - ../uom-plugin-tutorial

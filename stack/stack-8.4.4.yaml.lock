@@ -13,7 +13,7 @@ packages:
     hackage: units-parser-0.1.0.0
 snapshots:
 - completed:
-    size: 506080
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/12/16.yaml
-    sha256: 8fb23cad3d4913303229b0ac8eee0b1f244b473dd0406ab3542a914ad9153e8b
-  original: lts-12.16
+    size: 509471
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/12/26.yaml
+    sha256: 95f014df58d0679b1c4a2b7bf2b652b61da8d30de5f571abb0d59015ef678646
+  original: lts-12.26
