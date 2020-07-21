@@ -344,12 +344,6 @@ tests = testGroup "uom-plugin"
 
     , testCase "1 m /= 1 m/m^2" $
         (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
-
-    , testCase "1 m/m^2 /= 1 m" $
-        (read "[u| 1 m/m^2 |]" :: Quantity Double [u| m |]) `throws` noParse
-
-    , testCase "1 m /= 1 m/m^2" $
-        (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
     ]
   ]
 
