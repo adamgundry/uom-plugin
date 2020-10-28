@@ -151,53 +151,65 @@ mk = MkQuantity
 -- | Addition ('+') of quantities requires the units to match.
 (+:) :: Num a => Quantity a u -> Quantity a u -> Quantity a u
 MkQuantity x +: MkQuantity y = MkQuantity (x + y)
+{-# INLINE (+:) #-}
 
 -- | Multiplication ('*') of quantities multiplies the units.
 (*:) :: (Num a, w ~~ u *: v) => Quantity a u -> Quantity a v -> Quantity a w
 MkQuantity x *: MkQuantity y = MkQuantity (x * y)
+{-# INLINE (*:) #-}
 
 -- | Subtraction ('-') of quantities requires the units to match.
 (-:) :: Num a => Quantity a u -> Quantity a u -> Quantity a u
 MkQuantity x -: MkQuantity y = MkQuantity (x - y)
+{-# INLINE (-:) #-}
 
 -- | Negation ('negate') of quantities is polymorphic in the units.
 negate' :: Num a => Quantity a u -> Quantity a u
 negate' (MkQuantity x) = MkQuantity (negate x)
+{-# INLINE negate' #-}
 
 -- | Absolute value ('abs') of quantities is polymorphic in the units.
 abs' :: Num a => Quantity a u -> Quantity a u
 abs' (MkQuantity x) = MkQuantity (abs x)
+{-# INLINE abs' #-}
 
 -- | The sign ('signum') of a quantity gives a dimensionless result.
 signum' :: Num a => Quantity a u -> Quantity a One
 signum' (MkQuantity x) = MkQuantity (signum x)
+{-# INLINE signum' #-}
 
 -- | Convert an 'Integer' quantity into any 'Integral' type ('fromInteger').
 fromInteger' :: Integral a => Quantity Integer u -> Quantity a u
 fromInteger' (MkQuantity x) = MkQuantity (fromInteger x)
+{-# INLINE fromInteger' #-}
 
 
 -- | Division ('/') of quantities divides the units.
 (/:) :: (Fractional a, w ~~ u /: v) => Quantity a u -> Quantity a v -> Quantity a w
 MkQuantity x /: MkQuantity y = MkQuantity (x / y)
+{-# INLINE (/:) #-}
 
 -- | Reciprocal ('recip') of quantities reciprocates the units.
 recip' :: (Fractional a, w ~~ One /: u) => Quantity a u -> Quantity a w
 recip' (MkQuantity x) = MkQuantity (recip x)
+{-# INLINE recip' #-}
 
 -- | Convert a 'Rational' quantity into any 'Fractional' type ('fromRational').
 fromRational' :: Fractional a => Quantity Rational u -> Quantity a u
 fromRational' (MkQuantity x) = MkQuantity (fromRational x)
+{-# INLINE fromRational' #-}
 
 -- | Convert any 'Real' quantity into a 'Rational' type ('toRational').
 toRational' :: Real a => Quantity a u -> Quantity Rational u
 toRational' (MkQuantity x) = MkQuantity (toRational x)
+{-# INLINE toRational' #-}
 
 
 -- | Taking the square root ('sqrt') of a quantity requires its units
 -- to be a square.  Fractional units are not currently supported.
 sqrt' :: (Floating a, w ~~ u ^: 2) => Quantity a w -> Quantity a u
 sqrt' (MkQuantity x) = MkQuantity (sqrt x)
+{-# INLINE sqrt' #-}
 
 
 -- | Syntactic representation of a unit as a pair of lists of base
