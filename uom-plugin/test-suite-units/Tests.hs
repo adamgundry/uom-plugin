@@ -30,6 +30,12 @@
 -- solveSimpleWanteds: too many iterations (limit = 4)
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
+#if __GLASGOW_HASKELL__ == 900
+-- TODO: it isn't clear why GHC 9.0.1 requires 6 iterations to compile this
+-- module, whereas GHC 9.2.0 succeeds with the default of 4.
+{-# OPTIONS_GHC -fconstraint-solver-iterations=6 #-}
+#endif
+
 module Main
     ( main
 
@@ -353,7 +359,8 @@ tests = testGroup "uom-plugin"
 throws :: a -> [[String]] -> Assertion
 throws v xs =
     (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
-        unless (any (all (`isInfixOf` show e)) xs) $ throw e
+        unless (any (all (`isInfixOf` show e)) xs) $
+          assertFailure ("Expected:\n" ++ unlines (concat xs) ++ "\nbut got:\n" ++ show e)
 
 noParse :: [[String]]
 noParse = [["Prelude.read: no parse"]]

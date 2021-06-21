@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
@@ -16,23 +16,23 @@ module Data.UnitsOfMeasure.Plugin
 import GhcApi
 import GhcApi.Shim
     ( mkEqPred, mkFunnyEqEvidence
-#if __GLASGOW_HASKELL__ < 802
-    , pattern FunTy
-#endif
     )
 import GhcApi.Wrap (newGivenCt, newWantedCt)
+
+import Control.Applicative
 import Data.Either
-import Data.List
+import Data.Maybe
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 
-
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
 plugin :: Plugin
-plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
+plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin
+                       , pluginRecompile = const $ pure NoForceRecompile
+                       }
 
 uomPlugin :: TcPlugin
 uomPlugin = tracePlugin
@@ -65,8 +65,10 @@ unitsOfMeasureSolver uds givens _deriveds []      = do
 
 
 unitsOfMeasureSolver uds givens _deriveds wanteds = do
-  xs <- lookForUnpacks uds givens wanteds
-  if not $ null xs then return $ TcPluginOk [] xs else do
+  mb <- lookForUnpacks uds wanteds
+  case mb of
+   Just (new_cts, solved_cts) -> return $ TcPluginOk solved_cts new_cts
+   Nothing -> do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ TcPluginOk [] []
@@ -110,39 +112,70 @@ substItemToCt uds si
         loc  = ctLoc ct
 
 
-lookForUnpacks :: UnitDefs -> [Ct] -> [Ct] -> TcPluginM [Ct]
-lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
+-- | If there are any occurrences of Unpack that can be reduced, return the new
+-- Cts and solved Cts.
+--
+-- Previously, when we found an Unpack redex we emitted a new Given Ct claiming
+-- that it was equal to its reduct.  However this appears not to work any more.
+-- So instead, we look for Unpack occurrences only in Wanteds, and solve the
+-- entire Wanted with a new one that contains the reduct.  This means that
+-- Unpack will not be reduced in Givens.
+--
+-- All this should become much simpler when plugins can define type family
+-- reductions directly.
+lookForUnpacks :: UnitDefs -> [Ct] -> TcPluginM (Maybe ([Ct], [(EvTerm, Ct)]))
+lookForUnpacks uds = lookForReductions (reduceType match_unpack)
   where
-    unpacks = concatMap collectCt $ givens ++ wanteds
+    match_unpack tc as
+      | [a] <- as, tc == unpackTyCon uds = reifyUnitUnpacked uds <$> (maybeConstant =<< normaliseUnit uds a)
+      | otherwise                        = Nothing
 
-    collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
+-- | Look for constraints whose types can be simplified by the reduction
+-- function.  If there are any, emit new wanteds and solve the existing wanteds
+-- using the new ones (coerced by UnivCo).
+lookForReductions :: (Type -> Maybe Type) -> [Ct] -> TcPluginM (Maybe ([Ct], [(EvTerm, Ct)]))
+lookForReductions reduce cts
+    | null simplified_cts = pure Nothing
+    | otherwise           = Just . unzip <$> mapM simplifyWanted simplified_cts
+  where
+    simplified_cts :: [(Ct, Type)]
+    simplified_cts = mapMaybe (\ct -> (ct ,) <$> reduce (ctEvPred (ctEvidence ct))) cts
 
-    collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
-    collectType ct (TyConApp tc [a])
-      | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
-                                        Just xs -> [(ct,a,xs)]
-                                        _       -> []
-    collectType ct (TyConApp _ as)  = concatMap (collectType ct) as
-    collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
-    collectType ct (ForAllTy _ t)   = collectType ct t
-    collectType _  _                = [] -- TyVarTy, LitTy from 7.10, plus CastTy and CoercionTy in 8.0
+-- | Given a wanted constraint and a simplified type, make a new wanted and
+-- return it along with evidence for the old wanted.
+simplifyWanted :: (Ct, Type) -> TcPluginM (Ct, (EvTerm, Ct))
+simplifyWanted (ct, ty) = do
+    new_ct <- newWantedCt (ctLoc ct) ty
+    let ev = evCast (ctEvExpr (ctEvidence new_ct))
+                    (mkUnivCo (PluginProv "uom-plugin") Representational ty (ctEvPred (ctEvidence ct)))
+    pure (new_ct, (ev, ct))
 
-    unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
-      where
-        ty1 = TyConApp (unpackTyCon uds) [a]
-        ty2 = mkTyConApp (unitSyntaxPromotedDataCon uds)
-               [ typeSymbolKind
-               , foldr promoter nil ys
-               , foldr promoter nil zs ]
-        loc = ctLoc ct
+-- | Search a type for an occurrence of Unpack applied to a constant.  Such
+-- occurrences can be reduced to the corresponding syntactic representation of
+-- the constant.  If one is found, return the corresponding type with the
+-- reduction applied.
+reduceType :: (TyCon -> [Type] -> Maybe Type) -> Type -> Maybe Type
+reduceType reduce = go
+  where
+    go :: Type -> Maybe Type
+    go (AppTy f s)       = uncurry mkAppTy <$> go2 f s
+    go (TyConApp tc as)  = reduce tc as <|> (mkTyConApp tc <$> go_tys [] as)
+    go (FunTy x y t1 t2) = uncurry (mkFunTy x y) <$> go2 t1 t2
+    go _                 = Nothing
 
-        ys = concatMap (\ (s, i) -> if i > 0 then genericReplicate i s       else []) xs
-        zs = concatMap (\ (s, i) -> if i < 0 then genericReplicate (abs i) s else []) xs
+    go2 :: Type -> Type -> Maybe (Type, Type)
+    go2 t1 t2 = ((, t2) <$> go t1) <|> ((t1 ,) <$> go t2)
 
-    nil = mkTyConApp (promoteDataCon nilDataCon) [typeSymbolKind]
-
-    promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
-    cons_tycon = promoteDataCon consDataCon
+    -- The first argument accumulates preceding arguments that cannot be reduced.
+    --
+    -- TODO: the following is almost certainly wrong if the TyCon has a
+    -- dependent kind, because simplifying the Unpack argument will change the
+    -- kind of subsequent arguments and/or the result!
+    go_tys :: [Type] -> [Type] -> Maybe [Type]
+    go_tys  _  [] = Nothing
+    go_tys xs (y:ys) = case go y of
+                         Just y' -> Just (reverse xs ++ y':ys)
+                         Nothing -> go_tys (y:xs) ys
 
 
 lookupUnitDefs :: TcPluginM UnitDefs
