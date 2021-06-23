@@ -1,0 +1,18 @@
+packages: uom-plugin/*, uom-plugin-examples/*, uom-plugin-tutorial/*
+with-compiler: ghc-9.0.1
+optimization: False
+tests: True
+
+package uom-plugin
+  ghc-options: -fobject-code
+
+package uom-plugin
+  ghc-options: -dcore-lint
+
+package uom-plugin-examples
+  ghc-options: -dcore-lint
+
+package uom-plugin-tutorial
+  ghc-options: -dcore-lint
+
+write-ghc-environment-files: always

@@ -1,10 +1,8 @@
 # Units of measure as a GHC typechecker plugin
 
-The `uom-plugin` library adds support for units of measure to GHC using the new experimental facility for typechecker plugins, which is available in GHC `7.10` and later.  See [Data.UnitsOfMeasure.Tutorial](https://github.com/adamgundry/uom-plugin/blob/master/uom-plugin/src/Data/UnitsOfMeasure/Tutorial.hs) for an introduction to the library, and [the accompanying paper](http://adam.gundry.co.uk/pub/typechecker-plugins/) for more background.  An example of a package that uses the library is given in [uom-plugin-examples](uom-plugin-examples).
+The `uom-plugin` library adds support for units of measure to GHC as a type-checker plugin.  See [Data.UnitsOfMeasure.Tutorial](https://github.com/adamgundry/uom-plugin/blob/master/uom-plugin/src/Data/UnitsOfMeasure/Tutorial.hs) for an introduction to the library, and [the accompanying paper](http://adam.gundry.co.uk/pub/typechecker-plugins/) for more background.  An example of a package that uses the library is given in [uom-plugin-examples](uom-plugin-examples).
 
-The library has been tested with GHC `7.10.3`, `8.0.2` & `8.2.2`.
-
-:warning: Please don't use this plugin with later versions of GHC as it will likely fail to solve constraints, [#43][i43].
+The latest version of the library is tested with GHC 9.0.1, and should work with 9.2.1. Older versions of `uom-plugin` (0.3 and earlier) work with the GHC 7.10, 8.0 and 8.2 series. There are no versions supporting GHC 8.4 to 8.10 ([#43][i43]).
 
 [i43]: https://github.com/adamgundry/uom-plugin/issues/43
 
@@ -84,18 +82,10 @@ one that corresponds to ghc-8.2.2;
 
 ### Continuous Integration
 
-[![Build Status](https://travis-ci.org/adamgundry/uom-plugin.svg?branch=master)](https://travis-ci.org/adamgundry/uom-plugin)
+![Build Status](https://github.com/adamgundry/uom-plugin/actions/workflows/haskell-ci.yml/badge.svg)
 
-If installing tooling from the master branch of haskell-ci then generate the
-`.travis.yml` setup with;
-
-```
-> make-travis-yml --output=.travis.yml --config=cabal.haskell-ci cabal.project
-```
-
-If installing tooling from the package branch of haskell-ci then generate the
-`.travis.yml` setup with;
+Generate the `.github/worksflows/haskell-ci.yml` setup with;
 
 ```
-> haskell-ci --output=.travis.yml --config=cabal.haskell-ci cabal.project
+> haskell-ci github cabal.project --local-ghc-options -dcore-lint
 ```

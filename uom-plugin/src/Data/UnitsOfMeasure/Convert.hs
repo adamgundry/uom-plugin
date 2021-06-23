@@ -73,8 +73,8 @@ module Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import GHC.Exts ( Constraint )
-import GHC.TypeLits
+import Data.Kind (Type, Constraint)
+import GHC.TypeLits (Symbol)
 
 
 -- | Class to capture the dimensions to which base units belong.  For
@@ -154,7 +154,7 @@ convert = (ratio (undefined :: proxy' (proxy v)) (undefined :: proxy' (proxy u))
 -- dimension.  The slightly unusual proxy arguments allow this to be
 -- called using quasiquoters to specify the units, for example
 -- @'ratio' [u| ft |] [u| m |]@.
-ratio :: forall a u v (proxy :: Unit -> *) proxy' .
+ratio :: forall a u v (proxy :: Unit -> Type) proxy' .
          (Fractional a, Convertible u v)
       => proxy' (proxy u) -> proxy' (proxy v) -> Quantity a (u /: v)
 ratio _ _ = fromRational' $ conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)

@@ -22,20 +22,21 @@ mismatch1 :: Quantity Double [u| s/m |]
 mismatch1 = [u| 3 m/s |]
 
 mismatch1_errors :: [[String]]
-mismatch1_errors = [ [ "Couldn't match type ‘Base \"s\" /: Base \"m\"’"
-                     , "with ‘Base \"m\" /: Base \"s\"’" ]
-                   , [ "Couldn't match type ‘Base \"m\" /: Base \"s\"’"
-                     , "with ‘Base \"s\" /: Base \"m\"’" ]
-                   ]
-
+mismatch1_errors = couldn'tMatchErrors "Base \"m\" /: Base \"s\"" "Base \"s\" /: Base \"m\""
 
 mismatch2 :: Quantity Int [u| s |]
 mismatch2 = [u| 2 m |] +: ([u| 2 s |] :: Quantity Int [u| s |])
 
 mismatch2_errors :: [[String]]
-mismatch2_errors = [ [ "Couldn't match type ‘Base \"s\"’ with ‘Base \"m\"’" ]
-                   , [ "Couldn't match type ‘Base \"m\"’ with ‘Base \"s\"’" ]
-                   ]
+mismatch2_errors = couldn'tMatchErrors "Base \"s\"" "Base \"m\""
+
+couldn'tMatchErrors :: String -> String -> [[String]]
+couldn'tMatchErrors t1 t2 =
+    [ [ "Couldn't match type ‘" ++ t1 ++ "’", "with ‘" ++ t2 ++ "’" ]
+    , [ "Couldn't match type ‘" ++ t2 ++ "’", "with ‘" ++ t1 ++ "’" ]
+    , [ "Couldn't match type: " ++ t1, "with: " ++ t2 ]
+    , [ "Couldn't match type: " ++ t2, "with: " ++ t1 ]
+    ]
 
 
 given1 :: ((One *: a) ~ (a *: One)) => Quantity Double a -> Quantity Double [u|kg|]
@@ -114,7 +115,16 @@ op_d3 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Rational (Base "
 
 opErrors :: String -> String -> String -> [[String]]
 opErrors a b c =
-#if __GLASGOW_HASKELL__ > 710 
+#if __GLASGOW_HASKELL__ >= 900
+  [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
+    , "Actual: Quantity " ++ c ++ " One"
+    ]
+  , [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
+    , "Expected: Quantity " ++ c ++ " One"
+    ]
+  , []
+  ]
+#elif __GLASGOW_HASKELL__ > 710
   [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
     , "Expected type: Quantity " ++ c ++ " (Base \"m\")"
     ]

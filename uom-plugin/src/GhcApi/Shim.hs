@@ -7,15 +7,9 @@ module GhcApi.Shim
     , tyVarsOfTypes
     , promoteTyCon
 
-#if __GLASGOW_HASKELL__ >= 800
-#if __GLASGOW_HASKELL__ < 802
-    , pattern FunTy
-#endif
     , mkEqPred
     , mkHEqPred
-#endif
-
-    , mkFunnyEqEvidence 
+    , mkFunnyEqEvidence
     ) where
 
 import GhcApi
@@ -29,43 +23,22 @@ tyVarsOfTypes = tyCoVarsOfTypes
 promoteTyCon :: TyCon -> TyCon
 promoteTyCon = id
 
-#if __GLASGOW_HASKELL__ >= 800
-#if __GLASGOW_HASKELL__ < 802
-pattern FunTy :: Type -> Type -> Type
-pattern FunTy t v = ForAllTy (Anon t) v
-#endif
-
 mkEqPred :: Type -> Type -> Type
 mkEqPred = mkPrimEqPred
 
 mkHEqPred :: Type -> Type -> Type
 mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
-#endif
 
-#if __GLASGOW_HASKELL__ >= 806
 evDFunApp' :: DFunId -> [Type] -> [EvExpr] -> EvTerm
-evDFunApp' f ts es = evDFunApp f ts es
-#else
-evDFunApp' :: DFunId -> [Type] -> [EvTerm] -> EvTerm
-evDFunApp' = EvDFunApp
-#endif
+evDFunApp' = evDFunApp
 
-#if __GLASGOW_HASKELL__ >= 806
 evCast' :: EvTerm -> TcCoercion -> EvTerm
 evCast' (EvExpr e)  = evCast e
-evCast' (EvTypeable _ _) = error "Can't evCast (EvTypeable _ _)"
-evCast' (EvFun _ _ _ _) = error "Can't evCast (EvFun _ _ _ _)"
-#elif __GLASGOW_HASKELL__ >= 802
-evCast' :: EvTerm -> TcCoercion -> EvTerm
-evCast' = EvCast
-#else
-evCast' :: EvTerm -> TcCoercionR -> EvTerm
-evCast' = EvCast
-#endif
+evCast' (EvTypeable{}) = error "Can't evCast (EvTypeable _ _)"
+evCast' (EvFun{}) = error "Can't evCast (EvFun _ _ _ _)"
 
--- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by
--- coercing bogus evidence of type @t1 ~ t2@ (or its heterogeneous
--- variant, in GHC 8.0).
+-- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
+-- bogus evidence of type @t1 ~ t2@.
 mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
 mkFunnyEqEvidence t t1 t2 =
     castFrom `evCast'` castTo
@@ -79,14 +52,10 @@ mkFunnyEqEvidence t t1 t2 =
                 tys :: [Kind]
                 tys = [typeKind t1, typeKind t2, t1, t2]
 
-#if __GLASGOW_HASKELL__ >= 806
                 terms :: [EvExpr]
-                terms = [let (EvExpr e) = evByFiat "units" t1 t2 in e]
-#else
-                terms :: [EvTerm]
-                terms = [evByFiat "units" t1 t2]
-#endif
-
+                terms = case evByFiat "units" t1 t2 of
+                          EvExpr e -> [e]
+                          _        -> error "evByFiat isn't an EvExpr?"
 
         castTo :: TcCoercion
         castTo =

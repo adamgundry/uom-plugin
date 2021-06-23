@@ -1,198 +1,90 @@
 {-# LANGUAGE CPP #-}
 
 module GhcApi
-    (
-    -- * From Coercion
-      mkUnivCo
-    , Coercion
-
-    -- * From DataCon
-    , dataConName, promoteDataCon, dataConWrapId
-
-    -- * From FastString
-    , FastString(..)
-    , fsLit
-
-    -- * From Module
-    , mkModuleName
-
-    -- * From Name
-    , mkSysTvName
-
-    -- * From OccName
-    , occName, occNameFS, mkTcOcc
-
-    -- * From Outputable
-    , Outputable(..)
-    , (<>), (<+>), ($$)
-    , text
-
-    -- * From Plugins
-    , Plugin(..)
-    , defaultPlugin
-
-    -- * From TcEvidence
-    , EvTerm(..)
-    , TcCoercion
-    , TcCoercionR
-#if __GLASGOW_HASKELL__ >= 806
-    , EvExpr
-    , evCast
-    , evDFunApp
-#endif
-
-    -- * From TcPluginM
-    , TcPluginM
-    , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
-    , tcLookupTyCon, zonkCt
-    , newUnique
-
-    -- * From TcRnTypes
-    , Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
-    , ctLoc, ctEvidence, ctEvPred, ctPred
-    , isGiven, isWanted, isGivenCt
-    , mkNonCanonical
-
-    -- * From TcType
-    , tcSplitTyConApp_maybe, vanillaSkolemTv
-
-    -- * From TyCon
-    , TyCon(..), Role(..)
-    , isFamilyTyCon, tyConDataCons
-
-    -- * From TyCoRep
-    , UnivCoProvenance(PluginProv)
-    , Kind
-#if __GLASGOW_HASKELL__ >= 802
-    , Type(TyConApp, TyVarTy, AppTy, ForAllTy, FunTy)
-#elif __GLASGOW_HASKELL__ >= 800
-    , Type(TyConApp, TyVarTy, AppTy, ForAllTy)
-#endif
-#if __GLASGOW_HASKELL__ <= 800
-    , TyBinder(Anon)
-#endif
-    , mkTyVarTy
-
-    -- * From Type
-    , EqRel(..), PredTree(..), PredType
-    , splitTyConApp_maybe, typeKind, classifyPredType
-    , tyCoVarsOfType, tyCoVarsOfTypes
-    , mkNumLitTy, mkTyConApp
-    , isNumLitTy, isStrLitTy
-    , coreView
-    , mkPrimEqPred, mkStrLitTy
-#if __GLASGOW_HASKELL__ >= 802
-    , nonDetCmpType, nonDetCmpTypes
-#endif
-
-    -- * From TysWiredIn
-    , typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon
-
-    -- * From Unique
-    , getUnique
-#if __GLASGOW_HASKELL__ >= 802
-    , nonDetCmpUnique
-#endif
-
-    -- * From Util
-    , thenCmp
-
-    -- * From Var
-    , Id, DFunId, TyVar
-    , mkTcTyVar
-
-    -- * From VarSet
-    , TyCoVarSet
-    , elemVarSet
-
-    -- * From GHC.TcPluginM.Extra
-    , evByFiat, tracePlugin, lookupModule, lookupName
+    ( module X
     ) where
 
-#if __GLASGOW_HASKELL__ >= 804
-import Prelude hiding ((<>))
-#endif
+import GHC.Core.Coercion as X (mkUnivCo, Coercion)
 
-import Coercion (mkUnivCo, Coercion)
+import GHC.Core.DataCon as X (dataConName, promoteDataCon, dataConWrapId)
+import GHC.Data.FastString as X (FastString(..), fsLit)
+import GHC as X (mkModuleName)
+import GHC.Types.Name as X (mkSysTvName)
+import GHC.Types.Name.Occurrence as X (occName, occNameFS, mkTcOcc)
+import GHC.Utils.Outputable as X (Outputable(..), (<>), (<+>), ($$), text)
+import GHC.Driver.Plugins as X (Plugin(..), defaultPlugin)
 
-import DataCon (dataConName, promoteDataCon, dataConWrapId)
-import FastString (FastString(..), fsLit)
-import Module (mkModuleName)
-import Name (mkSysTvName)
-import OccName (occName, occNameFS, mkTcOcc)
-import Outputable (Outputable(..), (<>), (<+>), ($$), text)
-import Plugins (Plugin(..), defaultPlugin)
-
-import TcEvidence
+import GHC.Tc.Types.Evidence as X
     ( EvTerm(..)
     , TcCoercion
     , TcCoercionR
-#if __GLASGOW_HASKELL__ >= 806
     , EvExpr
     , evCast
     , evDFunApp
-#endif
     )
 
-import TcPluginM
+import GHC.Tc.Plugin as X
     ( TcPluginM
     , tcPluginTrace, matchFam, newFlexiTyVar, isTouchableTcPluginM
     , tcLookupTyCon, zonkCt
     , newUnique
     )
-import TcRnTypes
-    ( Ct(..), TcPlugin(..), TcPluginResult(..), CtLoc
-    , ctLoc, ctEvidence, ctEvPred, ctPred
+import GHC.Tc.Types as X (TcPlugin(..), TcPluginResult(..))
+import GHC.Tc.Types.Constraint as X
+    ( Ct(..), CtLoc
+    , ctLoc, ctEvidence, ctEvPred, ctPred, ctEvExpr
     , isGiven, isWanted, isGivenCt
     , mkNonCanonical
     )
-import TcType (tcSplitTyConApp_maybe, vanillaSkolemTv)
-import TyCon (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
+import GHC.Tc.Utils.TcType as X (tcSplitTyConApp_maybe, vanillaSkolemTv)
+import GHC.Core.TyCon as X (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
 
-import TyCoRep
+import GHC.Core.TyCo.Rep as X
     ( UnivCoProvenance(PluginProv)
     , Kind
-#if __GLASGOW_HASKELL__ >= 802
-    , Type(TyConApp, TyVarTy, AppTy, ForAllTy, FunTy)
-#elif __GLASGOW_HASKELL__ >= 800
-    , Type(TyConApp, TyVarTy, AppTy, ForAllTy)
-#endif
-#if __GLASGOW_HASKELL__ <= 800
-    , TyBinder(Anon)
-#endif
+    , Type(TyConApp, TyVarTy, AppTy, ForAllTy, FunTy, LitTy)
     , mkTyVarTy
+    , mkFunTy
+#if __GLASGOW_HASKELL__ > 900
+    , cmpTyLit
+#endif
     )
 
-import Type
-    ( EqRel(..), PredTree(..), PredType
-    , splitTyConApp_maybe, typeKind, classifyPredType
+import GHC.Core.Coercion as X (mkPrimEqPred)
+import GHC.Core.Predicate as X
+    ( EqRel(..)
+    , Pred(..)
+    , classifyPredType
+    )
+import GHC as X (PredType)
+import GHC.Core.Type as X
+    ( splitTyConApp_maybe, typeKind
     , tyCoVarsOfType, tyCoVarsOfTypes
     , mkNumLitTy, mkTyConApp
     , isNumLitTy, isStrLitTy
     , coreView
-    , mkPrimEqPred, mkStrLitTy
-#if __GLASGOW_HASKELL__ >= 802
-    , nonDetCmpType, nonDetCmpTypes
-#endif
+    , mkStrLitTy
+    , nonDetCmpType, nonDetCmpTypes, nonDetCmpTc
+    , mkAppTy
     )
 
-import TysWiredIn (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
+import GHC.Builtin.Types as X (typeSymbolKind, nilDataCon, consDataCon, heqTyCon, heqDataCon)
 
-import Unique
+import GHC.Types.Unique as X
     ( getUnique
-#if __GLASGOW_HASKELL__ >= 802
     , nonDetCmpUnique
-#endif
     )
 
-import Util (thenCmp)
+import GHC.Utils.Misc as X (thenCmp)
 
-import Var
+import GHC.Types.Var as X
     ( TyVar
     , DFunId
     , Id
     , mkTcTyVar
     )
 
-import VarSet (TyCoVarSet, elemVarSet)
-import GHC.TcPluginM.Extra (evByFiat, tracePlugin, lookupModule, lookupName )
+import GHC.Types.Var.Set as X (TyCoVarSet, elemVarSet)
+import GHC.TcPluginM.Extra as X (evByFiat, tracePlugin, lookupModule, lookupName )
+
+import GHC.Driver.Plugins as X (PluginRecompile(..))
