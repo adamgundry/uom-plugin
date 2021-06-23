@@ -52,11 +52,8 @@ in    defs
       , tests =
           { units =
               { dependencies =
-                  [ "base"
-                  , "tasty >= 0.11.3"
-                  , "tasty-hunit >= 0.9.2"
-                  , "uom-plugin"
-                  ]
+                    defs.dependencies
+                  # [ "tasty >= 0.11.3", "tasty-hunit >= 0.9.2", "uom-plugin" ]
               , ghc-options =
                   testopts
               , main =
@@ -68,13 +65,32 @@ in    defs
               }
           , hlint =
               { dependencies =
-                  [ "base", "hlint >= 2.0.11" ]
+                  defs.dependencies # [ "hlint >= 2.0.11" ]
               , ghc-options =
                   testopts
               , main =
                   "HLint.hs"
               , source-dirs =
                   "test-suite-hlint"
+              }
+          , doctest =
+              { dependencies =
+                    defs.dependencies
+                  # [ "deepseq >=1.3 && <1.5"
+                    , "ghc >= 8.0.2 && <8.9"
+                    , "ghc-tcplugins-extra >=0.1"
+                    , "template-haskell >=2.9"
+                    , "containers >=0.5"
+                    , "units-parser >=0.1"
+                    , "doctest"
+                    , "QuickCheck"
+                    ]
+              , ghc-options =
+                  [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
+              , main =
+                  "DocTest.hs"
+              , source-dirs =
+                  [ "src", "test-suite-doctest" ]
               }
           }
       }

@@ -75,12 +75,75 @@ testEquivalentSUnit su sv
   | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
   | otherwise = Nothing
 
--- | Calculate a normal form of a syntactic unit: a map from base unit
--- names to non-zero integers.
+-- | Calculate a normal form of a syntactic unit: a map from base unit names to
+-- non-zero integers.
+--
+-- >>> normaliseUnitSyntax ([] :/ [])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m"] :/ [])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ [])
+-- fromList [("m",2)]
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ [])
+-- fromList [("m",3)]
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m"])
+-- fromList [("m",-1)]
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m", "m"])
+-- fromList [("m",-2)]
+--
+-- >>> normaliseUnitSyntax ([] :/ ["m", "m", "m"])
+-- fromList [("m",-3)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["m"])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["m", "m"])
+-- fromList [("m",-1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m"])
+-- fromList [("m",1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ ["m", "m", "m"])
+-- fromList [("m",-1)]
+--
+-- >>> normaliseUnitSyntax (["m", "m", "m"] :/ ["m", "m", "m"])
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (replicate 3 "m" :/ [])
+-- fromList [("m",3)]
+--
+-- >>> normaliseUnitSyntax ([] :/ replicate 3 "m")
+-- fromList [("m",-3)]
+--
+-- >>> normaliseUnitSyntax (replicate 3 "m" :/ replicate 3 "m")
+-- fromList []
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["s"])
+-- fromList [("m",1),("s",-1)]
+--
+-- >>> normaliseUnitSyntax (["m"] :/ ["s", "s"])
+-- fromList [("m",1),("s",-2)]
+--
+-- >>> normaliseUnitSyntax (["m", "m"] :/ []) == normaliseUnitSyntax (["m", "m"] :/ ["m", "m"])
+-- False
+--
+-- >>> normaliseUnitSyntax (["m"] :/ []) == normaliseUnitSyntax (["m"] :/ ["m", "m"])
+-- False
 normaliseUnitSyntax :: UnitSyntax String -> Map.Map String Integer
 normaliseUnitSyntax (xs :/ ys) =
     Map.filter (/= 0)
-        (foldl' (\ m x -> Map.insertWith (-) x 1 m)
+        (foldl' (\ m x -> Map.insertWith (+) x (negate 1) m)
             (foldl' (\ m x -> Map.insertWith (+) x 1 m) Map.empty xs) ys)
 
 

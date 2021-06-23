@@ -338,8 +338,14 @@ tests = testGroup "uom-plugin"
     , testCase "-0.3 m s^-1" $ read "[u| -0.3 m s^-1 |]" @?= [u| -0.3 m/s |]
     , testCase "42 s m s"    $ read "[u| 42 s m s |]"    @?= [u| 42 m s^2 |]
     ]
-  ]
+  , testGroup "read equality (avoid false equivalences)"
+    [ testCase "1 m/m^2 /= 1 m" $
+        (read "[u| 1 m/m^2 |]" :: Quantity Double [u| m |]) `throws` noParse
 
+    , testCase "1 m /= 1 m/m^2" $
+        (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
+    ]
+  ]
 
 -- | Assert that evaluation of the first argument (to WHNF) will throw
 -- an exception whose string representation contains one of the given
@@ -348,3 +354,6 @@ throws :: a -> [[String]] -> Assertion
 throws v xs =
     (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
         unless (any (all (`isInfixOf` show e)) xs) $ throw e
+
+noParse :: [[String]]
+noParse = [["Prelude.read: no parse"]]
