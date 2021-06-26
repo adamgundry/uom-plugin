@@ -8,7 +8,7 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Z (Alt(..), z, tests) where
+module Z (z, tests) where
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -28,15 +28,23 @@ import Data.UnitsOfMeasure.Defs ()
 {-# ANN z "HLint: ignore Eta reduce" #-}
 z q = convert q
 
-newtype Alt a = Alt a
+newtype A a = A a
+newtype B a = B a
 
-instance (Convertible u [u| m |], q ~ Quantity Double u) => Show (Alt q) where
-    show (Alt x) = show y
+instance (Convertible u [u| m |], q ~ Quantity Double u) => Show (A q) where
+    show (A x) = show y
+        where
+            y :: Quantity Double [u| m |]
+            y = convert x
+
+instance (q ~ Quantity Double [u| m |]) => Show (B q) where
+    show (B x) = show y
         where
             y :: Quantity Double [u| m |]
             y = convert x
 
 tests :: TestTree
 tests = testGroup "show via convert"
-    [ testCase "1.01km" $ show (Alt [u| 1.01 km |]) @?= "[u| 1010.0 m |]"
+    [ testCase "A 1.01km" $ show (A [u| 1.01 km |]) @?= "[u| 1010.0 m |]"
+    , testCase "B 1010m" $ show (B [u| 1010.0 m |]) @?= "[u| 1010.0 m |]"
     ]
