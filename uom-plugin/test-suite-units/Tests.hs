@@ -77,6 +77,7 @@ import Test.Tasty.HUnit
 import Defs ()
 import ErrorTests
 import Z (z)
+import qualified Z (tests)
 
 -- Some basic examples
 
@@ -327,6 +328,7 @@ tests = testGroup "uom-plugin"
     , testCase "2.4 l/h in m" $ convert [u| 2.4 l/ha |] @?= [u| 2.4e-7 m |]
     , testCase "1 m^4 in l m" $ convert [u| 1 m^4 |] @?= [u| 1000 l m |]
     ]
+  , Z.tests
   , testGroup "errors"
     [ testCase "s/m ~ m/s"            $ mismatch1 `throws` mismatch1_errors
     , testCase "m + s"                $ mismatch2 `throws` mismatch2_errors

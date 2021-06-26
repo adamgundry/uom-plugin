@@ -1,12 +1,21 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Z (z) where
+module Z (Alt(..), z, tests) where
 
-import Data.UnitsOfMeasure.Convert (convert)
+import Test.Tasty
+import Test.Tasty.HUnit
+
+import Data.UnitsOfMeasure (Quantity, u)
+import Data.UnitsOfMeasure.Convert (Convertible, convert)
+import Data.UnitsOfMeasure.Defs ()
 
 
 -- Inferring this type used to lead to unit equations with occur-check
@@ -18,3 +27,16 @@ import Data.UnitsOfMeasure.Convert (convert)
 --   -> Quantity a v
 {-# ANN z "HLint: ignore Eta reduce" #-}
 z q = convert q
+
+newtype Alt a = Alt a
+
+instance (Convertible u [u| m |], q ~ Quantity Double u) => Show (Alt q) where
+    show (Alt x) = show y
+        where
+            y :: Quantity Double [u| m |]
+            y = convert x
+
+tests :: TestTree
+tests = testGroup "show via convert"
+    [ testCase "1.01km" $ show (Alt [u| 1.01 km |]) @?= "[u| 1010.0 m |]"
+    ]
