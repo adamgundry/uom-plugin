@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module GhcApi.Wrap
   ( -- * Wrappers
     newUnique
@@ -9,11 +7,6 @@ module GhcApi.Wrap
 
 import GhcApi
 import GHC.TcPluginM.Extra
-
-#if __GLASGOW_HASKELL__ < 711
-newUnique :: TcPluginM Unique
-newUnique = unsafeTcPluginTcM TcRnMonad.newUnique
-#endif
 
 newWantedCt :: CtLoc -> PredType -> TcPluginM Ct
 newWantedCt loc = fmap mkNonCanonical . newWanted loc

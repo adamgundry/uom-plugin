@@ -237,7 +237,8 @@ type family Unpack u where
 -- | This is a bit of a hack, honestly, but a good hack.  Constraints
 -- @u ~~ v@ are just like equalities @u ~ v@, except solving them will
 -- be delayed until the plugin.  This may lead to better inferred types.
-type family (u :: Unit) ~~ (v :: Unit) :: Constraint where
+type (~~) :: Unit -> Unit -> Constraint
+type family u ~~ v where
 
 infix 4 ~~
 

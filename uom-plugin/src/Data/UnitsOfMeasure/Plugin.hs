@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 
 -- | This module defines a typechecker plugin that solves equations

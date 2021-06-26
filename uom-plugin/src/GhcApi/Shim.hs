@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 
 module GhcApi.Shim
