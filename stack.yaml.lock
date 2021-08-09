@@ -5,15 +5,15 @@
 
 packages:
 - completed:
-    hackage: units-parser-0.1.0.0@sha256:d4c9ed0c8265217114015b288f991e7832933cd0265c786743c00e6919707e9f,1518
+    hackage: units-parser-0.1.1.4@sha256:fdf942e2b929d6bbc4d92b726192e1a54338b3318207633e8d1b2ba0ae7d5104,1664
     pantry-tree:
       size: 274
-      sha256: dba7c712e196e3e9f191669f170001e97b016c844d5ea27b228f9c226b93a896
+      sha256: 739b83c92d537075203f3d4964fa74135c8dda63c27602f27e1001e7d0b7c45e
   original:
-    hackage: units-parser-0.1.0.0
+    hackage: units-parser-0.1.1.4
 snapshots:
 - completed:
-    size: 527836
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/11/22.yaml
-    sha256: 341870ac98d8a9f8f77c4adf2e9e0b22063e264a7fbeb4c85b7af5f380dac60e
-  original: lts-11.22
+    size: 571803
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2021/8/8.yaml
+    sha256: 8492e8c97cab9a573cc1a559c688201fd29db575bada55d867717188791c7133
+  original: nightly-2021-08-08
