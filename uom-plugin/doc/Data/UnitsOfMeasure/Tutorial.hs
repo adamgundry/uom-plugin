@@ -77,7 +77,7 @@ import Data.UnitsOfMeasure
 -- To start experimenting with @uom-plugin@ in GHCi you will need to do the
 -- equivalent setup.
 --
--- >>> :seti -fplugin Data.UnitsOfMeasure.Plugin -XDataKinds -XQuasiQuotes -XTypeOperators
+-- >>> :set -fplugin Data.UnitsOfMeasure.Plugin -XDataKinds -XQuasiQuotes -XTypeOperators
 -- >>> import Data.UnitsOfMeasure
 
 -- $units
@@ -148,7 +148,7 @@ import Data.UnitsOfMeasure
 -- Adding a full or partial type signature can make the underlying
 -- representational type more concrete.
 --
--- >>> :seti -XPartialTypeSignatures -fno-warn-partial-type-signatures
+-- >>> :set -XPartialTypeSignatures -fno-warn-partial-type-signatures
 --
 -- >>> :type [u| 1 m |] :: _ Int _
 -- [u| 1 m |] :: _ Int _ :: Quantity Int (Base "m")
