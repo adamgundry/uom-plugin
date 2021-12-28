@@ -304,8 +304,7 @@ tests = testGroup "uom-plugin"
       ]
     ]
   , testGroup "showQuantity"
-    [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
-    , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
+    [ testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
     , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m / s^2"
     ]
   , testGroup "convert"
