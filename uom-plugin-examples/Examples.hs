@@ -54,7 +54,7 @@ attract (m1 :: Quantity a [u| kg |]) (m2 :: Quantity a [u| kg |]) (r :: Quantity
 
 
 -- Some polymorphic functions for working with quantities
-sum' xs = foldr (+:) zero xs
+sum' = foldr (+:) zero
 mean xs = sum' xs /: mk (genericLength xs)
 foo x y = x *: y +: y *: x
 
