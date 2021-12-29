@@ -1,0 +1,64 @@
+name: cabal
+
+on:
+  push:
+    branches: [ci-cabal, wip/ghc-9.2-minimal]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    name: ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cabal: ["3.6"]
+        ghc:
+          - "8.2.2"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: haskell/actions/setup@v1
+        name: Setup GHC and cabal-install
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+
+      - uses: rwe/actions-hlint-setup@v1
+        name: Set up HLint
+        with:
+          version: "3.3.4"
+
+      - uses: actions/cache@v2
+        name: cache ~/.cabal/store
+        with:
+          path: ~/.cabal/store
+          key: ${{ runner.os }}-${{ matrix.ghc }}-cabal
+
+      - name: build
+        run: |
+          cabal v2-update
+          cabal v2-build all:libs
+          cabal v2-build uom-plugin --enable-tests
+
+      - name: build examples
+        if: ${{ matrix.ghc == '8.2.2' }}
+        run: cabal v2-build uom-plugin-examples
+
+      - name: test uom-plugin:units
+        if: ${{ matrix.ghc == '8.2.2' }}
+        run: cabal v2-test uom-plugin:units --test-show-details=direct --test-option="--color=always"
+
+      # WARNING: uom-plugin-tutorial:doctest fails with
+      # Could not find module ‘Data.UnitsOfMeasure’
+      # - name: test uom-plugin-tutorial:doctest
+      #   run: cabal v2-test uom-plugin-tutorial:doctest --test-show-details=direct --test-option="--color=always"
+
+      - uses: rwe/actions-hlint-run@v2
+        name: hlint
+        with:
+          path: '["thoralf", "uom-plugin", "uom-plugin-defs", "uom-plugin-examples", "uom-plugin-tutorial", "uom-quantity", "uom-th"]'
+          fail-on: suggestion
