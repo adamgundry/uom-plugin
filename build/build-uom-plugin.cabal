@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 59b14bb92b5ade04c510599340f9bbb182ce9ca8f50a0750cdf248f0bcef3f77
+-- hash: bed7ffcc01000f2c62945f98eac2b6f8e9f6b947d966b10788e505c88e729acf
 
 name:           build-uom-plugin
 version:        0.3.0.1
@@ -30,7 +30,6 @@ executable build-uom-plugin
   build-depends:
       ansi-terminal
     , base
-    , dhall
     , raw-strings-qq
     , shake
     , text
