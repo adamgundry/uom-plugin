@@ -60,5 +60,5 @@ jobs:
       - uses: rwe/actions-hlint-run@v2
         name: hlint
         with:
-          path: '["thoralf", "uom-plugin", "uom-plugin-defs", "uom-plugin-examples", "uom-plugin-tutorial", "uom-quantity", "uom-th"]'
+          path: '["uom-plugin", "uom-plugin-examples", "uom-plugin-tutorial" ]'
           fail-on: suggestion
