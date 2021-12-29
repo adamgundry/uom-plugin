@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3047c6157f20fa9a94fb02991a10136596e282a6153367d9a8c632eaaf5bdd64
+-- hash: 77965ed2484e3257feabf5978b506243ca3df649b14436b676798d8594002d9b
 
 name:           uom-plugin
 version:        0.3.0.1
@@ -104,19 +104,6 @@ test-suite doctest
     , ghc-tcplugins-extra >=0.1
     , template-haskell >=2.9
     , units-parser >=0.1
-  default-language: Haskell2010
-
-test-suite hlint
-  type: exitcode-stdio-1.0
-  main-is: HLint.hs
-  other-modules:
-      Paths_uom_plugin
-  hs-source-dirs:
-      test-suite-hlint
-  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
-  build-depends:
-      base >=4.9.1.0 && <5
-    , hlint >=2.0.11
   default-language: Haskell2010
 
 test-suite units

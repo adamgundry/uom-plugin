@@ -50,12 +50,6 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
               , source-dirs = "test-suite-units"
               , when = { condition = "impl(ghc > 8.2.2)", buildable = False }
               }
-            , hlint =
-              { dependencies = defs.dependencies # [ "hlint >= 2.0.11" ]
-              , ghc-options = testopts
-              , main = "HLint.hs"
-              , source-dirs = "test-suite-hlint"
-              }
             , doctest =
               { dependencies =
                     defs.dependencies
