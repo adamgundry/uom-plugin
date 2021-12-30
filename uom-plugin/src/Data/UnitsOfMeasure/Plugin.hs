@@ -1,6 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE PatternSynonyms #-}
-
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
 --

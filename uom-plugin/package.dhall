@@ -18,7 +18,7 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
           , stability = "experimental"
           , extra-source-files = [ "CHANGELOG.md", "README.md", "LICENSE" ]
           , library =
-            { source-dirs = [ "doc", "src" ]
+            { source-dirs = [ "src" ]
             , exposed-modules =
               [ "GHC.Corroborate.Type"
               , "Data.UnitsOfMeasure"
@@ -50,28 +50,28 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
                   ]
             , when =
               [ { condition = "impl(ghc >= 9.2) && impl(ghc < 9.4)"
-                , source-dirs = "src-ghc-9.0"
+                , source-dirs = [ "src-ghc-9.0", "doc-ghc-9.2" ]
                 }
               , { condition = "impl(ghc >= 9.0) && impl(ghc < 9.2)"
-                , source-dirs = "src-ghc-9.0"
+                , source-dirs = [ "src-ghc-9.0", "doc-ghc-9.2" ]
                 }
               , { condition = "impl(ghc >= 8.10.0) && impl(ghc < 9.0)"
-                , source-dirs = "src-ghc-8.10"
+                , source-dirs = [ "src-ghc-8.10" ]
                 }
               , { condition = "impl(ghc >= 8.8.0) && impl(ghc < 8.10.0)"
-                , source-dirs = "src-ghc-8.8"
+                , source-dirs = [ "src-ghc-8.8" ]
                 }
               , { condition = "impl(ghc >= 8.6.0) && impl(ghc < 8.8.0)"
-                , source-dirs = "src-ghc-8.6"
+                , source-dirs = [ "src-ghc-8.6" ]
                 }
               , { condition = "impl(ghc >= 8.4.0) && impl(ghc < 8.6.0)"
-                , source-dirs = "src-ghc-8.4"
+                , source-dirs = [ "src-ghc-8.4" ]
                 }
               , { condition = "impl(ghc >= 8.2.0) && impl(ghc < 8.4.0)"
-                , source-dirs = "src-ghc-8.2"
+                , source-dirs = [ "src-ghc-8.2", "doc-ghc-8.2" ]
                 }
               , { condition = "impl(ghc >= 8.0.0) && impl(ghc < 8.2.0)"
-                , source-dirs = "src-ghc-8.0"
+                , source-dirs = [ "src-ghc-8.0", "doc-ghc-8.2" ]
                 }
               ]
             }
@@ -119,9 +119,28 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
                     , "doctest"
                     , "QuickCheck"
                     ]
-              , ghc-options = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
               , main = "DocTest.hs"
-              , source-dirs = [ "src", "test-suite-doctest" ]
+              , source-dirs = [ "src" ]
+              , other-modules =
+                [ "GHC.Corroborate.Type"
+                , "Data.UnitsOfMeasure.Unsafe.Convert"
+                , "Data.UnitsOfMeasure.Unsafe.NormalForm"
+                , "Data.UnitsOfMeasure.Unsafe.Unify"
+                , "GhcApi"
+                ]
+              , ghc-options = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
+              , when =
+                [ { condition = "impl(ghc >= 9.2) && impl(ghc < 9.4)"
+                  , source-dirs =
+                    [ "src-ghc-9.2", "test-suite-doctest-ghc-9.2" ]
+                  , other-modules = [] : List Text
+                  }
+                , { condition = "impl(ghc >= 8.2) && impl(ghc < 9.2)"
+                  , source-dirs =
+                    [ "src-ghc-8.2", "test-suite-doctest-ghc-8.2" ]
+                  , other-modules = [] : List Text
+                  }
+                ]
               }
             }
           }

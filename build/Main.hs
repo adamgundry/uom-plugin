@@ -28,6 +28,7 @@ dhallPkgs = fst <$> dhallCabal
 dhallCabal :: [(Folder, Pkg)]
 dhallCabal =
     [ ("uom-plugin", "uom-plugin")
+    , ("uom-plugin-defs", "uom-plugin-defs")
     , ("uom-plugin-examples", "uom-plugin-examples")
     , ("uom-plugin-tutorial", "uom-plugin-tutorial")
     , ("build", "build-uom-plugin")

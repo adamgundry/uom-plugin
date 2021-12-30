@@ -14,6 +14,12 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
             { dependencies = defs.dependencies # [ "uom-plugin" ]
             , source-dirs = "."
             , main = "Examples.hs"
-            , when = { condition = "impl(ghc > 8.2.2)", buildable = False }
+            , when =
+              [ { condition = "impl(ghc < 8.4)", buildable = True }
+              , { condition = "impl(ghc >= 9.2.1)", buildable = False }
+              , { condition = "impl(ghc >= 8.4) && impl(ghc < 9.2)"
+                , buildable = False
+                }
+              ]
             }
           }

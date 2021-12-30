@@ -1,4 +1,3 @@
-
 module GhcApi
     ( module GHC.Corroborate
     , module GHC.Corroborate.Compare

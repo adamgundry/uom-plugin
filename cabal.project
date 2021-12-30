@@ -1,6 +1,7 @@
 packages:
     ghc-corroborate/ghc-corroborate
     uom-plugin
+    uom-plugin-defs
     uom-plugin-tutorial
     uom-plugin-examples
     build

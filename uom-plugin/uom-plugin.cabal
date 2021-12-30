@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d965a8989690a513fa2bee9cec51c4626c0e248e6d4a29f793d84e300cb64f38
+-- hash: e5fbe13e8b90c568e4867b15b25249443995a0e2f1119d89e3551ee88bdcf611
 
 name:           uom-plugin
 version:        0.3.0.1
@@ -53,7 +53,6 @@ library
       Data.UnitsOfMeasure.Unsafe.Unify
       GhcApi
   hs-source-dirs:
-      doc
       src
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors
   build-depends:
@@ -68,9 +67,11 @@ library
   if impl(ghc >= 9.2) && impl(ghc < 9.4)
     hs-source-dirs:
         src-ghc-9.0
+        doc-ghc-9.2
   if impl(ghc >= 9.0) && impl(ghc < 9.2)
     hs-source-dirs:
         src-ghc-9.0
+        doc-ghc-9.2
   if impl(ghc >= 8.10.0) && impl(ghc < 9.0)
     hs-source-dirs:
         src-ghc-8.10
@@ -86,32 +87,24 @@ library
   if impl(ghc >= 8.2.0) && impl(ghc < 8.4.0)
     hs-source-dirs:
         src-ghc-8.2
+        doc-ghc-8.2
   if impl(ghc >= 8.0.0) && impl(ghc < 8.2.0)
     hs-source-dirs:
         src-ghc-8.0
+        doc-ghc-8.2
   default-language: Haskell2010
 
 test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
-      Data.UnitsOfMeasure
-      Data.UnitsOfMeasure.Convert
-      Data.UnitsOfMeasure.Defs
-      Data.UnitsOfMeasure.Internal
-      Data.UnitsOfMeasure.Plugin
-      Data.UnitsOfMeasure.Read
-      Data.UnitsOfMeasure.Show
-      Data.UnitsOfMeasure.Singleton
-      Data.UnitsOfMeasure.TH
+      GHC.Corroborate.Type
       Data.UnitsOfMeasure.Unsafe.Convert
       Data.UnitsOfMeasure.Unsafe.NormalForm
       Data.UnitsOfMeasure.Unsafe.Unify
       GhcApi
-      Paths_uom_plugin
   hs-source-dirs:
       src
-      test-suite-doctest
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -124,6 +117,14 @@ test-suite doctest
     , ghc-tcplugins-extra >=0.1
     , template-haskell >=2.9
     , units-parser >=0.1
+  if impl(ghc >= 9.2) && impl(ghc < 9.4)
+    hs-source-dirs:
+        src-ghc-9.2
+        test-suite-doctest-ghc-9.2
+  if impl(ghc >= 8.2) && impl(ghc < 9.2)
+    hs-source-dirs:
+        src-ghc-8.2
+        test-suite-doctest-ghc-8.2
   default-language: Haskell2010
 
 test-suite units

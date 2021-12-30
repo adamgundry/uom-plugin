@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7a490695cd09e19f4bf559e6ab09f74f2575ad978b485e87e1d3f440b1c24646
+-- hash: 2f754109f899774e6352babeb9c9474d9ee436a1e2f47ff947fabdd4c2c4d9f4
 
 name:           uom-plugin-tutorial
 version:        0.3.0.1
@@ -25,16 +25,24 @@ test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
-      Data.UnitsOfMeasure.Tutorial
-      Paths_uom_plugin_tutorial
+      Plugins.UoM.UnitDefs
   hs-source-dirs:
-      test-suite-doctest
-      doc
+      src
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N -fplugin Data.UnitsOfMeasure.Plugin
   build-depends:
       base >=4.9.1.0 && <5
     , doctest >=0.13.0
     , uom-plugin
-  if impl(ghc < 8.2.2) || impl(ghc > 8.2.2)
-    buildable: False
+  if impl(ghc >= 9.2) && impl(ghc < 9.4)
+    other-modules:
+        Data.UnitsOfMeasure.Tutorial
+    hs-source-dirs:
+        doc-ghc-9.2
+        test-suite-doctest-ghc-9.2
+  if impl(ghc >= 8.2) && impl(ghc < 9.2)
+    other-modules:
+        Data.UnitsOfMeasure.Tutorial
+    hs-source-dirs:
+        doc-ghc-8.2
+        test-suite-doctest-ghc-8.2
   default-language: Haskell2010

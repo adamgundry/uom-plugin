@@ -15,6 +15,7 @@ jobs:
         cabal: ["3.6"]
         ghc:
           - "8.2.2"
+          - "9.2.1"
 
     steps:
       - uses: actions/checkout@v2
@@ -44,21 +45,22 @@ jobs:
           cabal v2-build all:libs
           cabal v2-build uom-plugin --enable-tests
 
+      - name: build defs
+        run: cabal v2-build uom-plugin-defs
+
+      # WARNING: Compiles to core lint errors with ghc-9.2.1
       - name: build examples
         if: ${{ matrix.ghc == '8.2.2' }}
         run: cabal v2-build uom-plugin-examples
 
       - name: test uom-plugin:units
-        if: ${{ matrix.ghc == '8.2.2' }}
         run: cabal v2-test uom-plugin:units --test-show-details=direct --test-option="--color=always"
 
-      # WARNING: uom-plugin-tutorial:doctest fails with
-      # Could not find module ‘Data.UnitsOfMeasure’
-      # - name: test uom-plugin-tutorial:doctest
-      #   run: cabal v2-test uom-plugin-tutorial:doctest --test-show-details=direct --test-option="--color=always"
+      - name: test uom-plugin-tutorial:doctest
+        run: cabal v2-test uom-plugin-tutorial:doctest --test-show-details=direct --test-option="--color=always"
 
       - uses: rwe/actions-hlint-run@v2
         name: hlint
         with:
-          path: '["uom-plugin", "uom-plugin-examples", "uom-plugin-tutorial" ]'
+          path: '["uom-plugin", "uom-plugin-defs", "uom-plugin-examples", "uom-plugin-tutorial" ]'
           fail-on: suggestion
