@@ -132,7 +132,7 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
               , when =
                 [ { condition = "impl(ghc >= 9.2) && impl(ghc < 9.4)"
                   , source-dirs =
-                    [ "src-ghc-9.2", "test-suite-doctest-ghc-9.2" ]
+                    [ "src-ghc-9.0", "test-suite-doctest-ghc-9.2" ]
                   , other-modules = [] : List Text
                   }
                 , { condition = "impl(ghc >= 8.2) && impl(ghc < 9.2)"
