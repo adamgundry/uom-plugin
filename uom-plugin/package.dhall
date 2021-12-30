@@ -20,7 +20,8 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
           , library =
             { source-dirs = [ "doc", "src" ]
             , exposed-modules =
-              [ "Data.UnitsOfMeasure"
+              [ "GHC.Corroborate.Type"
+              , "Data.UnitsOfMeasure"
               , "Data.UnitsOfMeasure.Convert"
               , "Data.UnitsOfMeasure.Defs"
               , "Data.UnitsOfMeasure.Internal"
@@ -30,34 +31,76 @@ in  let testopts = [ "-rtsopts", "-threaded", "-with-rtsopts=-N" ]
               , "Data.UnitsOfMeasure.Singleton"
               , "Data.UnitsOfMeasure.Tutorial"
               ]
+            , other-modules =
+              [ "Data.UnitsOfMeasure.Unsafe.Convert"
+              , "Data.UnitsOfMeasure.Unsafe.NormalForm"
+              , "Data.UnitsOfMeasure.Unsafe.Unify"
+              , "Data.UnitsOfMeasure.TH"
+              , "GhcApi"
+              ]
             , dependencies =
                   defs.dependencies
                 # [ "deepseq >=1.3 && <1.5"
-                  , "ghc >= 8.0.2 && <8.9"
                   , "ghc-tcplugins-extra >=0.1"
+                  , "ghc"
+                  , "ghc-corroborate"
                   , "template-haskell >=2.9"
                   , "containers >=0.5"
-                  , "units-parser >=0.1"
+                  , "units-parser >=0.1.1.4"
                   ]
+            , when =
+              [ { condition = "impl(ghc >= 9.2) && impl(ghc < 9.4)"
+                , source-dirs = "src-ghc-9.0"
+                }
+              , { condition = "impl(ghc >= 9.0) && impl(ghc < 9.2)"
+                , source-dirs = "src-ghc-9.0"
+                }
+              , { condition = "impl(ghc >= 8.10.0) && impl(ghc < 9.0)"
+                , source-dirs = "src-ghc-8.10"
+                }
+              , { condition = "impl(ghc >= 8.8.0) && impl(ghc < 8.10.0)"
+                , source-dirs = "src-ghc-8.8"
+                }
+              , { condition = "impl(ghc >= 8.6.0) && impl(ghc < 8.8.0)"
+                , source-dirs = "src-ghc-8.6"
+                }
+              , { condition = "impl(ghc >= 8.4.0) && impl(ghc < 8.6.0)"
+                , source-dirs = "src-ghc-8.4"
+                }
+              , { condition = "impl(ghc >= 8.2.0) && impl(ghc < 8.4.0)"
+                , source-dirs = "src-ghc-8.2"
+                }
+              , { condition = "impl(ghc >= 8.0.0) && impl(ghc < 8.2.0)"
+                , source-dirs = "src-ghc-8.0"
+                }
+              ]
             }
           , tests =
             { units =
               { dependencies =
                     defs.dependencies
-                  # [ "tasty >= 0.11.3", "tasty-hunit >= 0.9.2", "uom-plugin" ]
+                  # [ "tasty >= 0.11.3"
+                    , "tasty-hunit >= 0.9.2"
+                    , "ghc-corroborate"
+                    , "uom-plugin"
+                    ]
               , ghc-options = testopts
               , main = "Tests.hs"
               , source-dirs = "test-suite-units"
-              , when = { condition = "impl(ghc > 8.2.2)", buildable = False }
+              , when =
+                { condition = "impl(ghc > 8.2.2) && impl(ghc < 9.2.1)"
+                , buildable = False
+                }
               }
             , doctest =
               { dependencies =
                     defs.dependencies
                   # [ "deepseq >=1.3 && <1.5"
-                    , "ghc >= 8.0.2 && <8.9"
+                    , "ghc"
                     , "ghc-tcplugins-extra >=0.1"
                     , "template-haskell >=2.9"
                     , "containers >=0.5"
+                    , "ghc-corroborate"
                     , "units-parser >=0.1"
                     , "doctest"
                     , "QuickCheck"

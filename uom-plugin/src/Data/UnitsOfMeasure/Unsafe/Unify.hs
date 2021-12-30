@@ -1,4 +1,4 @@
-module Data.UnitsOfMeasure.Plugin.Unify
+module Data.UnitsOfMeasure.Unsafe.Unify
   ( SubstItem(..)
   , substsSubst
   , substsUnitEquality
@@ -11,8 +11,8 @@ module Data.UnitsOfMeasure.Plugin.Unify
   ) where
 
 import GhcApi
-import Data.UnitsOfMeasure.Plugin.Convert
-import Data.UnitsOfMeasure.Plugin.NormalForm
+import Data.UnitsOfMeasure.Unsafe.Convert
+import Data.UnitsOfMeasure.Unsafe.NormalForm
 
 
 -- | A substitution is essentially a list of (variable, unit) pairs,

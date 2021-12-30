@@ -1,2 +1,8 @@
-packages: */*.cabal
+packages:
+    ghc-corroborate/ghc-corroborate
+    uom-plugin
+    uom-plugin-tutorial
+    uom-plugin-examples
+    build
 tests: True
+write-ghc-environment-files: always

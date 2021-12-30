@@ -1,0 +1,3 @@
+[submodule "ghc-corroborate"]
+	path = ghc-corroborate
+	url = https://github.com/blockscope/ghc-corroborate

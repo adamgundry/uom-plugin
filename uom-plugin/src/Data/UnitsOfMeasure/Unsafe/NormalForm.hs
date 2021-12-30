@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 
-module Data.UnitsOfMeasure.Plugin.NormalForm
+module Data.UnitsOfMeasure.Unsafe.NormalForm
   ( Atom(..)
   , BaseUnit
   , NormUnit
@@ -37,8 +37,6 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 import Prelude hiding ((<>))
 #endif
 import GhcApi
-import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
-import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
