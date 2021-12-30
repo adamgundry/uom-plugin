@@ -9,10 +9,12 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Defs where
+module UnitDefsTests where
 
 import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Defs ()
+
+-- Import the definitions of m and s from UnitDefs
+import UnitDefs ()
 
 -- Declarations.
 declareBaseUnit "byte"
@@ -22,5 +24,5 @@ declareConvertibleUnit "squiggle" 2 "m/s"
 
 -- This declares a dimensionless unit that requires explicit conversion.
 [u| dime = 1 1 |]
-dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
+dime :: Fractional a => Quantity a [u| dime |] -> Quantity a [u| 1 |]
 dime = convert

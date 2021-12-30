@@ -55,22 +55,21 @@ module Main
     , dimensionless
     ) where
 
-import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Convert
-import Data.UnitsOfMeasure.Defs ()
-import Data.UnitsOfMeasure.Show
 
-import Control.Monad (unless)
-import Control.Exception
 import Data.List
 import Data.Ratio ((%))
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Defs ()
-import ErrorTests
+import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Show
+import UnitDefs ()
+import UnitDefsTests ()
+import ErrorTestGroups
 import Z (z)
+import qualified Z (tests)
 
 -- Some basic examples
 
@@ -206,7 +205,7 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "uom-plugin"
+tests = testGroup "uom-plugin:units"
   [ testGroup "Get the underlying value with unQuantity"
     [ testCase "unQuantity 3 m"                $ unQuantity [u| 3 m |]            @?= 3
     , testCase "unQuantity 3 s^2"              $ unQuantity [u| 3 s^2 |]          @?= 3
@@ -281,28 +280,7 @@ tests = testGroup "uom-plugin"
     , testCase "_ = Int"
         $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
     ]
-  , testGroup "errors when a /= b, (1 :: Quantity a One) (*:) Quantity b u"
-    [ testGroup "b = Double"
-      [ testCase "a = Int" $ op_a1 `throws` opErrors "Double" "Int" "Int"
-      , testCase "a = Integer" $ op_a2 `throws` opErrors "Double" "Integer" "Integer"
-      , testCase "a = Rational" $ op_a3 `throws` opErrors "Double" "GHC.Real.Ratio Integer" "Rational"
-      ]
-    , testGroup "b = Int"
-      [ testCase "a = Double" $ op_b1 `throws` opErrors "Int" "Double" "Double"
-      , testCase "a = Integer" $ op_b2 `throws` opErrors "Int" "Integer" "Integer"
-      , testCase "a = Rational" $ op_b3 `throws` opErrors "Int" "GHC.Real.Ratio Integer" "Rational"
-      ]
-    , testGroup "b = Integer"
-      [ testCase "a = Double" $ op_c1 `throws` opErrors "Integer" "Double" "Double"
-      , testCase "a = Int" $ op_c2 `throws` opErrors "Integer" "Int" "Int"
-      , testCase "a = Rational" $ op_c3 `throws` opErrors "Integer" "GHC.Real.Ratio Integer" "Rational"
-      ]
-    , testGroup "b = Rational"
-      [ testCase "a = Double" $ op_d1 `throws` opErrors "GHC.Real.Ratio Integer" "Double" "Double"
-      , testCase "a = Int" $ op_d2 `throws` opErrors "GHC.Real.Ratio Integer" "Int" "Int"
-      , testCase "a = Integer" $ op_d3 `throws` opErrors "GHC.Real.Ratio Integer" "Integer" "Integer"
-      ]
-    ]
+  , errorsWhenTestGroup
   , testGroup "showQuantity"
     [ testCase "myMass"         $ showQuantity myMass         @?= "65.0 kg"
     , testCase "gravityOnEarth" $ showQuantity gravityOnEarth @?= "9.808 m / s^2"
@@ -321,13 +299,8 @@ tests = testGroup "uom-plugin"
     , testCase "2.4 l/h in m" $ convert [u| 2.4 l/ha |] @?= [u| 2.4e-7 m |]
     , testCase "1 m^4 in l m" $ convert [u| 1 m^4 |] @?= [u| 1000 l m |]
     ]
-  , testGroup "errors"
-    [ testCase "s/m ~ m/s"            $ mismatch1 `throws` mismatch1_errors
-    , testCase "m + s"                $ mismatch2 `throws` mismatch2_errors
-    , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
-    , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
-    , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
-    ]
+  , Z.tests
+  , errorsTestGroup
   , testGroup "read . show"
     [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]
     , testCase "1.2 m/s" $ read (show [u| 1.2 m/s |]) @?= [u| 1.2 m/s |]
@@ -347,13 +320,6 @@ tests = testGroup "uom-plugin"
     ]
   ]
 
--- | Assert that evaluation of the first argument (to WHNF) will throw
--- an exception whose string representation contains one of the given
--- lists of substrings.
-throws :: a -> [[String]] -> Assertion
-throws v xs =
-    (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
-        unless (any (all (`isInfixOf` show e)) xs) $ throw e
 
 noParse :: [[String]]
 noParse = [["Prelude.read: no parse"]]
