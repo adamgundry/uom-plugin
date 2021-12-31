@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.dhall by hpack version 0.31.0.
+-- This file has been generated from package.dhall by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bec7aa84478fcff5a44bca8fd75597ac24f83c51fd414ba6f9fbd0cf9bd4f97d
+-- hash: bed7ffcc01000f2c62945f98eac2b6f8e9f6b947d966b10788e505c88e729acf
 
 name:           build-uom-plugin
 version:        0.3.0.1
@@ -14,7 +14,8 @@ category:       Build
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
-tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
+tested-with:
+    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 build-type:     Simple
 extra-source-files:
     package.dhall
@@ -24,12 +25,11 @@ executable build-uom-plugin
   other-modules:
       Paths_build_uom_plugin
   hs-source-dirs:
-      ./.
+      ./
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
       ansi-terminal
     , base
-    , dhall
     , raw-strings-qq
     , shake
     , text

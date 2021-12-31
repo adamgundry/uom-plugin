@@ -1,6 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE PatternSynonyms #-}
-
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
 --
@@ -14,19 +11,13 @@ module Data.UnitsOfMeasure.Plugin
   ) where
 
 import GhcApi
-import GhcApi.Shim
-    ( mkEqPred, mkFunnyEqEvidence
-#if __GLASGOW_HASKELL__ < 802
-    , pattern FunTy
-#endif
-    )
-import GhcApi.Wrap (newGivenCt, newWantedCt)
 import Data.Either
 import Data.List
 
-import Data.UnitsOfMeasure.Plugin.Convert
-import Data.UnitsOfMeasure.Plugin.NormalForm
-import Data.UnitsOfMeasure.Plugin.Unify
+import Data.UnitsOfMeasure.Unsafe.Convert
+import Data.UnitsOfMeasure.Unsafe.Unify
+
+import GHC.Corroborate.Type (collectType)
 
 
 -- | The plugin that GHC will load when this module is used with the
@@ -91,7 +82,7 @@ reportContradiction uds eq = TcPluginContradiction . pure <$> fromUnitEqualityFo
 fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> TcPluginM Ct
 fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq _ _ -> return ct
-    _ | isGivenCt ct -> newGivenCt  (ctLoc ct) (mkEqPred u' v') (mkFunnyEqEvidence (ctPred ct) u' v')
+    _ | isGivenCt ct -> newGivenCt  (ctLoc ct) (mkEqPred u' v') (mkFunnyEqEvidence "units" (ctPred ct) u' v')
       | otherwise    -> newWantedCt (ctLoc ct) (mkEqPred u' v')
   where
     u' = reifyUnit uds u
@@ -115,17 +106,7 @@ lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
   where
     unpacks = concatMap collectCt $ givens ++ wanteds
 
-    collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
-
-    collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
-    collectType ct (TyConApp tc [a])
-      | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
-                                        Just xs -> [(ct,a,xs)]
-                                        _       -> []
-    collectType ct (TyConApp _ as)  = concatMap (collectType ct) as
-    collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
-    collectType ct (ForAllTy _ t)   = collectType ct t
-    collectType _  _                = [] -- TyVarTy, LitTy from 7.10, plus CastTy and CoercionTy in 8.0
+    collectCt ct = collectType uds ct $ ctEvPred $ ctEvidence ct
 
     unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
       where
@@ -175,5 +156,5 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq t1 t2   -> evByFiat "units" t1 t2
     IrredPred t
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
-      , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
+      , tc == equivTyCon uds -> mkFunnyEqEvidence "units" t t1 t2
     _                    -> error "evMagic"

@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.dhall by hpack version 0.31.0.
+-- This file has been generated from package.dhall by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 36d37ad65026630167bcd24a1e4135816468c0fe449ff16959d56bd583907cf1
+-- hash: bef770761472e33882bda6cf34b666db195d2ac5c368227f056fa2bfa0000540
 
 name:           uom-plugin
 version:        0.3.0.1
@@ -22,7 +22,8 @@ maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
-tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
+tested-with:
+    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 build-type:     Simple
 extra-source-files:
     CHANGELOG.md
@@ -35,6 +36,7 @@ source-repository head
 
 library
   exposed-modules:
+      GHC.Corroborate.Type
       Data.UnitsOfMeasure
       Data.UnitsOfMeasure.Convert
       Data.UnitsOfMeasure.Defs
@@ -44,54 +46,65 @@ library
       Data.UnitsOfMeasure.Show
       Data.UnitsOfMeasure.Singleton
       Data.UnitsOfMeasure.Tutorial
-  other-modules:
-      Data.UnitsOfMeasure.Plugin.Convert
-      Data.UnitsOfMeasure.Plugin.NormalForm
-      Data.UnitsOfMeasure.Plugin.Unify
       Data.UnitsOfMeasure.TH
+  other-modules:
+      Data.UnitsOfMeasure.Unsafe.Convert
+      Data.UnitsOfMeasure.Unsafe.NormalForm
+      Data.UnitsOfMeasure.Unsafe.Unify
       GhcApi
-      GhcApi.Compare
-      GhcApi.Shim
-      GhcApi.Wrap
-      Paths_uom_plugin
   hs-source-dirs:
-      doc
       src
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors
   build-depends:
       base >=4.9.1.0 && <5
     , containers >=0.5
     , deepseq >=1.3 && <1.5
-    , ghc >=8.0.2 && <8.9
+    , ghc
+    , ghc-corroborate
     , ghc-tcplugins-extra >=0.1
     , template-haskell >=2.9
-    , units-parser >=0.1
+    , units-parser >=0.1.1.4
+  if impl(ghc >= 9.2) && impl(ghc < 9.4)
+    hs-source-dirs:
+        src-ghc-9.0
+        doc-ghc-9.2
+  if impl(ghc >= 9.0) && impl(ghc < 9.2)
+    hs-source-dirs:
+        src-ghc-9.0
+        doc-ghc-9.2
+  if impl(ghc >= 8.10.0) && impl(ghc < 9.0)
+    hs-source-dirs:
+        src-ghc-8.10
+  if impl(ghc >= 8.8.0) && impl(ghc < 8.10.0)
+    hs-source-dirs:
+        src-ghc-8.8
+  if impl(ghc >= 8.6.0) && impl(ghc < 8.8.0)
+    hs-source-dirs:
+        src-ghc-8.6
+  if impl(ghc >= 8.4.0) && impl(ghc < 8.6.0)
+    hs-source-dirs:
+        src-ghc-8.4
+  if impl(ghc >= 8.2.0) && impl(ghc < 8.4.0)
+    hs-source-dirs:
+        src-ghc-8.2
+        doc-ghc-8.2
+  if impl(ghc >= 8.0.0) && impl(ghc < 8.2.0)
+    hs-source-dirs:
+        src-ghc-8.0
+        doc-ghc-8.2
   default-language: Haskell2010
 
 test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
-      Data.UnitsOfMeasure
-      Data.UnitsOfMeasure.Convert
-      Data.UnitsOfMeasure.Defs
-      Data.UnitsOfMeasure.Internal
-      Data.UnitsOfMeasure.Plugin
-      Data.UnitsOfMeasure.Plugin.Convert
-      Data.UnitsOfMeasure.Plugin.NormalForm
-      Data.UnitsOfMeasure.Plugin.Unify
-      Data.UnitsOfMeasure.Read
-      Data.UnitsOfMeasure.Show
-      Data.UnitsOfMeasure.Singleton
-      Data.UnitsOfMeasure.TH
+      GHC.Corroborate.Type
+      Data.UnitsOfMeasure.Unsafe.Convert
+      Data.UnitsOfMeasure.Unsafe.NormalForm
+      Data.UnitsOfMeasure.Unsafe.Unify
       GhcApi
-      GhcApi.Compare
-      GhcApi.Shim
-      GhcApi.Wrap
-      Paths_uom_plugin
   hs-source-dirs:
       src
-      test-suite-doctest
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -99,41 +112,51 @@ test-suite doctest
     , containers >=0.5
     , deepseq >=1.3 && <1.5
     , doctest
-    , ghc >=8.0.2 && <8.9
+    , ghc
+    , ghc-corroborate
     , ghc-tcplugins-extra >=0.1
     , template-haskell >=2.9
     , units-parser >=0.1
-  default-language: Haskell2010
-
-test-suite hlint
-  type: exitcode-stdio-1.0
-  main-is: HLint.hs
-  other-modules:
-      Paths_uom_plugin
-  hs-source-dirs:
-      test-suite-hlint
-  ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
-  build-depends:
-      base >=4.9.1.0 && <5
-    , hlint >=2.0.11
+  if impl(ghc >= 9.2) && impl(ghc < 9.4)
+    hs-source-dirs:
+        src-ghc-9.0
+        test-suite-doctest-ghc-9.2
+  if impl(ghc >= 8.2) && impl(ghc < 9.2)
+    hs-source-dirs:
+        src-ghc-8.2
+        test-suite-doctest-ghc-8.2
   default-language: Haskell2010
 
 test-suite units
   type: exitcode-stdio-1.0
   main-is: Tests.hs
   other-modules:
-      Defs
-      ErrorTests
+      UnitDefs
+      UnitDefsTests
       Z
-      Paths_uom_plugin
   hs-source-dirs:
       test-suite-units
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -rtsopts -threaded -with-rtsopts=-N
   build-depends:
       base >=4.9.1.0 && <5
+    , ghc-corroborate
     , tasty >=0.11.3
     , tasty-hunit >=0.9.2
     , uom-plugin
-  if impl(ghc > 8.2.2)
+  if impl(ghc >= 9.2) && impl(ghc < 9.4)
+    other-modules:
+        ErrorTests
+        ErrorTestGroups
+    hs-source-dirs:
+        test-suite-units-ghc-9.2
+    buildable: True
+  if impl(ghc >= 8.2) && impl(ghc < 9.2)
+    other-modules:
+        ErrorTests
+        ErrorTestGroups
+    hs-source-dirs:
+        test-suite-units-ghc-8.2
+    buildable: True
+  if impl(ghc >= 8.4) && impl(ghc < 9.2)
     buildable: False
   default-language: Haskell2010

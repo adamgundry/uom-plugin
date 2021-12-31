@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.dhall by hpack version 0.31.0.
+-- This file has been generated from package.dhall by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7dbdbfefb25b6a75cdfcf2055da1f652095e65766a0329edf073c10f82dff101
+-- hash: b8e31dbf68b0599655de64c05bc3f951074e61d3c7ceeae4fd6b88398e0be94e
 
 name:           uom-plugin-examples
 version:        0.3.0.1
@@ -14,7 +14,8 @@ author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2018, Adam Gundry
 license:        PublicDomain
-tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
+tested-with:
+    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 build-type:     Simple
 extra-source-files:
     package.dhall
@@ -25,11 +26,15 @@ executable Examples
       RationalExamples
       Paths_uom_plugin_examples
   hs-source-dirs:
-      ./.
+      ./
   ghc-options: -dcore-lint
   build-depends:
       base >=4.9.1.0 && <5
     , uom-plugin
-  if impl(ghc > 8.2.2)
+  if impl(ghc < 8.4)
+    buildable: True
+  if impl(ghc >= 9.2.1)
+    buildable: False
+  if impl(ghc >= 8.4) && impl(ghc < 9.2)
     buildable: False
   default-language: Haskell2010
