@@ -29,14 +29,14 @@ import GHC.Tc.Plugin as X
     , tcLookupTyCon, zonkCt
     , newUnique
     )
-import GHC.Tc.Types as X (TcPlugin(..), TcPluginResult(..))
+-- import GHC.Tc.Types as X (TcPlugin(..), TcPluginResult(..))
 import GHC.Tc.Types.Constraint as X
     ( Ct(..), CtLoc
     , ctLoc, ctEvidence, ctEvPred, ctPred, ctEvExpr
     , isGiven, isWanted, isGivenCt
     , mkNonCanonical
     )
-import GHC.Tc.Utils.TcType as X (tcSplitTyConApp_maybe, vanillaSkolemTv)
+import GHC.Tc.Utils.TcType as X (tcSplitTyConApp_maybe {-, vanillaSkolemTv -})
 import GHC.Core.TyCon as X (TyCon(..), Role(..), isFamilyTyCon, tyConDataCons)
 
 import GHC.Core.TyCo.Rep as X

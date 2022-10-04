@@ -34,6 +34,6 @@ test-suite doctest
       base >=4.9.1.0 && <5
     , doctest >=0.13.0
     , uom-plugin
-  if impl(ghc < 9.0.0)
+  if impl(ghc < 9.0.0) || impl(ghc >= 9.4)
     buildable: False
   default-language: Haskell2010

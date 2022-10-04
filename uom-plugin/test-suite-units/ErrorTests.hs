@@ -45,6 +45,8 @@ given1 = id
 given1_errors :: [[String]]
 given1_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
                   , "from the context ((One *: a) ~ (a *: One))" ]
+                , [ "Could not deduce (Base \"kg\" ~ a)"
+                  , "from the context: (One *: a) ~ (a *: One)" ]
                 , [ "Could not deduce: a ~ Base \"kg\""
                   , "from the context: (One *: a) ~ (a *: One)" ]
                 , [ "Could not deduce: Base \"kg\" ~ a"
@@ -58,6 +60,8 @@ given2 = id
 given2_errors :: [[String]]
 given2_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
                   , "from the context ((One *: a) ~ (b *: One))" ]
+                , [ "Could not deduce (Base \"kg\" ~ a)"
+                  , "from the context: (One *: a) ~ (b *: One)" ]
                 , [ "Could not deduce: a ~ Base \"kg\""
                   , "from the context: (One *: a) ~ (b *: One)" ]
                 , [ "Could not deduce: Base \"kg\" ~ a"
@@ -71,6 +75,8 @@ given3 _ = [u| 3 s |]
 given3_errors :: [[String]]
 given3_errors = [ [ "Could not deduce (a ~ Base \"s\")"
                   , "from the context ((a ^: 2) ~ (b ^: 3))" ]
+                , [ "Could not deduce (Base \"s\" ~ a)"
+                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
                 , [ "Could not deduce: a ~ Base \"s\""
                   , "from the context: (a ^: 2) ~ (b ^: 3)" ]
                 , [ "Could not deduce: Base \"s\" ~ a"

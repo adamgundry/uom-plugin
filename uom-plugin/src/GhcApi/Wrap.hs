@@ -9,7 +9,7 @@ import GhcApi
 import GHC.TcPluginM.Extra
 
 newWantedCt :: CtLoc -> PredType -> TcPluginM Ct
-newWantedCt loc = fmap mkNonCanonical . newWanted loc
+newWantedCt loc = undefined -- fmap mkNonCanonical . newWanted loc
 
 newGivenCt :: CtLoc -> PredType -> EvTerm -> TcPluginM Ct
-newGivenCt loc prd ev = mkNonCanonical <$> newGiven loc prd ev
+newGivenCt loc prd ev = undefined -- mkNonCanonical <$> newGiven loc prd ev
