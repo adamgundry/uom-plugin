@@ -24,3 +24,7 @@ declareConvertibleUnit "squiggle" 2 "m/s"
 [u| dime = 1 1 |]
 dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
 dime = convert
+
+
+try :: Quantity Double [u| ft^3 m^3 |]
+try = convert [u| 2 l^2  |]

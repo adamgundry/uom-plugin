@@ -5,7 +5,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -29,12 +28,6 @@
 -- > cabal new-repl uom-plugin:units
 -- solveSimpleWanteds: too many iterations (limit = 4)
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-
-#if __GLASGOW_HASKELL__ == 900
--- TODO: it isn't clear why GHC 9.0.1 requires 6 iterations to compile this
--- module, whereas GHC 9.2.0 succeeds with the default of 4.
-{-# OPTIONS_GHC -fconstraint-solver-iterations=6 #-}
-#endif
 
 module Main
     ( main
@@ -333,7 +326,7 @@ tests = testGroup "uom-plugin"
     , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
-    , testCase "a^(x + y) ~ a^x a^y"  $ exponent_doesn't_distribute undefined `throws` matchErrors "Base \"m\" ^: (x + y)" "(Base \"m\" ^: x) *: (Base \"m\" ^: y)" "Double" "(MkUnit \"m\" ^: (x + y))"
+    , testCase "a^(x + y) ~ a^x a^y"  $ exponentDoesn'tDistribute undefined `throws` matchErrors "Base \"m\" ^: (x + y)" "(Base \"m\" ^: x) *: (Base \"m\" ^: y)" "Double" "(MkUnit \"m\" ^: (x + y))"
     ]
   , testGroup "read . show"
     [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]

@@ -122,7 +122,7 @@ op_d3 :: Quantity Rational [u| m |]
 op_d3 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Rational (Base "m")))
 
 opErrors :: String -> String -> String -> [[String]]
-opErrors a b c = matchErrors a b c "One"
+opErrors a b c = matchErrors a b c "One" ++ matchErrors a b c "(Base \"m\")"
 
 matchErrors :: String -> String -> String -> String -> [[String]]
 matchErrors a b c d =
@@ -150,5 +150,5 @@ matchErrors a b c d =
 #endif
 
 
-exponent_doesn't_distribute :: Quantity Double ([u| m |] ^: (x + y)) -> Quantity Double (([u| m |] ^: x) *: [u| m |] ^: y)
-exponent_doesn't_distribute x = x
+exponentDoesn'tDistribute :: Quantity Double ([u| m |] ^: (x + y)) -> Quantity Double (([u| m |] ^: x) *: [u| m |] ^: y)
+exponentDoesn'tDistribute x = x

@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TupleSections #-}
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
