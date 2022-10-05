@@ -18,6 +18,8 @@ module ErrorTests where
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Defs ()
 
+import GHC.TypeLits
+
 mismatch1 :: Quantity Double [u| s/m |]
 mismatch1 = [u| 3 m/s |]
 
@@ -120,19 +122,25 @@ op_d3 :: Quantity Rational [u| m |]
 op_d3 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Rational (Base "m")))
 
 opErrors :: String -> String -> String -> [[String]]
-opErrors a b c =
+opErrors a b c = matchErrors a b c "One"
+
+matchErrors :: String -> String -> String -> String -> [[String]]
+matchErrors a b c d =
 #if __GLASGOW_HASKELL__ >= 900
   [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
-    , "Actual: Quantity " ++ c ++ " One"
+    , "Actual: Quantity " ++ c ++ " " ++ d
     ]
   , [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
-    , "Expected: Quantity " ++ c ++ " One"
+    , "Expected: Quantity " ++ c ++ " " ++ d
     ]
-  , []
-  ]
-#elif __GLASGOW_HASKELL__ > 710
-  [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
-    , "Expected type: Quantity " ++ c ++ " (Base \"m\")"
+  , [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
+    , "Expected: Quantity " ++ c ++ " " ++ d
+    ]
+  , [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
+    , "Actual: Quantity " ++ c ++ " " ++ d
+    ]
+  , [ "Couldn't match type: " ++ a, "with: " ++ b
+    , "Actual: Quantity " ++ c ++ " " ++ d
     ]
   ]
 #else
@@ -140,3 +148,7 @@ opErrors a b c =
     ]
   ]
 #endif
+
+
+exponent_doesn't_distribute :: Quantity Double ([u| m |] ^: (x + y)) -> Quantity Double (([u| m |] ^: x) *: [u| m |] ^: y)
+exponent_doesn't_distribute x = x

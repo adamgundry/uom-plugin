@@ -333,6 +333,7 @@ tests = testGroup "uom-plugin"
     , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
+    , testCase "a^(x + y) ~ a^x a^y"  $ exponent_doesn't_distribute undefined `throws` matchErrors "Base \"m\" ^: (x + y)" "(Base \"m\" ^: x) *: (Base \"m\" ^: y)" "Double" "(MkUnit \"m\" ^: (x + y))"
     ]
   , testGroup "read . show"
     [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]

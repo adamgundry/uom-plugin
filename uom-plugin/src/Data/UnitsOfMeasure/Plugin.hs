@@ -15,7 +15,7 @@ module Data.UnitsOfMeasure.Plugin
 
 import GhcApi hiding (tcPluginTrace)
 import GhcApi.Shim
-    ( mkEqPred, mkFunnyEqEvidence
+    ( mkEqPred, mkHEqPred, evCast'
     )
 
 import qualified GHC.Plugins as Plugins
@@ -196,6 +196,35 @@ lookupUnitDefs = do
     myPackage = fsLit "uom-plugin"
 
 
+-- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
+-- bogus evidence of type @t1 ~ t2@.
+mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
+mkFunnyEqEvidence t t1 t2 =
+    castFrom `evCast'` castTo
+    where
+        castFrom :: EvTerm
+        castFrom = evDFunApp funId tys terms
+            where
+                funId :: Id
+                funId = dataConWrapId heqDataCon
+
+                tys :: [Kind]
+                tys = [typeKind t1, typeKind t2, t1, t2]
+
+                terms :: [EvExpr]
+                terms = [evByFiatExpr "units" t1 t2]
+
+        castTo :: TcCoercion
+        castTo =
+            mkUnivCo from Representational tySource t
+            where
+                from :: UnivCoProvenance
+                from = PluginProv "units"
+
+                tySource :: Type
+                tySource = mkHEqPred t1 t2
+
+
 -- | Produce bogus evidence for a constraint, including actual
 -- equality constraints and our fake '(~~)' equality constraints.
 evMagic :: UnitDefs -> Ct -> EvTerm
@@ -205,6 +234,9 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
       , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
     _                    -> error "evMagic"
+
+evByFiat :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvTerm
+evByFiat s t1 t2 = PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2
 
 evByFiatExpr :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvExpr
 evByFiatExpr s t1 t2 = evTermToExpr $ PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2

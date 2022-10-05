@@ -52,7 +52,6 @@ library
       GhcApi
       GhcApi.Compare
       GhcApi.Shim
-      GhcApi.Wrap
       Paths_uom_plugin
   hs-source-dirs:
       doc
@@ -64,7 +63,6 @@ library
     , deepseq >=1.3 && <1.5
     , ghc >=9.0.1 && <9.5
     , ghc-tcplugin-api >=0.4.1.0 && <0.9
-    , ghc-tcplugins-extra >=0.1
     , template-haskell >=2.9
     , units-parser >=0.1
   default-language: Haskell2010
@@ -90,7 +88,6 @@ test-suite doctest
       GhcApi
       GhcApi.Compare
       GhcApi.Shim
-      GhcApi.Wrap
       Paths_uom_plugin
   hs-source-dirs:
       src

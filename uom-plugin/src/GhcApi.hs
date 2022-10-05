@@ -85,6 +85,5 @@ import GHC.Types.Var as X
     )
 
 import GHC.Types.Var.Set as X (TyCoVarSet, elemVarSet)
-import GHC.TcPluginM.Extra as X (evByFiat, tracePlugin, lookupModule, lookupName )
 
 import GHC.Driver.Plugins as X (PluginRecompile(..))
