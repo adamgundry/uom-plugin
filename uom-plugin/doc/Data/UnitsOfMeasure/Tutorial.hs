@@ -209,11 +209,20 @@ import Data.UnitsOfMeasure
 -- Things get a little weird when not being explicit about Quantity.
 --
 -- >>> :type 1 :: _ _ [u| 1 |]
--- 1 :: _ _ [u| 1 |] :: Num (w1 w2 One) => w1 w2 One
+-- 1 :: _ _ [u| 1 |]
+--   :: ...
+--      Num (w1 w2 One) =>
+--      w1 w2 One
 -- >>> :type 1 :: _ _ One
--- 1 :: _ _ One :: Num (w1 w2 One) => w1 w2 One
+-- 1 :: _ _ One
+--   :: ...
+--      Num (w1 w2 One) =>
+--      w1 w2 One
 -- >>> :type 1.0 :: _ _ One
--- 1.0 :: _ _ One :: Fractional (w1 w2 One) => w1 w2 One
+-- 1.0 :: _ _ One
+--   :: ...
+--      Fractional (w1 w2 One) =>
+--      w1 w2 One
 
 -- $multiplication-by-one
 --
@@ -314,8 +323,8 @@ import Data.UnitsOfMeasure
 -- >>>  [u| 3 m |] -: [u| 1 s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type...Base "m"
--- ... with...Base "s"...
+-- ... Couldn't match type...Base "s"
+-- ... with...Base "m"...
 -- ...
 
 -- $polymorphism
