@@ -1,1 +1,17 @@
-901.cabal.project
+packages: uom-plugin/*, uom-plugin-examples/*, uom-plugin-tutorial/*
+tests: True
+with-compiler: ghc-9.4.1
+optimization: False
+
+package uom-plugin
+  ghc-options: -dcore-lint
+
+package uom-plugin-examples
+  ghc-options: -dcore-lint
+
+package uom-plugin-tutorial
+  ghc-options: -dcore-lint
+
+allow-newer: doctest:ghc
+
+write-ghc-environment-files: always
