@@ -7,9 +7,11 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , UnitEquality(..)
   , toUnitEquality
   , fromUnitEquality
+  , isUsefulUnitEquality
   , SimplifyState(..)
   , SimplifyResult(..)
   , simplifyUnits
+  , initialState
   ) where
 
 import GhcApi
@@ -69,7 +71,7 @@ instance Outputable UnifyResult where
 -- substitution.  The 'Ct' is the equality between the non-normalised
 -- (and perhaps less substituted) unit type expressions.
 unifyUnits :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
-unifyUnits uds (UnitEquality ct u0 v0) = do -- tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+unifyUnits uds (UnitEquality ct u0 v0) = do PluginAPI.tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
                                             unifyOne uds ct [] [] [] (u0 /: v0)
 
 unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> TySubst -> NormUnit -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
@@ -136,6 +138,14 @@ fromUnitEquality :: UnitEquality -> Ct
 fromUnitEquality (UnitEquality ct _ _) = ct
 
 
+isUsefulUnitEquality :: UnitEquality -> Bool
+isUsefulUnitEquality (UnitEquality _ lhs rhs) =
+    case (maybeSingleVariable lhs, maybeSingleVariable rhs) of
+        (Nothing, Nothing) -> True
+        (Just v, _)        -> occurs v rhs
+        (_, Just v)        -> occurs v lhs
+
+
 data SimplifyState
   = SimplifyState { simplifyFreshVars :: [TyVar]
                   , simplifySubst     :: TySubst
@@ -165,13 +175,13 @@ instance Outputable SimplifyResult where
   ppr (Impossible eq eqs) = text "Impossible" <+> ppr eq <+> ppr eqs
 
 simplifyUnits :: UnitDefs -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
-simplifyUnits uds eqs0 = {-tcPluginTrace "simplifyUnits" (ppr eqs0) >> -}simples initialState eqs0
+simplifyUnits uds eqs0 = PluginAPI.tcPluginTrace "simplifyUnits" (ppr eqs0) >> simples initialState eqs0
   where
     simples :: SimplifyState -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
     simples ss [] = return $ Simplified ss
     simples ss (eq:eqs) = do
         ur <- unifyUnits uds (substsUnitEquality (simplifySubst ss) eq)
-        -- tcPluginTrace "unifyUnits result" (ppr ur)
+        PluginAPI.tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
           Win  tvs subst unsubst -> let (ss', xs) = win eq tvs subst unsubst ss
                                     in simples ss' (xs ++ eqs)

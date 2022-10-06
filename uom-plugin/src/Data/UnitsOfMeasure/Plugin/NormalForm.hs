@@ -19,6 +19,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 
     -- * Predicates
   , isOne
+  , maybeSingleVariable
   , isConstant
   , maybeConstant
   , isBase
@@ -132,6 +133,12 @@ invert = NormUnit . Map.map negate . _NormUnit
 -- | Test whether a unit is dimensionless
 isOne :: NormUnit -> Bool
 isOne = Map.null . _NormUnit
+
+-- | Test whether a unit consists of a single variable with multiplicity 1.
+maybeSingleVariable :: NormUnit -> Maybe TyVar
+maybeSingleVariable x = case Map.toList (_NormUnit x) of
+    [(VarAtom v, 1)] -> Just v
+    _                -> Nothing
 
 -- | Test whether a unit is constant (contains only base literals)
 isConstant :: NormUnit -> Bool

@@ -16,6 +16,7 @@ import GhcApi hiding (tcPluginTrace)
 import GhcApi.Shim
     ( mkEqPred, mkHEqPred, evCast'
     )
+import GHC.Tc.Types.Constraint (ctEvTerm)
 
 import qualified GHC.Plugins as Plugins
 import qualified GHC.TcPlugin.API as PluginAPI
@@ -45,35 +46,64 @@ uomPlugin =
         }
 
 
+
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
 unitsOfMeasureSolver uds givens []      = do
-    zonked_cts <- mapM PluginAPI.zonkCt givens
-    let (unit_givens , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) zonked_cts
+    PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplifying givens" $ ppr givens
+    let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) givens
+    let unit_givens = filter is_useful unit_givens0
     case unit_givens of
       []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
         PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
         case sr of
-          -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
-          Simplified _    -> return $ PluginAPI.TcPluginOk [] []
+          -- TODO: givens simplification is currently disabled, because if we emit a given
+          -- constraint like x[sk] ~ Base "kg" then GHC will "simplify" all occurrences
+          -- of the type family application Base "kg" to the skolem variable x[sk].
+          -- This can then result in loops as the rewriter will turn the fam app into
+          -- the variable, then the plugin will "solve" it again.
+          Simplified _ -> pure $ PluginAPI.TcPluginOk [] []
+          Simplified ss   -> do
+              -- TODO: we ought to generate evidence that depends on the
+              -- previous givens (and similarly when simplifying wanteds, the
+              -- evidence we generate should depend on the new wanteds).
+              -- Otherwise we could potentially have a soundness issue e.g. if a
+              -- GADT pattern match brings a unit equality into scope, but we
+              -- later float out something that depends on it.
+              let usefuls = simplifySubst ss
+              xs <- mapM (substItemToCt uds) usefuls
+              pure $ PluginAPI.TcPluginOk (map (solvedGiven . siCt) usefuls) xs
+          -- Simplified _    -> return $ PluginAPI.TcPluginOk [] []
           Impossible eq _ -> reportContradiction uds eq
   where
     foo :: Ct -> Either UnitEquality Ct -> Either (Ct, UnitEquality) Ct
     foo ct (Left x)    = Left (ct, x)
     foo _  (Right ct') = Right ct'
 
-    -- solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
+    solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
 
+    -- TODO: if the simplify givens stage makes progress, we want to emit new
+    -- givens in case GHC can substitute into constraints other than unit
+    -- equalities.  However, we don't want to cause a loop by repeatedly
+    -- re-simplifying the same givens.  We currently have a conservative check
+    -- to see if it is useful to simplify a unit equality: if neither side of
+    -- the original equality was a single variable.  There are "useful" cases
+    -- this misses, however, e.g. v^2 ~ v.
+    is_useful (_, ue) = isUsefulUnitEquality ue
 
 unitsOfMeasureSolver uds givens wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
       []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
-        (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM PluginAPI.zonkCt givens
+        let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds) givens
         sr <- simplifyUnits uds unit_givens
         PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
+        -- TODO: it is somewhat questionable to simplify the givens again
+        -- here. In principle we should be able to simplify them at the
+        -- simplify-givens stage, turn them into a substitution, and have GHC
+        -- apply the substitution.
         case sr of
           Impossible eq _ -> reportContradiction uds eq
           Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
