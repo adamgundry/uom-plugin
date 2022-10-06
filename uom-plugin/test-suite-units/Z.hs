@@ -31,11 +31,12 @@ import Data.UnitsOfMeasure.Defs ()
 {-# ANN z "HLint: ignore Eta reduce" #-}
 z q = convert q
 
+
+#if __GLASGOW_HASKELL__ >= 902
 newtype A a = A a
 newtype B a = B a
 
-#if __GLASGOW_HASKELL__ >= 902
--- See https://github.com/adamgundry/uom-plugin/pull/86.  This code works in GHC
+  -- See https://github.com/adamgundry/uom-plugin/pull/86.  This code works in GHC
 -- 9.2 and later because they do not flatten, but is broken in 9.0 because of
 -- flattening. For now we skip testing it in 9.0.  In principle we should be
 -- able to fix it by having simplify-givens do substitution.
@@ -50,13 +51,15 @@ instance (q ~ Quantity Double [u| m |]) => Show (B q) where
         where
             y :: Quantity Double [u| m |]
             y = convert x
-#else
-deriving instance (q ~ Quantity Double u, Show q) => Show (A q)
-deriving instance (q ~ Quantity Double u, Show q) => Show (B q)
-#endif
 
 tests :: TestTree
 tests = testGroup "show via convert"
     [ testCase "A 1.01km" $ show (A [u| 1.01 km |]) @?= "[u| 1010.0 m |]"
     , testCase "B 1010m" $ show (B [u| 1010.0 m |]) @?= "[u| 1010.0 m |]"
     ]
+
+
+#else
+tests :: TestTree
+tests = testGroup "show via convert" []
+#endif
