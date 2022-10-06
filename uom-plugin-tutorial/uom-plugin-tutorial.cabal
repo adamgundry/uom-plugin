@@ -1,11 +1,4 @@
 cabal-version: 1.12
-
--- This file has been generated from package.dhall by hpack version 0.31.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 653c169a74854a68d066766533489e500facc219b8966eb17ad9fec11c52ec77
-
 name:           uom-plugin-tutorial
 version:        0.3.0.1
 synopsis:       A tutorial for the Units of measure typechecker plugin
@@ -13,12 +6,10 @@ description:    A tutorial for the units of measure typechecker plugin, checked 
 category:       Type System
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2014-2018, Adam Gundry
+copyright:      Copyright (c) 2022, Adam Gundry
 license:        BSD3
-tested-with:    GHC == 9.0.1
+tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
 build-type:     Simple
-extra-source-files:
-    package.dhall
 
 test-suite doctest
   type: exitcode-stdio-1.0

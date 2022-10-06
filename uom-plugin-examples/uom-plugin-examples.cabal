@@ -1,23 +1,14 @@
 cabal-version: 1.12
-
--- This file has been generated from package.dhall by hpack version 0.31.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 7dbdbfefb25b6a75cdfcf2055da1f652095e65766a0329edf073c10f82dff101
-
 name:           uom-plugin-examples
 version:        0.3.0.1
 synopsis:       Examples of the use of uom-plugin
 description:    This package provides examples of the use of uom-plugin
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2014-2018, Adam Gundry
-license:        PublicDomain
-tested-with:    GHC == 9.0.1
+copyright:      Copyright (c) 2014-2022, Adam Gundry
+license:        BSD3
+tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
 build-type:     Simple
-extra-source-files:
-    package.dhall
 
 executable Examples
   main-is: Examples.hs

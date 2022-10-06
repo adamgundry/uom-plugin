@@ -1,11 +1,5 @@
 cabal-version: 1.12
 
--- This file has been generated from package.dhall by hpack version 0.31.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 36d37ad65026630167bcd24a1e4135816468c0fe449ff16959d56bd583907cf1
-
 name:           uom-plugin
 version:        0.4.0.0
 synopsis:       Units of measure as a GHC typechecker plugin
@@ -19,10 +13,10 @@ homepage:       https://github.com/adamgundry/uom-plugin#readme
 bug-reports:    https://github.com/adamgundry/uom-plugin/issues
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2021, Adam Gundry
+copyright:      Copyright (c) 2022, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
-tested-with:    GHC == 9.0.1
+tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
 build-type:     Simple
 extra-source-files:
     CHANGELOG.md
