@@ -3,6 +3,7 @@ name:           uom-plugin-examples
 version:        0.3.0.1
 synopsis:       Examples of the use of uom-plugin
 description:    This package provides examples of the use of uom-plugin
+category:       Type System
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
 copyright:      Copyright (c) 2014-2022, Adam Gundry
@@ -14,12 +15,9 @@ executable Examples
   main-is: Examples.hs
   other-modules:
       RationalExamples
-      Paths_uom_plugin_examples
   hs-source-dirs:
-      ./.
+      .
   build-depends:
       base >=4.9.1.0 && <5
     , uom-plugin
-  if impl(ghc < 9.0.0)
-    buildable: False
   default-language: Haskell2010

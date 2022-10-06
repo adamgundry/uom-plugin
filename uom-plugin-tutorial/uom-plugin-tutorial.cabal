@@ -16,7 +16,6 @@ test-suite doctest
   main-is: DocTest.hs
   other-modules:
       Data.UnitsOfMeasure.Tutorial
-      Paths_uom_plugin_tutorial
   hs-source-dirs:
       test-suite-doctest
       doc
@@ -25,6 +24,7 @@ test-suite doctest
       base >=4.9.1.0 && <5
     , doctest >=0.13.0
     , uom-plugin
-  if impl(ghc < 9.0.0) || impl(ghc >= 9.4)
+  -- doctest doesn't yet build on 9.4
+  if impl(ghc >= 9.4)
     buildable: False
   default-language: Haskell2010
