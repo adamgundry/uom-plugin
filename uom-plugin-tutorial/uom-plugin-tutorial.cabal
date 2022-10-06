@@ -25,6 +25,7 @@ test-suite doctest
     , doctest >=0.13.0
     , uom-plugin
   -- doctest doesn't yet build on 9.4
-  if impl(ghc >= 9.4)
+  -- test outputs are different on 9.0
+  if impl(ghc < 9.2) || impl(ghc >= 9.4)
     buildable: False
   default-language: Haskell2010
