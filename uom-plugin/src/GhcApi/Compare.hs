@@ -1,13 +1,15 @@
 {-# LANGUAGE CPP #-}
 
 module GhcApi.Compare
-  ( -- * GHC API changes
-    cmpType
+  ( cmpType
   , cmpTypes
   , cmpTyCon
+  , thenCmp
   ) where
 
 import GhcApi
+
+import GHC.Utils.Misc (thenCmp)
 
 -- TODO: all this is deeply dodgy!  These comparison functions are
 -- non-deterministic, so we may end up getting different results on different

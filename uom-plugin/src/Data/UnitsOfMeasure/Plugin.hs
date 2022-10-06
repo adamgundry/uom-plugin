@@ -12,14 +12,10 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi hiding (tcPluginTrace)
-import GhcApi.Shim
-    ( mkEqPred, mkHEqPred, evCast'
-    )
-import GHC.Tc.Types.Constraint (ctEvTerm)
+import GhcApi (TcCoercion, ctEvPred, ctEvTerm, typeKind, heqDataCon, evDFunApp, dataConName, dataConWrapId, occName, occNameFS, tyConDataCons, (<+>), isWanted, isGivenCt, isGiven, UnivCoProvenance(PluginProv), mkPrimEqPred, Type(TyConApp), heqTyCon)
 
 import qualified GHC.Plugins as Plugins
-import qualified GHC.TcPlugin.API as PluginAPI
+import GHC.TcPlugin.API as PluginAPI
 
 import Data.Either
 
@@ -121,8 +117,8 @@ reportContradiction uds eq = PluginAPI.TcPluginContradiction . pure <$> fromUnit
 fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve Ct
 fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq _ _ -> return ct
-    _ | isGivenCt ct -> PluginAPI.mkNonCanonical <$> PluginAPI.newGiven  (ctLoc ct) (mkEqPred u' v') (evTermToExpr (mkFunnyEqEvidence (ctPred ct) u' v'))
-      | otherwise    -> PluginAPI.mkNonCanonical <$> PluginAPI.newWanted (ctLoc ct) (mkEqPred u' v')
+    _ | isGivenCt ct -> PluginAPI.mkNonCanonical <$> PluginAPI.newGiven  (ctLoc ct) (mkPrimEqPred u' v') (evTermToExpr (mkFunnyEqEvidence (ctPred ct) u' v'))
+      | otherwise    -> PluginAPI.mkNonCanonical <$> PluginAPI.newWanted (ctLoc ct) (mkPrimEqPred u' v')
   where
     u' = reifyUnit uds u
     v' = reifyUnit uds v
@@ -133,7 +129,7 @@ substItemToCt uds si
       | isGiven (ctEvidence ct) = PluginAPI.mkNonCanonical <$> PluginAPI.newGiven loc prd (evByFiatExpr "units" ty1 ty2)
       | otherwise               = PluginAPI.mkNonCanonical <$> PluginAPI.newWanted loc prd
       where
-        prd  = mkEqPred ty1 ty2
+        prd  = mkPrimEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
@@ -253,6 +249,9 @@ mkFunnyEqEvidence t t1 t2 =
                 tySource :: Type
                 tySource = mkHEqPred t1 t2
 
+mkHEqPred :: Type -> Type -> Type
+mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
+
 
 -- | Produce bogus evidence for a constraint, including actual
 -- equality constraints and our fake '(~~)' equality constraints.
@@ -273,3 +272,6 @@ evByFiatExpr s t1 t2 = evTermToExpr $ PluginAPI.mkPluginUnivEvTerm s Nominal t1 
 evTermToExpr :: EvTerm -> EvExpr
 evTermToExpr (EvExpr e) = e
 evTermToExpr _ = error "evTermToExpr"
+
+evCast' :: EvTerm -> TcCoercion -> EvTerm
+evCast' = evCast . evTermToExpr

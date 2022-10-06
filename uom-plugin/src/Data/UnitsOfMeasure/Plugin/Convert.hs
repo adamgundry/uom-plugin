@@ -7,9 +7,10 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnitUnpacked
   ) where
 
-import GhcApi
-import GhcApi.Shim (promoteTyCon)
+import GhcApi (Type(..), typeSymbolKind, nilDataCon, consDataCon, tcSplitTyConApp_maybe, coreView, isFamilyTyCon)
 import Data.List
+
+import GHC.TcPlugin.API
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
@@ -30,7 +31,7 @@ data UnitDefs = UnitDefs
 
 -- | 'Unit' promoted to a kind
 unitKind :: UnitDefs -> Kind
-unitKind uds = TyConApp (promoteTyCon $ unitKindCon uds) []
+unitKind uds = TyConApp (unitKindCon uds) []
 
 -- | Is this the 'Unit' kind?
 isUnitKind :: UnitDefs -> Kind -> Bool

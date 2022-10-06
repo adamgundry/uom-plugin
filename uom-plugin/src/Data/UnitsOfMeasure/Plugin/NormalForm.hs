@@ -34,9 +34,10 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   ) where
 
 import Prelude hiding ((<>))
-import GhcApi
-import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
-import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
+import GhcApi (elemVarSet, tyCoVarsOfType, tyCoVarsOfTypes, text, (<>))
+import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon, thenCmp)
+
+import GHC.TcPlugin.API
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
@@ -171,9 +172,9 @@ divisible i = Foldable.all (\ j -> j `rem` i == 0) . _NormUnit
 occurs :: TyVar -> NormUnit -> Bool
 occurs a = any occursAtom . Map.keys . _NormUnit
   where
-    occursAtom (BaseAtom ty)   = elemVarSet a $ tyVarsOfType ty
+    occursAtom (BaseAtom ty)   = elemVarSet a $ tyCoVarsOfType ty
     occursAtom (VarAtom b)     = a == b
-    occursAtom (FamAtom _ tys) = elemVarSet a $ tyVarsOfTypes tys
+    occursAtom (FamAtom _ tys) = elemVarSet a $ tyCoVarsOfTypes tys
 
 
 -- | View a unit as a list of atoms in order of ascending absolute exponent

@@ -32,7 +32,7 @@ import GHC.Tc.Plugin as X
 -- import GHC.Tc.Types as X (TcPlugin(..), TcPluginResult(..))
 import GHC.Tc.Types.Constraint as X
     ( Ct(..), CtLoc
-    , ctLoc, ctEvidence, ctEvPred, ctPred, ctEvExpr
+    , ctLoc, ctEvidence, ctEvPred, ctPred, ctEvExpr, ctEvTerm
     , isGiven, isWanted, isGivenCt
     , mkNonCanonical
     )
@@ -74,8 +74,6 @@ import GHC.Types.Unique as X
     ( getUnique
     , nonDetCmpUnique
     )
-
-import GHC.Utils.Misc as X (thenCmp)
 
 import GHC.Types.Var as X
     ( TyVar

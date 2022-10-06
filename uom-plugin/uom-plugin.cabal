@@ -45,7 +45,6 @@ library
       Data.UnitsOfMeasure.TH
       GhcApi
       GhcApi.Compare
-      GhcApi.Shim
   hs-source-dirs:
       doc
       src
@@ -80,7 +79,6 @@ test-suite doctest
       Data.UnitsOfMeasure.TH
       GhcApi
       GhcApi.Compare
-      GhcApi.Shim
   hs-source-dirs:
       src
       test-suite-doctest
