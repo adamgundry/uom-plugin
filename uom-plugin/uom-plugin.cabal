@@ -2,10 +2,9 @@ cabal-version: 1.12
 
 name:           uom-plugin
 version:        0.4.0.0
-synopsis:       Units of measure as a GHC typechecker plugin
-description:    The @uom-plugin@ library adds support for units of measure to GHC
-                using the new experimental facility for typechecker plugins, which
-                is available in GHC 7.10 and later.  See
+synopsis:       Units of measure as a GHC type-checker plugin
+description:    The @uom-plugin@ library adds support for units of
+                measure as a GHC type-checker plugin. See
                 "Data.UnitsOfMeasure.Tutorial" for an introduction to the library.
 category:       Type System
 stability:      experimental

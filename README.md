@@ -1,15 +1,13 @@
-# Units of measure as a GHC typechecker plugin
+# Units of measure as a GHC type-checker plugin
 
-The `uom-plugin` library adds support for units of measure to GHC as a type-checker plugin.  See [Data.UnitsOfMeasure.Tutorial](https://github.com/adamgundry/uom-plugin/blob/master/uom-plugin/src/Data/UnitsOfMeasure/Tutorial.hs) for an introduction to the library, and [the accompanying paper](http://adam.gundry.co.uk/pub/typechecker-plugins/) for more background.  An example of a package that uses the library is given in [uom-plugin-examples](uom-plugin-examples).
+:warning: This library is experimental, and may lead to unexpected type-checking failures or even type soundness bugs.
 
-The latest version of the library is tested with GHC 9.0 to 9.4. Older versions of `uom-plugin` (0.3 and earlier) work with the GHC 7.10, 8.0 and 8.2 series. There are no versions supporting GHC 8.4 to 8.10 ([#43][i43]).
+The `uom-plugin` library adds support for units of measure as a GHC type-checker plugin.  See [Data.UnitsOfMeasure.Tutorial](https://hackage.haskell.org/package/uom-plugin/docs/Data-UnitsOfMeasure-Tutorial.html) for an introduction to the library, and [the accompanying paper](http://adam.gundry.co.uk/pub/typechecker-plugins/) for more background.  An example of a package that uses the library is given in [uom-plugin-examples](https://github.com/adamgundry/uom-plugin/tree/master/uom-plugin-examples).
 
-Running `cabal haddock` on this library requires GHC 9.4 (see [#66][i66]).
+The latest version of the library is tested with GHC 9.0 to 9.4. Older versions of `uom-plugin` (0.3 and earlier) work with the GHC 7.10, 8.0 and 8.2 series. There are no versions supporting GHC 8.4 to 8.10 ([#43][i43]). Running `cabal haddock` on this library requires GHC 9.4 (see [#66][i66]).
 
 [i43]: https://github.com/adamgundry/uom-plugin/issues/43
 [i66]: https://github.com/adamgundry/uom-plugin/issues/66
-
-:warning: This library is experimental, and may lead to unexpected type-checking failures or even type soundness bugs.
 
 ## Installation
 
