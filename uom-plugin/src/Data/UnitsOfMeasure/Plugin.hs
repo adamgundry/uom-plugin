@@ -45,14 +45,14 @@ uomPlugin =
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
 unitsOfMeasureSolver uds givens []      = do
-    PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplifying givens" $ ppr givens
+    PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplifying givens" $ ppr givens
     let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) givens
     let unit_givens = filter is_useful unit_givens0
     case unit_givens of
       []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
-        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
+        PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified givens only" $ ppr sr
         case sr of
           -- TODO: givens simplification is currently disabled, because if we emit a given
           -- constraint like x[sk] ~ Base "kg" then GHC will "simplify" all occurrences
@@ -95,7 +95,7 @@ unitsOfMeasureSolver uds givens wanteds = do
       (_:_) -> do
         let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds) givens
         sr <- simplifyUnits uds unit_givens
-        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
+        PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified givens" $ ppr sr
         -- TODO: it is somewhat questionable to simplify the givens again
         -- here. In principle we should be able to simplify them at the
         -- simplify-givens stage, turn them into a substitution, and have GHC
@@ -103,7 +103,7 @@ unitsOfMeasureSolver uds givens wanteds = do
         case sr of
           Impossible eq _ -> reportContradiction uds eq
           Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
-                                PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
+                                PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified wanteds" $ ppr sr'
                                 case sr' of
                                   Impossible _eq _ -> return $ PluginAPI.TcPluginOk [] [] -- Don't report a contradiction, see #22
                                   Simplified ss'  -> PluginAPI.TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
@@ -176,14 +176,14 @@ unitsOfMeasureRewrite uds = PluginAPI.listToUFM [(unpackTyCon uds, unpackRewrite
 unpackRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult
 unpackRewriter uds _givens [ty] = do
   case maybeConstant =<< normaliseUnit uds ty of
-    Nothing -> do PluginAPI.tcPluginTrace "unpackRewriter: no rewrite" (ppr ty)
+    Nothing -> do PluginAPI.tcPluginTrace "[UOM] unpackRewriter: no rewrite" (ppr ty)
                   pure PluginAPI.TcPluginNoRewrite
-    Just u  -> do PluginAPI.tcPluginTrace "unpackRewriter: rewrite" (ppr ty <+> ppr u)
+    Just u  -> do PluginAPI.tcPluginTrace "[UOM] unpackRewriter: rewrite" (ppr ty <+> ppr u)
                   pure $ let reduct = reifyUnitUnpacked uds u
                          in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (unpackTyCon uds) [ty]) reduct
                             in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
 unpackRewriter _ _ tys = do
-    PluginAPI.tcPluginTrace "unpackRewriter: wrong number of arguments?" (ppr tys)
+    PluginAPI.tcPluginTrace "[UOM] unpackRewriter: wrong number of arguments?" (ppr tys)
     pure PluginAPI.TcPluginNoRewrite
 
 -- TODO: the following is nonsense
