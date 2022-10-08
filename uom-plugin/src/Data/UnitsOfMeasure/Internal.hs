@@ -58,13 +58,20 @@ module Data.UnitsOfMeasure.Internal
     , MkUnit
     ) where
 
-import Control.DeepSeq
-import Foreign.Storable
-import GHC.Exts (Constraint)
+import Control.DeepSeq (NFData)
+import Data.Kind (Constraint, Type)
+import Foreign.Storable (Storable)
 import GHC.TypeLits (Symbol, Nat, type (-))
 
--- | (Kind) Units of measure
-data Unit
+-- | Kind tag for 'Unit'
+data UnitKind
+
+-- | (Kind) Units of measure.
+--
+-- This should be regarded as an opaque kind, but it is defined as a type
+-- synonym for a kind ending in 'Type' so that new base units can be defined as
+-- empty data types.
+type Unit = UnitKind -> Type
 
 -- | Dimensionless unit (identity element)
 type family One :: Unit where

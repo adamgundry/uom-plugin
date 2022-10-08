@@ -11,32 +11,38 @@ import GhcApi (Type(..), typeSymbolKind, nilDataCon, consDataCon, tcSplitTyConAp
 import Data.List
 
 import GHC.TcPlugin.API
+import GHC.Core.Type (irrelevantMult)
+import GHC.Tc.Utils.TcType
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
 -- | Contains references to the basic unit constructors declared in
 -- "Data.UnitsOfMeasure", as loaded inside GHC.
 data UnitDefs = UnitDefs
-    { unitKindCon   :: TyCon -- ^ The 'Unit' type constructor, to be promoted to a kind
-    , unitBaseTyCon :: TyCon -- ^ The 'Base' data constructor of 'Unit', promoted to a type constructor
-    , unitOneTyCon  :: TyCon -- ^ The 'One'  type family
-    , mulTyCon      :: TyCon -- ^ The '(*:)' type family
-    , divTyCon      :: TyCon -- ^ The '(/:)' type family
-    , expTyCon      :: TyCon -- ^ The '(^:)' type family
-    , unpackTyCon     :: TyCon -- ^ The 'Unpack' type family
-    , unitSyntaxTyCon :: TyCon -- ^ The 'UnitSyntax' type constructor, to be promoted to a kind
+    { unitTagKindCon            :: TyCon -- ^ The 'UnitKind' type constructor
+    , unitTypeSyn               :: TyCon -- ^ The 'Unit' type synonym
+    , unitBaseTyCon             :: TyCon -- ^ The 'Base' type family
+    , unitOneTyCon              :: TyCon -- ^ The 'One'  type family
+    , mulTyCon                  :: TyCon -- ^ The '(*:)' type family
+    , divTyCon                  :: TyCon -- ^ The '(/:)' type family
+    , expTyCon                  :: TyCon -- ^ The '(^:)' type family
+    , unpackTyCon               :: TyCon -- ^ The 'Unpack' type family
+    , unitSyntaxTyCon           :: TyCon -- ^ The 'UnitSyntax' type constructor, to be promoted to a kind
     , unitSyntaxPromotedDataCon :: TyCon -- ^ The data constructor of 'UnitSyntax', promoted to a type constructor
-    , equivTyCon      :: TyCon -- ^ The '(~~)' type family
+    , equivTyCon                :: TyCon -- ^ The '(~~)' type family
     }
 
 -- | 'Unit' promoted to a kind
 unitKind :: UnitDefs -> Kind
-unitKind uds = TyConApp (unitKindCon uds) []
+unitKind uds = mkTyConApp (unitTypeSyn uds) []
 
 -- | Is this the 'Unit' kind?
 isUnitKind :: UnitDefs -> Kind -> Bool
-isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon uds
-                  | otherwise                                = False
+isUnitKind uds ty
+  | Just (sty, _) <- tcSplitFunTy_maybe ty
+  , let ty' = irrelevantMult sty
+  , Just (tc, _) <- tcSplitTyConApp_maybe ty' = tc == unitTagKindCon uds
+  | otherwise                                 = False
 
 
 -- | Try to convert a type to a unit normal form; this does not check

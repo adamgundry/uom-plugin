@@ -14,7 +14,8 @@ import Data.UnitsOfMeasure.Plugin.Convert
 lookupUnitDefs :: TcPluginM Init UnitDefs
 lookupUnitDefs = do
     md <- lookModule
-    unitKindCon               <- lookTyCon md "Unit"
+    unitTagKindCon            <- lookTyCon md "UnitKind"
+    unitTypeSyn               <- lookTyCon md "Unit"
     unitBaseTyCon             <- lookTyCon md "Base"
     unitOneTyCon              <- lookTyCon md "One"
     mulTyCon                  <- lookTyCon md "*:"
