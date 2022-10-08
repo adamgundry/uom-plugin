@@ -39,6 +39,7 @@ library
       Data.UnitsOfMeasure.Tutorial
   other-modules:
       Data.UnitsOfMeasure.Plugin.Convert
+      Data.UnitsOfMeasure.Plugin.Lookup
       Data.UnitsOfMeasure.Plugin.NormalForm
       Data.UnitsOfMeasure.Plugin.Unify
       Data.UnitsOfMeasure.TH
@@ -70,6 +71,7 @@ test-suite doctest
       Data.UnitsOfMeasure.Internal
       Data.UnitsOfMeasure.Plugin
       Data.UnitsOfMeasure.Plugin.Convert
+      Data.UnitsOfMeasure.Plugin.Lookup
       Data.UnitsOfMeasure.Plugin.NormalForm
       Data.UnitsOfMeasure.Plugin.Unify
       Data.UnitsOfMeasure.Read
