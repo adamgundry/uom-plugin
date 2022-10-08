@@ -1,6 +1,6 @@
 packages: uom-plugin/*, uom-plugin-examples/*, uom-plugin-tutorial/*
 tests: True
-with-compiler: ghc-9.2.2
+with-compiler: ghc-9.0.1
 optimization: False
 
 package uom-plugin
@@ -11,7 +11,5 @@ package uom-plugin-examples
 
 package uom-plugin-tutorial
   ghc-options: -dcore-lint
-
-allow-newer: doctest:ghc
 
 write-ghc-environment-files: always
