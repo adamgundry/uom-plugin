@@ -1,9 +1,9 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RoleAnnotations #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -67,32 +67,24 @@ import GHC.TypeLits (Symbol, Nat, type (-))
 data Unit
 
 -- | Dimensionless unit (identity element)
-type family One :: Unit
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type family One :: Unit where
 
 -- | Base unit
-type family Base (b :: Symbol) :: Unit
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type Base :: Symbol -> Unit
+type family Base b where
 
 -- | Multiplication for units of measure
-type family (u :: Unit) *: (v :: Unit) :: Unit
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type (*:) :: Unit -> Unit -> Unit
+type family u *: v where
 
 -- | Division for units of measure
-type family (u :: Unit) /: (v :: Unit) :: Unit
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type (/:) :: Unit -> Unit -> Unit
+type family u /: v where
 
 -- | Exponentiation (to a positive power) for units of measure;
 -- negative exponents are not yet supported (they require an Integer kind)
-type family (u :: Unit) ^: (n :: Nat)  :: Unit where
+type (^:) :: Unit -> Nat -> Unit
+type family u ^: n where
   u ^: 0 = One
   u ^: 1 = u
   u ^: n = u *: (u ^: (n-1))
@@ -216,11 +208,13 @@ data UnitSyntax s = [s] :/ [s]
 -- inverse of 'Unpack' up to the equational theory of units, but it is
 -- not a right inverse (because there are multiple list
 -- representations of the same unit).
-type family Pack (u :: UnitSyntax Symbol) :: Unit where
+type Pack :: UnitSyntax Symbol -> Unit
+type family Pack u where
   Pack (xs :/ ys) = Prod xs /: Prod ys
 
 -- | Take the product of a list of base units.
-type family Prod (xs :: [Symbol]) :: Unit where
+type Prod :: [Symbol] -> Unit
+type family Prod xs where
   Prod '[]       = One
   Prod (x ': xs) = Base x *: Prod xs
 
@@ -236,19 +230,15 @@ type family Prod (xs :: [Symbol]) :: Unit where
 -- it does not allow the structure of the unit to be observed.  The
 -- reduction behaviour is implemented by the plugin, because we cannot
 -- define it otherwise.
-type family Unpack (u :: Unit) :: UnitSyntax Symbol
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type Unpack :: Unit -> UnitSyntax Symbol
+type family Unpack u where
 
 
 -- | This is a bit of a hack, honestly, but a good hack.  Constraints
 -- @u ~~ v@ are just like equalities @u ~ v@, except solving them will
 -- be delayed until the plugin.  This may lead to better inferred types.
-type family (u :: Unit) ~~ (v :: Unit) :: Constraint
-#if __GLASGOW_HASKELL__ >= 711
-  where
-#endif
+type (~~) :: Unit -> Unit -> Constraint
+type family u ~~ v where
 
 infix 4 ~~
 
@@ -259,4 +249,5 @@ infix 4 ~~
 --
 -- The instances displayed by Haddock are available only if
 -- "Data.UnitsOfMeasure.Defs" is imported.
-type family MkUnit (s :: Symbol) :: Unit
+type MkUnit :: Symbol -> Unit
+type family MkUnit s

@@ -52,4 +52,7 @@ import Data.UnitsOfMeasure
   , au = 149597870700 m |]
 
 -- Some random other units
-[u| ft = 100 % 328 m, in = 0.0254 m, mi = 1609.344 m, mph = mi/h |]
+[u| ft = 100 % 328 m
+  , in = 0.0254 m
+  , mi = 1609.344 m
+  , mph = mi/h |]

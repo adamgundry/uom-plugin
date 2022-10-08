@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 
 module Data.UnitsOfMeasure.Plugin.NormalForm
@@ -20,6 +19,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 
     -- * Predicates
   , isOne
+  , maybeSingleVariable
   , isConstant
   , maybeConstant
   , isBase
@@ -33,12 +33,11 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
   , substUnit
   ) where
 
-#if __GLASGOW_HASKELL__ >= 804
 import Prelude hiding ((<>))
-#endif
-import GhcApi
-import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
-import GhcApi.Shim (tyVarsOfType, tyVarsOfTypes)
+import GhcApi (elemVarSet, tyCoVarsOfType, tyCoVarsOfTypes, text, (<>))
+import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon, thenCmp)
+
+import GHC.TcPlugin.API
 
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
@@ -136,6 +135,12 @@ invert = NormUnit . Map.map negate . _NormUnit
 isOne :: NormUnit -> Bool
 isOne = Map.null . _NormUnit
 
+-- | Test whether a unit consists of a single variable with multiplicity 1.
+maybeSingleVariable :: NormUnit -> Maybe TyVar
+maybeSingleVariable x = case Map.toList (_NormUnit x) of
+    [(VarAtom v, 1)] -> Just v
+    _                -> Nothing
+
 -- | Test whether a unit is constant (contains only base literals)
 isConstant :: NormUnit -> Bool
 isConstant = all isBaseLiteral . Map.keys . _NormUnit
@@ -167,9 +172,9 @@ divisible i = Foldable.all (\ j -> j `rem` i == 0) . _NormUnit
 occurs :: TyVar -> NormUnit -> Bool
 occurs a = any occursAtom . Map.keys . _NormUnit
   where
-    occursAtom (BaseAtom ty)   = elemVarSet a $ tyVarsOfType ty
+    occursAtom (BaseAtom ty)   = elemVarSet a $ tyCoVarsOfType ty
     occursAtom (VarAtom b)     = a == b
-    occursAtom (FamAtom _ tys) = elemVarSet a $ tyVarsOfTypes tys
+    occursAtom (FamAtom _ tys) = elemVarSet a $ tyCoVarsOfTypes tys
 
 
 -- | View a unit as a list of atoms in order of ascending absolute exponent

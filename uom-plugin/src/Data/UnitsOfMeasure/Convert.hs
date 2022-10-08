@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -6,13 +5,11 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-
-#if __GLASGOW_HASKELL__ > 710
 {-# LANGUAGE UndecidableSuperClasses #-}
-#endif
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
@@ -73,8 +70,8 @@ module Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import GHC.Exts ( Constraint )
-import GHC.TypeLits
+import Data.Kind (Type, Constraint)
+import GHC.TypeLits (Symbol)
 
 
 -- | Class to capture the dimensions to which base units belong.  For
@@ -95,29 +92,35 @@ class IsCanonical (Unpack (CanonicalBaseUnit b))
 
 -- | Convert a unit into its canonical representation, where units are
 -- represented syntactically.
-type family ToCBU (u :: UnitSyntax Symbol) :: Unit where
+type ToCBU :: UnitSyntax Symbol -> Unit
+type family ToCBU u where
   ToCBU (xs :/ ys) = ListToCBU xs /: ListToCBU ys
 
-type family ListToCBU (xs :: [Symbol]) :: Unit where
+type ListToCBU :: [Symbol] -> Unit
+type family ListToCBU xs where
   ListToCBU '[]       = One
   ListToCBU (x ': xs) = CanonicalBaseUnit x *: ListToCBU xs
 
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit have associated canonical
 -- representations.
-type family HasCanonical (u :: UnitSyntax Symbol) :: Constraint where
+type HasCanonical :: UnitSyntax Symbol -> Constraint
+type family HasCanonical u where
   HasCanonical (xs :/ ys) = (AllHasCanonical xs, AllHasCanonical ys)
 
-type family AllHasCanonical (xs :: [Symbol]) :: Constraint where
+type AllHasCanonical :: [Symbol] -> Constraint
+type family AllHasCanonical xs where
   AllHasCanonical '[] = ()
   AllHasCanonical (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical xs)
 
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit are in their canonical form.
-type family IsCanonical (u :: UnitSyntax Symbol) :: Constraint where
+type IsCanonical :: UnitSyntax Symbol -> Constraint
+type family IsCanonical u where
   IsCanonical (xs :/ ys) = (AllIsCanonical xs, AllIsCanonical ys)
 
-type family AllIsCanonical (xs :: [Symbol]) :: Constraint where
+type AllIsCanonical :: [Symbol] -> Constraint
+type family AllIsCanonical xs where
   AllIsCanonical '[] = ()
   AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ Base x, AllIsCanonical xs)
 
@@ -154,7 +157,7 @@ convert = (ratio (undefined :: proxy' (proxy v)) (undefined :: proxy' (proxy u))
 -- dimension.  The slightly unusual proxy arguments allow this to be
 -- called using quasiquoters to specify the units, for example
 -- @'ratio' [u| ft |] [u| m |]@.
-ratio :: forall a u v (proxy :: Unit -> *) proxy' .
+ratio :: forall a u v (proxy :: Unit -> Type) proxy' .
          (Fractional a, Convertible u v)
       => proxy' (proxy u) -> proxy' (proxy v) -> Quantity a (u /: v)
 ratio _ _ = fromRational' $ conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)

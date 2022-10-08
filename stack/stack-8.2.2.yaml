@@ -1,8 +1,0 @@
-resolver: lts-11.22
-packages:
-- ../build
-- ../uom-plugin
-- ../uom-plugin-tutorial
-- ../uom-plugin-examples
-extra-deps:
-- units-parser-0.1.0.0

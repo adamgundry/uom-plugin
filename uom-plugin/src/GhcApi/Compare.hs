@@ -1,36 +1,33 @@
 {-# LANGUAGE CPP #-}
 
 module GhcApi.Compare
-  ( -- * GHC API changes
-    cmpType
+  ( cmpType
   , cmpTypes
   , cmpTyCon
+  , thenCmp
   ) where
 
 import GhcApi
-#if __GLASGOW_HASKELL__ < 802
-import qualified Type (cmpType, cmpTypes)
-#endif
+
+import GHC.Utils.Misc (thenCmp)
+
+-- TODO: all this is deeply dodgy!  These comparison functions are
+-- non-deterministic, so we may end up getting different results on different
+-- runs.  Really we should replace them with deterministic versions.
 
 cmpTyCon :: TyCon -> TyCon -> Ordering
-#if __GLASGOW_HASKELL__ >= 802
-cmpTyCon a b = getUnique a `nonDetCmpUnique` getUnique b
-#else
-cmpTyCon = compare
-#endif
+cmpTyCon = nonDetCmpTc
 
 cmpType :: Type -> Type -> Ordering
-cmpType =
-#if __GLASGOW_HASKELL__ >= 802
-    nonDetCmpType
+#if __GLASGOW_HASKELL__ > 900
+cmpType (LitTy x) (LitTy y) = cmpTyLit x y
+cmpType t1 t2 = nonDetCmpType t1 t2
 #else
-    Type.cmpType
+cmpType = nonDetCmpType
 #endif
 
 cmpTypes :: [Type] -> [Type] -> Ordering
-cmpTypes =
-#if __GLASGOW_HASKELL__ >= 802
-    nonDetCmpTypes
-#else
-    Type.cmpTypes
-#endif
+cmpTypes [] [] = EQ
+cmpTypes (t1:ts1) (t2:ts2) = cmpType t1 t2 `thenCmp` cmpTypes ts1 ts2
+cmpTypes [] _ = LT
+cmpTypes _ [] = GT

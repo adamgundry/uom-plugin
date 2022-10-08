@@ -1,31 +1,21 @@
 cabal-version: 1.12
-
--- This file has been generated from package.dhall by hpack version 0.31.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 653c169a74854a68d066766533489e500facc219b8966eb17ad9fec11c52ec77
-
 name:           uom-plugin-tutorial
-version:        0.3.0.1
+version:        0.4.0.0
 synopsis:       A tutorial for the Units of measure typechecker plugin
 description:    A tutorial for the units of measure typechecker plugin, checked with doctest.
 category:       Type System
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2014-2018, Adam Gundry
+copyright:      Copyright (c) 2022, Adam Gundry
 license:        BSD3
-tested-with:    GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
+tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
 build-type:     Simple
-extra-source-files:
-    package.dhall
 
 test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
       Data.UnitsOfMeasure.Tutorial
-      Paths_uom_plugin_tutorial
   hs-source-dirs:
       test-suite-doctest
       doc
@@ -34,6 +24,8 @@ test-suite doctest
       base >=4.9.1.0 && <5
     , doctest >=0.13.0
     , uom-plugin
-  if impl(ghc < 8.2.2) || impl(ghc > 8.2.2)
+  -- doctest doesn't yet build on 9.4
+  -- test outputs are different on 9.0
+  if impl(ghc < 9.2) || impl(ghc >= 9.4)
     buildable: False
   default-language: Haskell2010

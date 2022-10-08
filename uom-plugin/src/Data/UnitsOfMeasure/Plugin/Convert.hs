@@ -4,11 +4,13 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , isUnitKind
   , normaliseUnit
   , reifyUnit
+  , reifyUnitUnpacked
   ) where
 
-import GhcApi
-import GhcApi.Shim (promoteTyCon)
+import GhcApi (Type(..), typeSymbolKind, nilDataCon, consDataCon, tcSplitTyConApp_maybe, coreView, isFamilyTyCon)
 import Data.List
+
+import GHC.TcPlugin.API
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
@@ -29,7 +31,7 @@ data UnitDefs = UnitDefs
 
 -- | 'Unit' promoted to a kind
 unitKind :: UnitDefs -> Kind
-unitKind uds = TyConApp (promoteTyCon $ unitKindCon uds) []
+unitKind uds = TyConApp (unitKindCon uds) []
 
 -- | Is this the 'Unit' kind?
 isUnitKind :: UnitDefs -> Kind -> Bool
@@ -74,3 +76,22 @@ reifyUnit uds u | null xs && null ys = oneTy
     reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [s]
     reifyAtom (VarAtom  v)    = mkTyVarTy  v
     reifyAtom (FamAtom f tys) = mkTyConApp f tys
+
+
+-- | Convert a constant unit normal form into a type expression of kind
+-- @UnitSyntax Symbol@.
+reifyUnitUnpacked  :: UnitDefs -> [(BaseUnit, Integer)] -> Type
+reifyUnitUnpacked uds xs =
+  mkTyConApp (unitSyntaxPromotedDataCon uds)
+             [ typeSymbolKind
+             , foldr promoter nil ys
+             , foldr promoter nil zs
+             ]
+  where
+    ys = concatMap (\ (s, i) -> if i > 0 then genericReplicate i s       else []) xs
+    zs = concatMap (\ (s, i) -> if i < 0 then genericReplicate (abs i) s else []) xs
+
+    nil = mkTyConApp (promoteDataCon nilDataCon) [typeSymbolKind]
+
+    promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
+    cons_tycon = promoteDataCon consDataCon

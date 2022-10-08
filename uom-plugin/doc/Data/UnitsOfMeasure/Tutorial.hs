@@ -203,17 +203,26 @@ import Data.UnitsOfMeasure
 -- <BLANKLINE>
 -- ...
 -- ...Couldn't match expected type...Quantity w1 One...
--- ...with actual type...GHC.Real.Ratio Integer...
+-- ...with actual type...GHC.Real.Ratio...
 -- ...
 --
 -- Things get a little weird when not being explicit about Quantity.
 --
 -- >>> :type 1 :: _ _ [u| 1 |]
--- 1 :: _ _ [u| 1 |] :: Num (w1 w2 One) => w1 w2 One
+-- 1 :: _ _ [u| 1 |]
+--   :: ...
+--      Num (w1 w2 One) =>
+--      w1 w2 One
 -- >>> :type 1 :: _ _ One
--- 1 :: _ _ One :: Num (w1 w2 One) => w1 w2 One
+-- 1 :: _ _ One
+--   :: ...
+--      Num (w1 w2 One) =>
+--      w1 w2 One
 -- >>> :type 1.0 :: _ _ One
--- 1.0 :: _ _ One :: Fractional (w1 w2 One) => w1 w2 One
+-- 1.0 :: _ _ One
+--   :: ...
+--      Fractional (w1 w2 One) =>
+--      w1 w2 One
 
 -- $multiplication-by-one
 --
@@ -289,14 +298,14 @@ import Data.UnitsOfMeasure
 -- >>> 2 * [u| 5 m |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type ‘Base "m"’ with ‘One’
+-- ... Couldn't match type...Base "m"...with...One...
 -- ...
 --
 --
 -- >>> [u| 2 m/s |] + [u| 5 m/s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type ‘Base "m" /: Base "s"’ with ‘One’
+-- ... Couldn't match type...Base "m" /: Base "s"...with...One...
 -- ...
 --
 -- Instead, "Data.UnitsOfMeasure" provides more general arithmetic
@@ -314,7 +323,8 @@ import Data.UnitsOfMeasure
 -- >>>  [u| 3 m |] -: [u| 1 s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type ‘Base "m"’ with ‘Base "s"’
+-- ... Couldn't match type...Base "s"
+-- ... with...Base "m"...
 -- ...
 
 -- $polymorphism

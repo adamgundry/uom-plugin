@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Data.UnitsOfMeasure.Plugin.Unify
   ( SubstItem(..)
   , substsSubst
@@ -5,12 +7,21 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , UnitEquality(..)
   , toUnitEquality
   , fromUnitEquality
+  , isUsefulUnitEquality
   , SimplifyState(..)
   , SimplifyResult(..)
   , simplifyUnits
+  , initialState
   ) where
 
-import GhcApi
+import GhcApi (text, (<+>), ($$), typeKind, ctEvPred, isGiven, mkSysTvName)
+
+import GHC.TcPlugin.API as PluginAPI
+import qualified GHC.TcPlugin.API.Internal as PluginAPI.Internal
+
+import qualified GHC.Tc.Utils.Monad as GHC
+import qualified GHC.Tc.Utils.TcMType as GHC
+
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
@@ -59,21 +70,21 @@ instance Outputable UnifyResult where
 -- | Attempt to unify two normalised units to produce a unifying
 -- substitution.  The 'Ct' is the equality between the non-normalised
 -- (and perhaps less substituted) unit type expressions.
-unifyUnits :: UnitDefs -> UnitEquality -> TcPluginM UnifyResult
-unifyUnits uds (UnitEquality ct u0 v0) = do tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+unifyUnits :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
+unifyUnits uds (UnitEquality ct u0 v0) = do PluginAPI.tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
                                             unifyOne uds ct [] [] [] (u0 /: v0)
 
-unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> TySubst -> NormUnit -> TcPluginM UnifyResult
+unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> TySubst -> NormUnit -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
 unifyOne uds ct tvs subst unsubst u
       | isOne u           = return $ Win tvs subst unsubst
       | isConstant u      = return   Lose
-      | otherwise         = tcPluginTrace "unifyOne" (ppr u) >> go [] (ascending u)
+      | otherwise         = {- tcPluginTrace "unifyOne" (ppr u) >> -} go [] (ascending u)
 
       where
-        go :: [(Atom, Integer)] -> [(Atom, Integer)] -> TcPluginM UnifyResult
+        go :: [(Atom, Integer)] -> [(Atom, Integer)] -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
         go _  []                       = return $ Draw tvs subst unsubst
         go ls (at@(VarAtom a, i) : xs) = do
-            tch <- if given_mode then return True else isTouchableTcPluginM a
+            tch <- if given_mode then return True else PluginAPI.isTouchableTcPluginM a
             let r = divideExponents (-i) $ leftover a u
             case () of
                 () | tch && divisible i u -> return $ if occurs a r then Draw tvs subst unsubst
@@ -85,8 +96,8 @@ unifyOne uds ct tvs subst unsubst u
                    | otherwise            -> go (at:ls) xs
 
         go ls (at@(FamAtom f tys, i) : xs) = do
-          mb <- matchFam f tys
-          case normaliseUnit uds . snd =<< mb of
+          mb <- PluginAPI.matchFam f tys
+          case normaliseUnit uds . PluginAPI.reductionReducedType =<< mb of
             Just v  -> unifyOne uds ct tvs subst unsubst $ mkNormUnit (ls ++ xs) *: v ^: i
             Nothing -> go (at:ls) xs
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
@@ -94,13 +105,14 @@ unifyOne uds ct tvs subst unsubst u
 
         given_mode = isGiven (ctEvidence ct)
 
-        newUnitVar | given_mode = newSkolemTyVar $ unitKind uds
-                   | otherwise  = newFlexiTyVar  $ unitKind uds
+        newUnitVar | given_mode = PluginAPI.Internal.unsafeLiftTcM $ newSkolemTyVar $ unitKind uds
+                   | otherwise  = PluginAPI.Internal.unsafeLiftTcM $ GHC.newFlexiTyVar  $ unitKind uds
 
         newSkolemTyVar kind = do
-            x <- newUnique
+            x <- GHC.newUnique
             let name = mkSysTvName x (fsLit "beta")
-            return $ mkTcTyVar name kind vanillaSkolemTv
+            return $ PluginAPI.mkTyVar name kind -- mkTcTyVar name kind vanillaSkolemTv
+
 
 
 data UnitEquality = UnitEquality Ct NormUnit NormUnit
@@ -124,6 +136,14 @@ toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
 
 fromUnitEquality :: UnitEquality -> Ct
 fromUnitEquality (UnitEquality ct _ _) = ct
+
+
+isUsefulUnitEquality :: UnitEquality -> Bool
+isUsefulUnitEquality (UnitEquality _ lhs rhs) =
+    case (maybeSingleVariable lhs, maybeSingleVariable rhs) of
+        (Nothing, Nothing) -> True
+        (Just v, _)        -> occurs v rhs
+        (_, Just v)        -> occurs v lhs
 
 
 data SimplifyState
@@ -154,14 +174,14 @@ instance Outputable SimplifyResult where
   ppr (Simplified ss)     = text "Simplified" $$ ppr ss
   ppr (Impossible eq eqs) = text "Impossible" <+> ppr eq <+> ppr eqs
 
-simplifyUnits :: UnitDefs -> [UnitEquality] -> TcPluginM SimplifyResult
-simplifyUnits uds eqs0 = tcPluginTrace "simplifyUnits" (ppr eqs0) >> simples initialState eqs0
+simplifyUnits :: UnitDefs -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
+simplifyUnits uds eqs0 = PluginAPI.tcPluginTrace "simplifyUnits" (ppr eqs0) >> simples initialState eqs0
   where
-    simples :: SimplifyState -> [UnitEquality] -> TcPluginM SimplifyResult
+    simples :: SimplifyState -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
     simples ss [] = return $ Simplified ss
     simples ss (eq:eqs) = do
         ur <- unifyUnits uds (substsUnitEquality (simplifySubst ss) eq)
-        tcPluginTrace "unifyUnits result" (ppr ur)
+        PluginAPI.tcPluginTrace "unifyUnits result" (ppr ur)
         case ur of
           Win  tvs subst unsubst -> let (ss', xs) = win eq tvs subst unsubst ss
                                     in simples ss' (xs ++ eqs)

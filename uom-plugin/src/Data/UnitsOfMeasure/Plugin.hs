@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE DataKinds #-}
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
@@ -13,141 +12,195 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi
-import GhcApi.Shim
-    ( mkEqPred, mkFunnyEqEvidence
-#if __GLASGOW_HASKELL__ < 802
-    , pattern FunTy
-#endif
-    )
-import GhcApi.Wrap (newGivenCt, newWantedCt)
+import GhcApi (TcCoercion, ctEvPred, ctEvTerm, typeKind, heqDataCon, evDFunApp, dataConName, dataConWrapId, occName, occNameFS, tyConDataCons, (<+>), isWanted, isGivenCt, isGiven, UnivCoProvenance(PluginProv), mkPrimEqPred, Type(TyConApp), heqTyCon)
+
+import qualified GHC.Plugins as Plugins
+import GHC.TcPlugin.API as PluginAPI
+
 import Data.Either
-import Data.List
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 
-
 -- | The plugin that GHC will load when this module is used with the
 -- @-fplugin@ option.
-plugin :: Plugin
-plugin = defaultPlugin { tcPlugin = const $ Just uomPlugin }
+plugin :: Plugins.Plugin
+plugin =
+    Plugins.defaultPlugin
+        { Plugins.tcPlugin = const $ Just $ PluginAPI.mkTcPlugin uomPlugin
+        , Plugins.pluginRecompile = const $ pure Plugins.NoForceRecompile
+        }
 
-uomPlugin :: TcPlugin
-uomPlugin = tracePlugin
-                "uom-plugin"
-                TcPlugin { tcPluginInit  = lookupUnitDefs
-                         , tcPluginSolve = unitsOfMeasureSolver
-                         , tcPluginStop  = const $ return ()
-                         }
+uomPlugin :: PluginAPI.TcPlugin
+uomPlugin =
+    PluginAPI.TcPlugin
+        { PluginAPI.tcPluginInit    = lookupUnitDefs
+        , PluginAPI.tcPluginSolve   = unitsOfMeasureSolver
+        , PluginAPI.tcPluginRewrite = unitsOfMeasureRewrite
+        , PluginAPI.tcPluginStop    = const $ return ()
+        }
 
 
-unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> [Ct] -> TcPluginM TcPluginResult
-unitsOfMeasureSolver uds givens _deriveds []      = do
-    zonked_cts <- mapM zonkCt givens
-    let (unit_givens , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) zonked_cts
+
+unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
+unitsOfMeasureSolver uds givens []      = do
+    PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplifying givens" $ ppr givens
+    let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) givens
+    let unit_givens = filter is_useful unit_givens0
     case unit_givens of
-      []    -> return $ TcPluginOk [] []
+      []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
-        tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
+        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
         case sr of
-          -- Simplified tvs []    evs eqs -> TcPluginOk (map (solvedGiven . fst) unit_givens) []
-          Simplified _    -> return $ TcPluginOk [] []
+          -- TODO: givens simplification is currently disabled, because if we emit a given
+          -- constraint like x[sk] ~ Base "kg" then GHC will "simplify" all occurrences
+          -- of the type family application Base "kg" to the skolem variable x[sk].
+          -- This can then result in loops as the rewriter will turn the fam app into
+          -- the variable, then the plugin will "solve" it again.
+          Simplified _ -> pure $ PluginAPI.TcPluginOk [] []
+          Simplified ss   -> do
+              -- TODO: we ought to generate evidence that depends on the
+              -- previous givens (and similarly when simplifying wanteds, the
+              -- evidence we generate should depend on the new wanteds).
+              -- Otherwise we could potentially have a soundness issue e.g. if a
+              -- GADT pattern match brings a unit equality into scope, but we
+              -- later float out something that depends on it.
+              let usefuls = simplifySubst ss
+              xs <- mapM (substItemToCt uds) usefuls
+              pure $ PluginAPI.TcPluginOk (map (solvedGiven . siCt) usefuls) xs
+          -- Simplified _    -> return $ PluginAPI.TcPluginOk [] []
           Impossible eq _ -> reportContradiction uds eq
   where
     foo :: Ct -> Either UnitEquality Ct -> Either (Ct, UnitEquality) Ct
     foo ct (Left x)    = Left (ct, x)
     foo _  (Right ct') = Right ct'
 
-    -- solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
+    solvedGiven ct = (ctEvTerm (ctEvidence ct), ct)
 
+    -- TODO: if the simplify givens stage makes progress, we want to emit new
+    -- givens in case GHC can substitute into constraints other than unit
+    -- equalities.  However, we don't want to cause a loop by repeatedly
+    -- re-simplifying the same givens.  We currently have a conservative check
+    -- to see if it is useful to simplify a unit equality: if neither side of
+    -- the original equality was a single variable.  There are "useful" cases
+    -- this misses, however, e.g. v^2 ~ v.
+    is_useful (_, ue) = isUsefulUnitEquality ue
 
-unitsOfMeasureSolver uds givens _deriveds wanteds = do
-  xs <- lookForUnpacks uds givens wanteds
-  if not $ null xs then return $ TcPluginOk [] xs else do
+unitsOfMeasureSolver uds givens wanteds = do
     let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
     case unit_wanteds of
-      []    -> return $ TcPluginOk [] []
+      []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
-        (unit_givens , _) <- partitionEithers . map (toUnitEquality uds) <$> mapM zonkCt givens
+        let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds) givens
         sr <- simplifyUnits uds unit_givens
-        tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
+        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
+        -- TODO: it is somewhat questionable to simplify the givens again
+        -- here. In principle we should be able to simplify them at the
+        -- simplify-givens stage, turn them into a substitution, and have GHC
+        -- apply the substitution.
         case sr of
           Impossible eq _ -> reportContradiction uds eq
           Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
-                                tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
+                                PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
                                 case sr' of
-                                  Impossible _eq _ -> return $ TcPluginOk [] [] -- Don't report a contradiction, see #22
-                                  Simplified ss'  -> TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
+                                  Impossible _eq _ -> return $ PluginAPI.TcPluginOk [] [] -- Don't report a contradiction, see #22
+                                  Simplified ss'  -> PluginAPI.TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
                                                          <$> mapM (substItemToCt uds) (filter (isWanted . ctEvidence . siCt) (substsSubst (simplifyUnsubst ss) (simplifySubst ss')))
 
 
-reportContradiction :: UnitDefs -> UnitEquality -> TcPluginM TcPluginResult
-reportContradiction uds eq = TcPluginContradiction . pure <$> fromUnitEqualityForContradiction uds eq
+reportContradiction :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
+reportContradiction uds eq = PluginAPI.TcPluginContradiction . pure <$> fromUnitEqualityForContradiction uds eq
 
 -- See #22 for why we need this
-fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> TcPluginM Ct
+fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve Ct
 fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq _ _ -> return ct
-    _ | isGivenCt ct -> newGivenCt  (ctLoc ct) (mkEqPred u' v') (mkFunnyEqEvidence (ctPred ct) u' v')
-      | otherwise    -> newWantedCt (ctLoc ct) (mkEqPred u' v')
+    _ | isGivenCt ct -> PluginAPI.mkNonCanonical <$> PluginAPI.newGiven  (ctLoc ct) (mkPrimEqPred u' v') (evTermToExpr (mkFunnyEqEvidence (ctPred ct) u' v'))
+      | otherwise    -> PluginAPI.mkNonCanonical <$> PluginAPI.newWanted (ctLoc ct) (mkPrimEqPred u' v')
   where
     u' = reifyUnit uds u
     v' = reifyUnit uds v
 
 
-substItemToCt :: UnitDefs -> SubstItem -> TcPluginM Ct
+substItemToCt :: UnitDefs -> SubstItem -> PluginAPI.TcPluginM PluginAPI.Solve Ct
 substItemToCt uds si
-      | isGiven (ctEvidence ct) = newGivenCt loc prd $ evByFiat "units" ty1 ty2
-      | otherwise               = newWantedCt loc prd
+      | isGiven (ctEvidence ct) = PluginAPI.mkNonCanonical <$> PluginAPI.newGiven loc prd (evByFiatExpr "units" ty1 ty2)
+      | otherwise               = PluginAPI.mkNonCanonical <$> PluginAPI.newWanted loc prd
       where
-        prd  = mkEqPred ty1 ty2
+        prd  = mkPrimEqPred ty1 ty2
         ty1  = mkTyVarTy (siVar si)
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
         loc  = ctLoc ct
 
 
-lookForUnpacks :: UnitDefs -> [Ct] -> [Ct] -> TcPluginM [Ct]
-lookForUnpacks uds givens wanteds = mapM unpackCt unpacks
-  where
-    unpacks = concatMap collectCt $ givens ++ wanteds
+{-
+TODO: this leads to errors like this on GHC 9.2, but seems to work on 9.4?
 
-    collectCt ct = collectType ct $ ctEvPred $ ctEvidence ct
+*** Core Lint errors : in result of Desugar (before optimization) ***
+src/Data/UnitsOfMeasure/Defs.hs:19:4: warning:
+    Trans coercion mis-match: (IsCanonical
+                                 Univ(nominal plugin "units"
+                                      :: Unpack (Base "m"), '["m"] ':/ '[]))_N
+                              ; Sym (D:R:IsCanonical[0] <'["m"]>_N <'[]>_N)
+      IsCanonical (Unpack (Base "m")) ~ IsCanonical ('["m"] ':/ '[])
+      (AllIsCanonical '["m"], AllIsCanonical '[]) ~ IsCanonical
+                                                      ('["m"] ':/ '[])
+    In the RHS of $cp1HasCanonicalBaseUnit_alno :: IsCanonical
+                                                     (Unpack (CanonicalBaseUnit "m"))
+    In the body of letrec with binders $d(%%)_alnP :: () :: Constraint
+    In the body of letrec with binders $d(%%)_alnN :: () :: Constraint
+    In the body of letrec with binders $d~_alnO :: Base "m" ~ Base "m"
+    In the body of letrec with binders $d(%,%)_alnM :: (Base "m"
+                                                        ~ Base "m",
+                                                        () :: Constraint)
+    In the body of letrec with binders $d(%,%)_alnL :: ((Base "m"
+                                                         ~ Base "m",
+                                                         () :: Constraint),
+                                                        () :: Constraint)
+    Substitution: [TCvSubst
+                     In scope: InScope {}
+                     Type env: []
+                     Co env: []]
+-}
 
-    collectType ct (AppTy f s)      = collectType ct f ++ collectType ct s
-    collectType ct (TyConApp tc [a])
-      | tc == unpackTyCon uds       = case maybeConstant =<< normaliseUnit uds a of
-                                        Just xs -> [(ct,a,xs)]
-                                        _       -> []
-    collectType ct (TyConApp _ as)  = concatMap (collectType ct) as
-    collectType ct (FunTy t v)      = collectType ct t ++ collectType ct v
-    collectType ct (ForAllTy _ t)   = collectType ct t
-    collectType _  _                = [] -- TyVarTy, LitTy from 7.10, plus CastTy and CoercionTy in 8.0
+unitsOfMeasureRewrite
+  :: UnitDefs ->
+    PluginAPI.UniqFM
+        TyCon
+        ([Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult)
+unitsOfMeasureRewrite uds = PluginAPI.listToUFM [(unpackTyCon uds, unpackRewriter uds)]
 
-    unpackCt (ct,a,xs) = newGivenCt loc (mkEqPred ty1 ty2) (evByFiat "units" ty1 ty2)
-      where
-        ty1 = TyConApp (unpackTyCon uds) [a]
-        ty2 = mkTyConApp (unitSyntaxPromotedDataCon uds)
-               [ typeSymbolKind
-               , foldr promoter nil ys
-               , foldr promoter nil zs ]
-        loc = ctLoc ct
+unpackRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult
+unpackRewriter uds _givens [ty] = do
+  case maybeConstant =<< normaliseUnit uds ty of
+    Nothing -> do PluginAPI.tcPluginTrace "unpackRewriter: no rewrite" (ppr ty)
+                  pure PluginAPI.TcPluginNoRewrite
+    Just u  -> do PluginAPI.tcPluginTrace "unpackRewriter: rewrite" (ppr ty <+> ppr u)
+                  pure $ let reduct = reifyUnitUnpacked uds u
+                         in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (unpackTyCon uds) [ty]) reduct
+                            in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
+unpackRewriter _ _ tys = do
+    PluginAPI.tcPluginTrace "unpackRewriter: wrong number of arguments?" (ppr tys)
+    pure PluginAPI.TcPluginNoRewrite
 
-        ys = concatMap (\ (s, i) -> if i > 0 then genericReplicate i s       else []) xs
-        zs = concatMap (\ (s, i) -> if i < 0 then genericReplicate (abs i) s else []) xs
+-- TODO: the following is nonsense
+lookupModule' :: PluginAPI.MonadTcPlugin m => PluginAPI.ModuleName -> p -> m PluginAPI.Module
+lookupModule' modname _pkg = do
+  r <- PluginAPI.findImportedModule modname PluginAPI.NoPkgQual --  (PluginAPI.OtherPkg pkg)
+  case r of
+    PluginAPI.Found _ md -> pure md
+    _ -> do r' <- PluginAPI.findImportedModule modname PluginAPI.NoPkgQual
+            case r' of
+              PluginAPI.Found _ md -> pure md
+              _ -> error "lookupModule: not Found"
 
-    nil = mkTyConApp (promoteDataCon nilDataCon) [typeSymbolKind]
 
-    promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
-    cons_tycon = promoteDataCon consDataCon
-
-
-lookupUnitDefs :: TcPluginM UnitDefs
+lookupUnitDefs :: PluginAPI.TcPluginM PluginAPI.Init UnitDefs
 lookupUnitDefs = do
-    md <- lookupModule myModule myPackage
+    md <- lookupModule' myModule myPackage
     u <- look md "Unit"
     b <- look md "Base"
     o <- look md "One"
@@ -163,9 +216,41 @@ lookupUnitDefs = do
                        [d] -> promoteDataCon d
                        _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
 
-    look md s = tcLookupTyCon =<< lookupName md (mkTcOcc s)
+    look md s = PluginAPI.tcLookupTyCon =<< PluginAPI.lookupOrig md (mkTcOcc s)
     myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
     myPackage = fsLit "uom-plugin"
+
+
+-- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
+-- bogus evidence of type @t1 ~ t2@.
+mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
+mkFunnyEqEvidence t t1 t2 =
+    castFrom `evCast'` castTo
+    where
+        castFrom :: EvTerm
+        castFrom = evDFunApp funId tys terms
+            where
+                funId :: Id
+                funId = dataConWrapId heqDataCon
+
+                tys :: [Kind]
+                tys = [typeKind t1, typeKind t2, t1, t2]
+
+                terms :: [EvExpr]
+                terms = [evByFiatExpr "units" t1 t2]
+
+        castTo :: TcCoercion
+        castTo =
+            mkUnivCo from Representational tySource t
+            where
+                from :: UnivCoProvenance
+                from = PluginProv "units"
+
+                tySource :: Type
+                tySource = mkHEqPred t1 t2
+
+mkHEqPred :: Type -> Type -> Type
+mkHEqPred t1 t2 = TyConApp heqTyCon [typeKind t1, typeKind t2, t1, t2]
 
 
 -- | Produce bogus evidence for a constraint, including actual
@@ -177,3 +262,16 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
       , tc == equivTyCon uds -> mkFunnyEqEvidence t t1 t2
     _                    -> error "evMagic"
+
+evByFiat :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvTerm
+evByFiat s t1 t2 = PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2
+
+evByFiatExpr :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvExpr
+evByFiatExpr s t1 t2 = evTermToExpr $ PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2
+
+evTermToExpr :: EvTerm -> EvExpr
+evTermToExpr (EvExpr e) = e
+evTermToExpr _ = error "evTermToExpr"
+
+evCast' :: EvTerm -> TcCoercion -> EvTerm
+evCast' = evCast . evTermToExpr
