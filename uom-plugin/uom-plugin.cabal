@@ -13,7 +13,7 @@ homepage:       https://github.com/adamgundry/uom-plugin#readme
 bug-reports:    https://github.com/adamgundry/uom-plugin/issues
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2022, Adam Gundry
+copyright:      Copyright (c) 2014-2022, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
 tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
