@@ -1,8 +1,10 @@
 # Changelog
 
-## [0.3.0.1] Unreleased
-### Added
+## [0.4.0.0] 2022-10-08
+* Support building on GHC 9.0, 9.2 and 9.4 (thanks to Phil de Joux and Sam Derbyshire)
+* Drop support for all previous versions of GHC
 * Doctest the tutorial
+* Various bug fixes and minor tweaks
 
 ## [0.3.0.0] 2018-07-13
 ### Added
