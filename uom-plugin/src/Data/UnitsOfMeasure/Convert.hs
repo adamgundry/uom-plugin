@@ -128,6 +128,7 @@ type family AllIsCanonical xs where
 conversionRatio :: forall proxy u . Good u
                => proxy u -> Quantity Rational (u /: ToCBU (Unpack u))
 conversionRatio _ = help (unitSing :: SUnit (Unpack u))
+{-# INLINABLE conversionRatio #-}
 
 help :: forall u . HasCanonical u => SUnit u -> Quantity Rational (Pack u /: ToCBU u)
 help (SUnit xs ys) = help' xs /: help' ys
@@ -152,6 +153,7 @@ type ToCanonicalUnit u = ToCBU (Unpack u)
 -- are @v@, provided @u@ and @v@ have the same dimension.
 convert :: forall a u v . (Fractional a, Convertible u v) => Quantity a u -> Quantity a v
 convert = (ratio (undefined :: proxy' (proxy v)) (undefined :: proxy' (proxy u)) *:)
+{-# INLINABLE convert #-}
 
 -- | Calculate the conversion ratio between two units with the same
 -- dimension.  The slightly unusual proxy arguments allow this to be
@@ -161,3 +163,4 @@ ratio :: forall a u v (proxy :: Unit -> Type) proxy' .
          (Fractional a, Convertible u v)
       => proxy' (proxy u) -> proxy' (proxy v) -> Quantity a (u /: v)
 ratio _ _ = fromRational' $ conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)
+{-# INLINABLE ratio #-}
