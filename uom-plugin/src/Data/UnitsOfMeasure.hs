@@ -54,8 +54,10 @@ module Data.UnitsOfMeasure
 
       -- * Automatic unit conversions
     , convert
+    , integralConvert
 
       -- * Pay no attention to that man behind the curtain
+    , type (~~)
     , Pack
     , Unpack
     , KnownUnit
