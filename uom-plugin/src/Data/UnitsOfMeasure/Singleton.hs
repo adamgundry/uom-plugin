@@ -23,8 +23,10 @@ module Data.UnitsOfMeasure.Singleton
     , KnownBaseUnit(..)
 
     , SUnit(..)
-    , KnownUnit(..)
+    , KnownUnit
+    , KnownUnitSyntax(..)
     , forgetSUnit
+    , unitSing
     , unitVal
     , testEquivalentSUnit
 
@@ -167,11 +169,13 @@ forgetSList (SCons (SBaseUnit @x) xs) = baseUnitName @x : forgetSList xs
 
 -- | A constraint @'KnownUnit' u@ means that @u@ must be a concrete
 -- unit that is statically known but passed at runtime
-class KnownUnit (u :: UnitSyntax BaseUnit) where
-  unitSing :: SUnit u
+type KnownUnit u = (u ~ Pack (Unpack u), KnownUnitSyntax (Unpack u))
 
-instance (KnownList xs, KnownList ys) => KnownUnit (xs :/ ys) where
-  unitSing = SUnit listSing listSing
+class KnownUnitSyntax (u :: UnitSyntax BaseUnit) where
+  unitSyntaxSing :: SUnit u
+
+instance (KnownList xs, KnownList ys) => KnownUnitSyntax (xs :/ ys) where
+  unitSyntaxSing = SUnit listSing listSing
 
 
 -- | A constraint @'KnownList' xs@ means that @xs@ must be a list of
@@ -186,6 +190,9 @@ instance (KnownBaseUnit x, KnownList xs) => KnownList (x ': xs) where
   listSing = SCons SBaseUnit listSing
 
 
+unitSing :: forall u . KnownUnit u => SUnit (Unpack u)
+unitSing = unitSyntaxSing @(Unpack u)
+
 -- | Extract the runtime syntactic representation of a 'KnownUnit'
-unitVal :: forall proxy u . KnownUnit u => proxy u -> UnitSyntax String
-unitVal _ = forgetSUnit (unitSing :: SUnit u)
+unitVal :: forall u . KnownUnit u => UnitSyntax String
+unitVal = forgetSUnit (unitSing @u)

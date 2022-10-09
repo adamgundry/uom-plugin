@@ -73,7 +73,7 @@ module Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import Data.Kind (Type, Constraint)
+import Data.Kind (Constraint)
 
 
 -- | Class to capture the dimensions to which base units belong.  For
@@ -127,9 +127,8 @@ type family AllIsCanonical xs where
   AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ x, AllIsCanonical xs)
 
 
-conversionRatio :: forall proxy u . Good u
-               => proxy u -> Quantity Rational (u /: ToCBU (Unpack u))
-conversionRatio _ = help (unitSing :: SUnit (Unpack u))
+conversionRatio :: forall u . Good u => Quantity Rational (u /: ToCanonicalUnit u)
+conversionRatio = help (unitSing @u)
 {-# INLINABLE conversionRatio #-}
 
 help :: forall u . HasCanonical u => SUnit u -> Quantity Rational (Pack u /: ToCBU u)
@@ -142,7 +141,7 @@ help' (SCons (_ :: SBaseUnit x) xs) = conversionBase @x *: help' xs
 
 -- | A unit is "good" if all its base units have been defined, and
 -- have associated canonical base units.
-type Good            u = (u ~ Pack (Unpack u), KnownUnit (Unpack u), HasCanonical (Unpack u))
+type Good            u = (KnownUnit u, HasCanonical (Unpack u))
 
 -- | Two units are convertible if they are both 'Good' and they have
 -- the same canonical units (and hence the same dimension).
@@ -153,16 +152,13 @@ type ToCanonicalUnit u = ToCBU (Unpack u)
 
 -- | Automatically convert a quantity with units @u@ so that its units
 -- are @v@, provided @u@ and @v@ have the same dimension.
-convert :: forall a u v . (Fractional a, Convertible u v) => Quantity a u -> Quantity a v
-convert = (ratio (undefined :: proxy' (proxy v)) (undefined :: proxy' (proxy u)) *:)
+convert :: forall u v a . (Convertible u v, Fractional a) => Quantity a u -> Quantity a v
+convert = (ratio @v @u *:)
 {-# INLINABLE convert #-}
 
--- | Calculate the conversion ratio between two units with the same
--- dimension.  The slightly unusual proxy arguments allow this to be
--- called using quasiquoters to specify the units, for example
--- @'ratio' [u| ft |] [u| m |]@.
-ratio :: forall a u v (proxy :: Unit -> Type) proxy' .
-         (Fractional a, Convertible u v)
-      => proxy' (proxy u) -> proxy' (proxy v) -> Quantity a (u /: v)
-ratio _ _ = fromRational' $ conversionRatio (undefined :: proxy u) /: conversionRatio (undefined :: proxy v)
+-- | Calculate the conversion ratio between two units with the same dimension.
+-- This should be called using type applications to specify the units, for
+-- example @'ratio' @[u| ft |] @[u| m |]@.
+ratio :: forall u v a . (Convertible u v, Fractional a) => Quantity a (u /: v)
+ratio = fromRational' $ conversionRatio @u /: conversionRatio @v
 {-# INLINABLE ratio #-}

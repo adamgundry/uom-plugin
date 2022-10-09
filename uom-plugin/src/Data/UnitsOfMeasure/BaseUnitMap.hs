@@ -16,7 +16,6 @@ module Data.UnitsOfMeasure.BaseUnitMap
 
 import qualified Data.Map.Strict as Map
 
-import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
 -- | An existential wrapper type: @'Some' p@ is essentially @exists x . p x@.

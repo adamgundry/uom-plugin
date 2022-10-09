@@ -301,7 +301,7 @@ tests = testGroup "uom-plugin"
   , testGroup "convert"
     [ testCase "10m in ft"     $ convert [u| 10m |]   @?= [u| 32.8 ft |]
     , testCase "5 km^2 in m^2" $ convert [u| 5km^2 |] @?= [u| 5000000 m m |]
-    , testCase "ratio"         $ show (ratio [u| ft |] [u| m |]) @?= "[u| 3.28 ft / m |]"
+    , testCase "ratio"         $ show (ratio @[u| ft |] @[u| m |]) @?= "[u| 3.28 ft / m |]"
     , testCase "100l in m^3"   $ convert [u| 100l |]   @?= [u| 0.1 m^3 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
