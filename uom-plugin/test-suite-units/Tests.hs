@@ -15,6 +15,7 @@
 
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Main
     ( main
@@ -197,6 +198,12 @@ _pack_to_unpack :: f (Pack (Unpack a)) -> f a
 _pack_to_unpack = id
 
 
+-- Test that integralConvert can infer its result type
+ten_km_in_m  = integralConvert (10 *: km)
+ten_km_in_m' = integralConvert [u| 10 km |]
+
+
+
 -- Runtime testsuite
 
 main :: IO ()
@@ -323,6 +330,7 @@ tests = testGroup "uom-plugin"
     [ testCase "3km in m" $ integralConvert [u| 3 km |] @?= [u| 3000 m |]
     , testCase "3km^2 in m^2" $ integralConvert [u| 3 km^2 |] @?= [u| 3000000 m^2 |]
     , testCase "24h in s" $ integralConvert [u| 24 h |] @?= [u| 86400 s |]
+    , testCase "10km in m"  $ ten_km_in_m @?= ten_km_in_m'
     ]
   , Z.tests
   , testGroup "errors"

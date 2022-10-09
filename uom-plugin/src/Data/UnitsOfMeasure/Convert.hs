@@ -143,8 +143,11 @@ help' :: forall a xs . (AllHasCanonical a xs, Num a) => SList xs -> Quantity a (
 help' SNil = 1
 help' (SCons (_ :: SBaseUnit x) xs) = conversionBase @x *: help' xs
 
-help2 :: forall a u xs . (u ~ xs :/ '[], HasCanonical a u, Num a) => SUnit u -> Quantity a (ToCBU u /: Pack u)
+help2 :: forall a u . (NoInverseUnits u, HasCanonical a u, Num a) => SUnit u -> Quantity a (ToCBU u /: Pack u)
 help2 (SUnit xs SNil) = help' xs
+
+type family NoInverseUnits (u :: UnitSyntax b) :: Constraint where
+  NoInverseUnits (_ :/ ys) = (ys ~ '[])
 
 
 
@@ -181,13 +184,13 @@ ratio = conversionRatio @v /: conversionRatio @u
 -- >>> integralConvert @Integer [u| 3 km |]
 -- [u| 3000 m |]
 --
-integralConvert :: forall a u v xs . (Convertible a u v, Num a, Unpack u ~ xs :/ '[], v ~ ToCanonicalUnit v) => Quantity a u -> Quantity a v
+integralConvert :: forall a u v . (Convertible a u v, Num a, NoInverseUnits (Unpack u), v ~ ToCanonicalUnit v) => Quantity a u -> Quantity a v
 integralConvert = (integralRatio @a @u @v *:)
 {-# INLINABLE integralConvert #-}
 
 -- | Calculate the conversion ratio between two units with the same dimension.
 -- This should be called using type applications to specify the units, for
 -- example @'ratio' @[u| ft |] @[u| m |]@.
-integralRatio :: forall a u v xs . (Convertible a u v, Num a, Unpack u ~ xs :/ '[], v ~ ToCanonicalUnit v) => Quantity a (v /: u)
+integralRatio :: forall a u v . (Convertible a u v, Num a, NoInverseUnits (Unpack u), v ~ ToCanonicalUnit v) => Quantity a (v /: u)
 integralRatio = help2 @a @(Unpack u) (unitSing @u)
 {-# INLINABLE integralRatio #-}
