@@ -144,15 +144,21 @@ declareUnit :: String -> UnitDecl -> Q [Dec]
 declareUnit s ud = do
     unitType <- [t| Unit |]
     let con = conT (toUnitName s)
+    let val = toUnitValueName s
     sequence $ case ud of
         BaseUnit ->
             [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
             , instanceD (pure []) [t| HasCanonicalBaseUnit $con |] []
             , instanceD (pure []) [t| KnownBaseUnit $con |]
                 [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]
+            , sigD val [t| forall a . Num a => Quantity a $con |]
+            , valD (varP val) (normalB [e| MkQuantity 1 |]) []
             ]
         DefinedUnit u ->
-            [ tySynD (toUnitName s) [] (unitExpToType u) ]
+            [ tySynD (toUnitName s) [] (unitExpToType u)
+            , sigD val [t| forall a . Num a => Quantity a $con |]
+            , valD (varP val) (normalB [e| MkQuantity 1 |]) []
+            ]
         ConversionUnit _ (Unit Nothing s')
             | s == s' -> [ do reportError ("cannot define cyclic convertible unit: " ++ s)
                               dataD (pure []) (toUnitName s) [] (Just unitType) [] []  ]
@@ -165,10 +171,28 @@ declareUnit s ud = do
                   ]
             , instanceD (pure []) [t| KnownBaseUnit $con |]
                   [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]
+            , sigD val [t| forall a . Num a => Quantity a $con |]
+            , valD (varP val) (normalB [e| MkQuantity 1 |]) []
             ]
 
+-- | Convert a unit name into a type constructor name.
 toUnitName :: String -> Name
 toUnitName s = mkName $ "U_" ++ s
+
+-- | Convert a unit name into a value-level name.
+toUnitValueName :: String -> Name
+toUnitValueName = mkName . mangleUnitValueName
+
+-- | Transform the name of a unit so it is suitable for use as a value-level
+-- binding. In particular we need to prefix unit names with an underscore if
+-- they start with a capital letter or form a keyword.
+mangleUnitValueName :: String -> String
+mangleUnitValueName ss@(s:_)
+  | isUpper s || ss `elem` keywords  = '_':ss
+mangleUnitValueName s = s
+
+keywords :: [String]
+keywords = [ "case", "class", "data", "default", "deriving", "do", "else", "foreign", "if", "import", "in", "infix", "infixl", "infixr", "instance", "let", "module", "newtype", "of", "then", "type", "where" ]
 
 unitExpToType :: UnitExp () String -> Q Type
 unitExpToType Unity = [t| One |]

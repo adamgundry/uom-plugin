@@ -30,7 +30,7 @@ module Main
     , inverse
     , inverse2
     , f
-    , g
+    , wurble
     , givens
     , givens2
     , givens3
@@ -39,6 +39,7 @@ module Main
     , patternSplice
     , pow
     , dimensionless
+    , from_dimensionless
     ) where
 
 import Data.UnitsOfMeasure
@@ -136,8 +137,8 @@ f :: (One /: (w ^: 2)) ~ (One /: [u| kg^2 |])  => Quantity a w -> Quantity a [u|
 f = id
 
 -- u ~ v * w, v^2 ~ v  =>  u ~ w
-g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
-g = id
+wurble :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
+wurble = id
 
 -- a*a ~ 1  =>  a ~ 1
 givens :: ((a *: a) ~ One) => Quantity Double a -> Quantity Double One
@@ -173,9 +174,9 @@ tricky
     => Quantity a u
     -> (Quantity a (u *: U_m), Quantity a (u *: U_kg))
 tricky x =
-    let h :: Quantity a v -> Quantity a (u *: v)
-        h = (x *:)
-    in (h [u| 3 m |], h [u| 5 kg |])
+    let k :: Quantity a v -> Quantity a (u *: v)
+        k = (x *:)
+    in (k [u| 3 m |], k [u| 5 kg |])
 
 
 -- Test that basic constraints involving exponentiation work
@@ -185,8 +186,8 @@ pow = id
 
 -- This declares a synonym for One
 [u| dimensionless = 1 |]
-dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
-dimensionless = id
+from_dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
+from_dimensionless = id
 
 
 -- Runtime testsuite

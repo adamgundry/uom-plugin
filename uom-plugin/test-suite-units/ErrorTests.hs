@@ -125,22 +125,22 @@ opErrors :: String -> String -> String -> [[String]]
 opErrors a b c = matchErrors a b c "One" ++ matchErrors a b c "U_m"
 
 matchErrors :: String -> String -> String -> String -> [[String]]
-matchErrors a b c d =
+matchErrors a b c d_ =
 #if __GLASGOW_HASKELL__ >= 900
   [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
-    , "Actual: Quantity " ++ c ++ " " ++ d
+    , "Actual: Quantity " ++ c ++ " " ++ d_
     ]
   , [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
-    , "Expected: Quantity " ++ c ++ " " ++ d
+    , "Expected: Quantity " ++ c ++ " " ++ d_
     ]
   , [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
-    , "Expected: Quantity " ++ c ++ " " ++ d
+    , "Expected: Quantity " ++ c ++ " " ++ d_
     ]
   , [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
-    , "Actual: Quantity " ++ c ++ " " ++ d
+    , "Actual: Quantity " ++ c ++ " " ++ d_
     ]
   , [ "Couldn't match type: " ++ a, "with: " ++ b
-    , "Actual: Quantity " ++ c ++ " " ++ d
+    , "Actual: Quantity " ++ c ++ " " ++ d_
     ]
   ]
 #else

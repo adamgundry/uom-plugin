@@ -23,8 +23,8 @@ declareConvertibleUnit "squiggle" 2 "m/s"
 
 -- This declares a dimensionless unit that requires explicit conversion.
 [u| dime = 1 1 |]
-dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
-dime = convert
+from_dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
+from_dime = convert
 
 
 try :: Quantity Double [u| ft^3 m^3 |]
