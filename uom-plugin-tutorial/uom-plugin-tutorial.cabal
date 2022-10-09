@@ -1,6 +1,6 @@
 cabal-version: 1.12
 name:           uom-plugin-tutorial
-version:        0.4.0.0
+version:        0.5.0.0
 synopsis:       A tutorial for the Units of measure typechecker plugin
 description:    A tutorial for the units of measure typechecker plugin, checked with doctest.
 category:       Type System

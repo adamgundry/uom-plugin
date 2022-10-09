@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0.0] Not yet released
+* Significant API redesign to use data types as units, rather than Symbols
+* Drop proxy arguments from various functions
+
 ## [0.4.0.0] 2022-10-08
 * Support building on GHC 9.0, 9.2 and 9.4 (thanks to Phil de Joux and Sam Derbyshire)
 * Drop support for all previous versions of GHC
