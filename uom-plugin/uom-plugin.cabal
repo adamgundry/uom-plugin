@@ -2,10 +2,9 @@ cabal-version: 1.12
 
 name:           uom-plugin
 version:        0.4.0.0
-synopsis:       Units of measure as a GHC typechecker plugin
-description:    The @uom-plugin@ library adds support for units of measure to GHC
-                using the new experimental facility for typechecker plugins, which
-                is available in GHC 7.10 and later.  See
+synopsis:       Units of measure as a GHC type-checker plugin
+description:    The @uom-plugin@ library adds support for units of
+                measure as a GHC type-checker plugin. See
                 "Data.UnitsOfMeasure.Tutorial" for an introduction to the library.
 category:       Type System
 stability:      experimental
@@ -13,7 +12,7 @@ homepage:       https://github.com/adamgundry/uom-plugin#readme
 bug-reports:    https://github.com/adamgundry/uom-plugin/issues
 author:         Adam Gundry <adam@well-typed.com>
 maintainer:     Adam Gundry <adam@well-typed.com>
-copyright:      Copyright (c) 2022, Adam Gundry
+copyright:      Copyright (c) 2014-2022, Adam Gundry
 license:        BSD3
 license-file:   LICENSE
 tested-with:    GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
@@ -51,12 +50,12 @@ library
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors
   build-depends:
       base >=4.9.1.0 && <5
-    , containers >=0.5
+    , containers >=0.5 && <0.7
     , deepseq >=1.3 && <1.5
     , ghc >=9.0.1 && <9.5
     , ghc-tcplugin-api >=0.8.3.0 && <0.9
-    , template-haskell >=2.9
-    , units-parser >=0.1
+    , template-haskell >=2.9 && <2.20
+    , units-parser >=0.1 && <0.2
   default-language: Haskell2010
 
 test-suite doctest

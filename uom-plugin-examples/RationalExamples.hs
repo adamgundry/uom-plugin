@@ -50,10 +50,7 @@ lngMinuteInNMRational = convert $ toRational' lngMinute
 
 -- A second of longitude at the equator as a distance.
 lngSecond :: Quantity Double [u| m |]
-lngSecond =
-    let k = 1 / 60 :: Quantity Double [u| 1 |]
-        s = k *: lngMinute
-    in convert s
+lngSecond = convert $ (1 / 60) *: lngMinute
 
 lngSecondInFeet:: Quantity Double [u| ft |]
 lngSecondInFeet = convert lngSecond
