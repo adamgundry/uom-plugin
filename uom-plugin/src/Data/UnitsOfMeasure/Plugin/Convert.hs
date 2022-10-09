@@ -28,6 +28,7 @@ data UnitDefs = UnitDefs
     , divTyCon                  :: TyCon -- ^ The '(/:)' type family
     , expTyCon                  :: TyCon -- ^ The '(^:)' type family
     , unpackTyCon               :: TyCon -- ^ The 'Unpack' type family
+    , packTyCon                 :: TyCon -- ^ The 'Pack' type family
     , unitSyntaxTyCon           :: TyCon -- ^ The 'UnitSyntax' type constructor, to be promoted to a kind
     , unitSyntaxPromotedDataCon :: TyCon -- ^ The data constructor of 'UnitSyntax', promoted to a type constructor
     , equivTyCon                :: TyCon -- ^ The '(~~)' type family

@@ -192,6 +192,11 @@ from_dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
 from_dimensionless = id
 
 
+-- Test that Pack reduces when applied to Unpack of a variable
+_pack_to_unpack :: f (Pack (Unpack a)) -> f a
+_pack_to_unpack = id
+
+
 -- Runtime testsuite
 
 main :: IO ()

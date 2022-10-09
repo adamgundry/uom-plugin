@@ -172,7 +172,11 @@ unitsOfMeasureRewrite
     PluginAPI.UniqFM
         TyCon
         ([Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult)
-unitsOfMeasureRewrite uds = PluginAPI.listToUFM [(unpackTyCon uds, unpackRewriter uds)]
+unitsOfMeasureRewrite uds =
+    PluginAPI.listToUFM
+        [ (unpackTyCon uds, unpackRewriter uds)
+        , (packTyCon uds, packRewriter uds)
+        ]
 
 unpackRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult
 unpackRewriter uds _givens [ty] = do
@@ -187,6 +191,24 @@ unpackRewriter _ _ tys = do
     PluginAPI.tcPluginTrace "[UOM] unpackRewriter: wrong number of arguments?" (ppr tys)
     pure PluginAPI.TcPluginNoRewrite
 
+
+-- | We can rewrite occurrences of @Pack (Unpack a)@ to @a@, even if it is not
+-- ground.  The reverse direction is not sound because @Unpack (Pack u)@ has the
+-- effect of sorting/normalising the unit.
+packRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM Rewrite TcPluginRewriteResult
+packRewriter uds _givens [ty]
+  | Just (tc, [a]) <- splitTyConApp_maybe ty
+  , tc == unpackTyCon uds
+  = do PluginAPI.tcPluginTrace "[UOM] packRewriter: rewrite" (ppr ty <+> ppr a)
+       pure $ let reduct = a
+              in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (packTyCon uds) [ty]) reduct
+                 in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
+  | otherwise = do
+    PluginAPI.tcPluginTrace "[UOM] packRewriter: no rewrite" (ppr ty)
+    pure PluginAPI.TcPluginNoRewrite
+packRewriter _ _ tys = do
+    PluginAPI.tcPluginTrace "[UOM] packRewriter: wrong number of arguments?" (ppr tys)
+    pure PluginAPI.TcPluginNoRewrite
 
 -- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
 -- bogus evidence of type @t1 ~ t2@.

@@ -22,6 +22,7 @@ lookupUnitDefs = do
     divTyCon                  <- lookTyCon md "/:"
     expTyCon                  <- lookTyCon md "^:"
     unpackTyCon               <- lookTyCon md "Unpack"
+    packTyCon                 <- lookTyCon md "Pack"
     unitSyntaxTyCon           <- lookTyCon md "UnitSyntax"
     equivTyCon                <- lookTyCon md "~~"
     unitSyntaxPromotedDataCon <- findDataCon unitSyntaxTyCon ":/"
