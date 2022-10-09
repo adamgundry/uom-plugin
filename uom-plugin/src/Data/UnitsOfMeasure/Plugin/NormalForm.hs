@@ -156,7 +156,6 @@ maybeConstant = mapM getBase . Map.toList . _NormUnit
 isBaseUnitType :: Type -> Maybe BaseUnit
 isBaseUnitType ty = case splitTyConApp_maybe ty of
                       Just (tc, []) | isAlgTyCon tc -> Just tc
---                      Just (base_fam, [s]) | Just{} <- isStrLitTy s -> Just s -- TODO: check
                       _ -> Nothing
 
 -- | Test whether an atom is a base unit (but not necessarily a
