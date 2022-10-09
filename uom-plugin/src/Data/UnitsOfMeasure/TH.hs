@@ -219,9 +219,10 @@ unitExpToType (Div u v) = [t| $(unitExpToType u) /: $(unitExpToType v) |]
 unitExpToType (Pow u n)
   | n >= 0    = [t| $(unitExpToType u) ^: $(natToType n) |]
   | otherwise = [t| One /: ($(unitExpToType u) ^: $(natToType (abs n))) |]
-
-natToType :: Integer -> Q Type -- TODO Natural
-natToType = litT . numTyLit
+  where
+    -- The integer is always positive, because of the guard
+    natToType :: Integer -> Q Type
+    natToType = litT . numTyLit
 
 
 -- | Declare a canonical base unit of the given name, which must not
