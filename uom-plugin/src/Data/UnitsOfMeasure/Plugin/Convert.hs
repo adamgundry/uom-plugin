@@ -66,13 +66,17 @@ normaliseUnit _ _ = Nothing
 -- | Convert a unit normal form to a type expression of kind 'Unit'
 reifyUnit :: UnitDefs -> NormUnit -> Type
 reifyUnit uds u | null xs && null ys = oneTy
-                | null ys            = foldr1 times xs
-                | null xs            = oneTy `divide` foldr1 times ys
-                | otherwise          = foldr1 times xs `divide` foldr1 times ys
+                | null ys            = prod xs
+                | null xs            = oneTy `divide` prod ys
+                | otherwise          = prod xs `divide` prod ys
   where
     (pos, neg) = partition ((> 0) . snd) $ ascending u
     xs = map fromAtom            pos
     ys = map (fromAtom . fmap negate) neg
+
+    prod [z]           = z
+    prod (z:zs@(_:_))  = z `times` prod zs
+    prod []            = oneTy
 
     oneTy      = mkTyConApp (unitOneTyCon uds) []
     times  x y = mkTyConApp (mulTyCon uds) [x, y]
