@@ -77,6 +77,19 @@ instance TestEquality SList where
     , Just Refl <- testEquality xs ys = Just Refl
   testEquality _ _ = Nothing
 
+
+-- TODO TODO: testEquivalentSUnit relies on the assumption of distinct unit
+-- strings, which is not safe in general.  Instead we should make the plugin
+-- sort the types by fingerprint (replacing the dodgy use of cmpTyCon etc), like
+-- in mkTyConRepTyConRHS. Then we can have the term-level code implement the
+-- following function by sorting based on Typeable fingerprints:
+--
+-- normaliseSUnit :: SUnit u -> SUnit (Unpack (Pack u))
+--
+-- It should be possible to observe this by making two unit types with the same
+-- name in different modules; testEquivalentSUnit and hence the parser should
+-- return an invalid proof that these types are equal.
+
 -- | Test whether two 'SUnit's represent the same units, up to the
 -- equivalence relation.  TODO: this currently uses 'unsafeCoerce',
 -- but in principle it should be possible to avoid it.
