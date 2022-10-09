@@ -15,11 +15,13 @@ module Data.UnitsOfMeasure.TH
     ) where
 
 import Data.Char
+import Data.Ratio
 import Numeric
 import Text.Parse.Units
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
+import Language.Haskell.TH.Syntax
 
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Convert
@@ -148,7 +150,9 @@ declareUnit s ud = do
     sequence $ case ud of
         BaseUnit ->
             [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
-            , instanceD (pure []) [t| HasCanonicalBaseUnit $con |] []
+            , instanceD (pure []) [t| HasCanonicalBaseUnit $con |]
+                [ do a <- varT <$> newName "a"
+                     tySynInstD (tySynEqn Nothing [t| ConversionRatioConstraints $con $a |] [t| Num $a|]) ]
             , instanceD (pure []) [t| KnownBaseUnit $con |]
                 [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]
             , sigD val [t| forall a . Num a => Quantity a $con |]
@@ -167,7 +171,11 @@ declareUnit s ud = do
             , instanceD (pure []) [t| HasCanonicalBaseUnit $con |]
                   [ tySynInstD (tySynEqn Nothing [t| CanonicalBaseUnit $con |] (unitExpToType u)
                                )
-                  , valD (varP 'conversionBase) (normalB [e| MkQuantity (1/r) |]) []
+                  , valD (varP 'conversionBase) (normalB
+                            (if denominator r == 1 then [e| MkQuantity $(lift (numerator r)) |] else [e| MkQuantity r |])) []
+                  , do a <- varT <$> newName "a"
+                       tySynInstD (tySynEqn Nothing [t| ConversionRatioConstraints $con $a |]
+                                    (if denominator r == 1 then [t| Num $a |] else [t| Fractional $a|]))
                   ]
             , instanceD (pure []) [t| KnownBaseUnit $con |]
                   [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]

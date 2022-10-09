@@ -61,6 +61,8 @@
 module Data.UnitsOfMeasure.Convert
     ( convert
     , ratio
+    , integralConvert
+    , integralRatio
     , HasCanonicalBaseUnit(..)
       -- * Constraints
     , Good
@@ -73,7 +75,7 @@ module Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
-import Data.Kind (Constraint)
+import Data.Kind (Constraint, Type)
 
 
 -- | Class to capture the dimensions to which base units belong.  For
@@ -86,10 +88,13 @@ class IsCanonical (Unpack (CanonicalBaseUnit b))
   type CanonicalBaseUnit b :: Unit
   type CanonicalBaseUnit b = b
 
+  type ConversionRatioConstraints b a :: Constraint
+  type ConversionRatioConstraints b a = Fractional a
+
   -- | The conversion ratio between this base unit and its canonical
   -- base unit.  If @b@ is canonical then this ratio is @1@.
-  conversionBase :: Quantity Rational (b /: CanonicalBaseUnit b)
-  default conversionBase :: (b ~ CanonicalBaseUnit b) => Quantity Rational (b /: CanonicalBaseUnit b)
+  conversionBase :: ConversionRatioConstraints b a => Quantity a (CanonicalBaseUnit b /: b)
+  default conversionBase :: (Num a, b ~ CanonicalBaseUnit b) => Quantity a (CanonicalBaseUnit b /: b)
   conversionBase = 1
 
 -- | Convert a unit into its canonical representation, where units are
@@ -106,14 +111,14 @@ type family ListToCBU xs where
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit have associated canonical
 -- representations.
-type HasCanonical :: UnitSyntax BaseUnit -> Constraint
-type family HasCanonical u where
-  HasCanonical (xs :/ ys) = (AllHasCanonical xs, AllHasCanonical ys)
+type HasCanonical :: Type -> UnitSyntax BaseUnit -> Constraint
+type family HasCanonical r u where
+  HasCanonical r (xs :/ ys) = (AllHasCanonical r xs, AllHasCanonical r ys)
 
-type AllHasCanonical :: [BaseUnit] -> Constraint
-type family AllHasCanonical xs where
-  AllHasCanonical '[] = ()
-  AllHasCanonical (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical xs)
+type AllHasCanonical :: Type -> [BaseUnit] -> Constraint
+type family AllHasCanonical r xs where
+  AllHasCanonical _ '[] = ()
+  AllHasCanonical r (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical r xs, ConversionRatioConstraints x r)
 
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit are in their canonical form.
@@ -127,38 +132,62 @@ type family AllIsCanonical xs where
   AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ x, AllIsCanonical xs)
 
 
-conversionRatio :: forall u . Good u => Quantity Rational (u /: ToCanonicalUnit u)
+conversionRatio :: forall u a . (Good a u, Fractional a) => Quantity a (ToCanonicalUnit u /: u)
 conversionRatio = help (unitSing @u)
 {-# INLINABLE conversionRatio #-}
 
-help :: forall u . HasCanonical u => SUnit u -> Quantity Rational (Pack u /: ToCBU u)
+help :: forall a u . (HasCanonical a u, Fractional a) => SUnit u -> Quantity a (ToCBU u /: Pack u)
 help (SUnit xs ys) = help' xs /: help' ys
 
-help' :: forall xs . AllHasCanonical xs => SList xs -> Quantity Rational (Prod xs /: ListToCBU xs)
+help' :: forall a xs . (AllHasCanonical a xs, Num a) => SList xs -> Quantity a (ListToCBU xs /: Prod xs)
 help' SNil = 1
 help' (SCons (_ :: SBaseUnit x) xs) = conversionBase @x *: help' xs
+
+help2 :: forall a u xs . (u ~ xs :/ '[], HasCanonical a u, Num a) => SUnit u -> Quantity a (ToCBU u /: Pack u)
+help2 (SUnit xs SNil) = help' xs
+
 
 
 -- | A unit is "good" if all its base units have been defined, and
 -- have associated canonical base units.
-type Good            u = (KnownUnit u, HasCanonical (Unpack u))
+type Good r u = (KnownUnit u, HasCanonical r (Unpack u))
 
 -- | Two units are convertible if they are both 'Good' and they have
 -- the same canonical units (and hence the same dimension).
-type Convertible   u v = (Good u, Good v, ToCanonicalUnit u ~ ToCanonicalUnit v)
+type Convertible r u v = (Good r u, Good r v, ToCanonicalUnit u ~ ToCanonicalUnit v)
 
 -- | Converts a unit to the corresponding canonical representation.
 type ToCanonicalUnit u = ToCBU (Unpack u)
 
 -- | Automatically convert a quantity with units @u@ so that its units
 -- are @v@, provided @u@ and @v@ have the same dimension.
-convert :: forall u v a . (Convertible u v, Fractional a) => Quantity a u -> Quantity a v
-convert = (ratio @v @u *:)
+convert :: forall a u v . (Convertible a u v, Fractional a) => Quantity a u -> Quantity a v
+convert = (ratio @a @v @u *:)
 {-# INLINABLE convert #-}
 
 -- | Calculate the conversion ratio between two units with the same dimension.
 -- This should be called using type applications to specify the units, for
 -- example @'ratio' @[u| ft |] @[u| m |]@.
-ratio :: forall u v a . (Convertible u v, Fractional a) => Quantity a (u /: v)
-ratio = fromRational' $ conversionRatio @u /: conversionRatio @v
+ratio :: forall a u v . (Convertible a u v, Fractional a) => Quantity a (u /: v)
+ratio = conversionRatio @v /: conversionRatio @u
 {-# INLINABLE ratio #-}
+
+
+-- | Automatically convert a quantity with units @u@ so that its units are @v@,
+-- provided @v@ is the canonical base unit for @u@ and the conversion ratios are
+-- all integral.  Note that @v@ is uniquely determined from @u@ so it is not
+-- necessary to annotate the result type.
+--
+-- >>> integralConvert @Integer [u| 3 km |]
+-- [u| 3000 m |]
+--
+integralConvert :: forall a u v xs . (Convertible a u v, Num a, Unpack u ~ xs :/ '[], v ~ ToCanonicalUnit v) => Quantity a u -> Quantity a v
+integralConvert = (integralRatio @a @u @v *:)
+{-# INLINABLE integralConvert #-}
+
+-- | Calculate the conversion ratio between two units with the same dimension.
+-- This should be called using type applications to specify the units, for
+-- example @'ratio' @[u| ft |] @[u| m |]@.
+integralRatio :: forall a u v xs . (Convertible a u v, Num a, Unpack u ~ xs :/ '[], v ~ ToCanonicalUnit v) => Quantity a (v /: u)
+integralRatio = help2 @a @(Unpack u) (unitSing @u)
+{-# INLINABLE integralRatio #-}

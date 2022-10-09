@@ -299,17 +299,23 @@ tests = testGroup "uom-plugin"
     , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m / s^2"
     ]
   , testGroup "convert"
-    [ testCase "10m in ft"     $ convert [u| 10m |]   @?= [u| 32.8 ft |]
-    , testCase "5 km^2 in m^2" $ convert [u| 5km^2 |] @?= [u| 5000000 m m |]
-    , testCase "ratio"         $ show (ratio @[u| ft |] @[u| m |]) @?= "[u| 3.28 ft / m |]"
+    [ testCase "10m in ft"     $ convert @Rational [u| 10m |]   @?= [u| 164 % 5 ft |]
+    , testCase "10m in ft"     $ convert @Double   [u| 10m |]   @?= [u| 32.800000000000004 ft |]
+    , testCase "5 km^2 in m^2" $ convert @Rational [u| 5km^2 |] @?= [u| 5000000 m m |]
+    , testCase "ratio"         $ show (ratio @Rational @[u| ft |] @[u| m |]) @?= "[u| 82 % 25 ft / m |]"
     , testCase "100l in m^3"   $ convert [u| 100l |]   @?= [u| 0.1 m^3 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
-    , testCase "5l in ft^3"    $ convert [u| 5l   |]   @?= [u| 0.17643776 ft^3 |]
-    , testCase "2000000l^2 in ft^3 m^3" $ convert [u| 2000000l^2 |] @?= [u| 70.575104 ft^3 m^3 |]
+    , testCase "5l in ft^3"    $ convert @Rational [u| 5l   |]   @?= [u| 0.17643776 ft^3 |]
+    , testCase "2000000l^2 in ft^3 m^3" $ convert @Rational [u| 2000000l^2 |] @?= [u| 70.575104 ft^3 m^3 |]
     , testCase "42 rad/s in s^-1" $ convert [u| 42 rad/s |] @?= [u| 42 s^-1 |]
     , testCase "2.4 l/h in m" $ convert [u| 2.4 l/ha |] @?= [u| 2.4e-7 m |]
     , testCase "1 m^4 in l m" $ convert [u| 1 m^4 |] @?= [u| 1000 l m |]
+    ]
+  , testGroup "integralConvert"
+    [ testCase "3km in m" $ integralConvert [u| 3 km |] @?= [u| 3000 m |]
+    , testCase "3km^2 in m^2" $ integralConvert [u| 3 km^2 |] @?= [u| 3000000 m^2 |]
+    , testCase "24h in s" $ integralConvert [u| 24 h |] @?= [u| 86400 s |]
     ]
   , Z.tests
   , testGroup "errors"
