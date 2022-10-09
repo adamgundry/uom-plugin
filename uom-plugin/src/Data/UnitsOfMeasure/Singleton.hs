@@ -36,6 +36,7 @@ module Data.UnitsOfMeasure.Singleton
     ) where
 
 import Data.List (foldl')
+import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Type.Equality
 import Data.Typeable
@@ -160,7 +161,7 @@ normaliseUnitSyntax (xs :/ ys) =
 
 -- | Extract the runtime syntactic representation from a singleton unit
 forgetSUnit :: SUnit u -> UnitSyntax String
-forgetSUnit (SUnit xs ys) = forgetSList xs :/ forgetSList ys
+forgetSUnit (SUnit xs ys) = List.sort (forgetSList xs) :/ List.sort (forgetSList ys)
 
 forgetSList :: SList xs -> [String]
 forgetSList SNil = []
