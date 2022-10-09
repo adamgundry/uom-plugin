@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -6,6 +7,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -26,15 +28,15 @@
 -- and hence between any two units that share a dimension (i.e. have
 -- the same canonical representation).
 --
--- For example, to declare @m@ as a canonical base unit, write:
+-- For example, to declare @U_m@ as a canonical base unit, write:
 --
--- > instance HasCanonicalBaseUnit "m"
+-- > instance HasCanonicalBaseUnit U_m
 --
 -- To declare @ft@ as a derived unit, write:
 --
--- > instance HasCanonicalBaseUnit "ft" where
--- >   type CanonicalBaseUnit "ft" = "m"
--- >   conversionBase _ = [u| 3.28 ft/m |]
+-- > instance HasCanonicalBaseUnit U_ft where
+-- >   type CanonicalBaseUnit U_ft = U_m
+-- >   conversionBase = [u| 3.28 ft/m |]
 --
 -- The above declarations can be written using the 'u' declaration
 -- quasiquoter as @['u'| m, ft = 1 % 3.28 ft/m |]@, or generated
@@ -86,9 +88,9 @@ class IsCanonical (Unpack (CanonicalBaseUnit b))
 
   -- | The conversion ratio between this base unit and its canonical
   -- base unit.  If @b@ is canonical then this ratio is @1@.
-  conversionBase :: proxy b -> Quantity Rational (b /: CanonicalBaseUnit b)
-  default conversionBase :: (b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (b /: CanonicalBaseUnit b)
-  conversionBase _ = 1
+  conversionBase :: Quantity Rational (b /: CanonicalBaseUnit b)
+  default conversionBase :: (b ~ CanonicalBaseUnit b) => Quantity Rational (b /: CanonicalBaseUnit b)
+  conversionBase = 1
 
 -- | Convert a unit into its canonical representation, where units are
 -- represented syntactically.
@@ -134,8 +136,8 @@ help :: forall u . HasCanonical u => SUnit u -> Quantity Rational (Pack u /: ToC
 help (SUnit xs ys) = help' xs /: help' ys
 
 help' :: forall xs . AllHasCanonical xs => SList xs -> Quantity Rational (Prod xs /: ListToCBU xs)
-help' SNil         = 1
-help' (SCons p xs) = conversionBase p *: help' xs
+help' SNil = 1
+help' (SCons (_ :: SBaseUnit x) xs) = conversionBase @x *: help' xs
 
 
 -- | A unit is "good" if all its base units have been defined, and

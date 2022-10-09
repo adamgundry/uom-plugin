@@ -139,31 +139,32 @@ parseUnitDecs = go
     go' _ _        = Nothing
 
 -- | Given a unit name and an optional definition, create an
--- appropriate instance of the 'MkUnit' type family.
+-- appropriate type and class instances.
 declareUnit :: String -> UnitDecl -> Q [Dec]
 declareUnit s ud = do
     unitType <- [t| Unit |]
+    let con = conT (toUnitName s)
     sequence $ case ud of
-        BaseUnit           -> [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
-                                   , instanceD (pure []) [t| HasCanonicalBaseUnit $(conT (toUnitName s)) |] []
-                                   , instanceD (pure []) [t| KnownBaseUnit $(conT (toUnitName s)) |]
-                                       [ valD (varP 'baseUnitName) (normalB (stringE s)) []
-                                       ]
-                                   ]
-        DefinedUnit u      -> [ tySynD (toUnitName s) [] (unitExpToType u) ]
-        ConversionUnit _ (Unit Nothing s') | s == s'
-                           -> [ do reportError ("cannot define cyclic convertible unit: " ++ s)
-                                   dataD (pure []) (toUnitName s) [] (Just unitType) [] []  ]
+        BaseUnit ->
+            [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
+            , instanceD (pure []) [t| HasCanonicalBaseUnit $con |] []
+            , instanceD (pure []) [t| KnownBaseUnit $con |]
+                [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]
+            ]
+        DefinedUnit u ->
+            [ tySynD (toUnitName s) [] (unitExpToType u) ]
+        ConversionUnit _ (Unit Nothing s')
+            | s == s' -> [ do reportError ("cannot define cyclic convertible unit: " ++ s)
+                              dataD (pure []) (toUnitName s) [] (Just unitType) [] []  ]
         ConversionUnit r u ->
             [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
-            , instanceD (pure []) [t| HasCanonicalBaseUnit $(conT (toUnitName s)) |]
-                     [ tySynInstD (tySynEqn Nothing [t| CanonicalBaseUnit $(conT (toUnitName s)) |] (unitExpToType u)
-                                  )
-                     , funD 'conversionBase [clause [ [p| _ |] ] (normalB [e| MkQuantity (1/r) |]) [] ]
-                     ]
-            , instanceD (pure []) [t| KnownBaseUnit $(conT (toUnitName s)) |]
-                                       [ valD (varP 'baseUnitName) (normalB (stringE s)) []
-                                       ]
+            , instanceD (pure []) [t| HasCanonicalBaseUnit $con |]
+                  [ tySynInstD (tySynEqn Nothing [t| CanonicalBaseUnit $con |] (unitExpToType u)
+                               )
+                  , valD (varP 'conversionBase) (normalB [e| MkQuantity (1/r) |]) []
+                  ]
+            , instanceD (pure []) [t| KnownBaseUnit $con |]
+                  [ valD (varP 'baseUnitName) (normalB (stringE s)) [] ]
             ]
 
 toUnitName :: String -> Name
@@ -221,7 +222,7 @@ declareDerivedUnit s d = case parseUnit universalSymbolTable d of
 -- > data U_kilobyte :: Unit
 -- > instance HasCanonicalBaseUnit U_kilobyte where
 -- >   type CanonicalBaseUnit U_kilobyte = U_byte
--- >   conversionBase _ = [u| 1 % 1024 kilobyte/byte |]
+-- >   conversionBase = [u| 1 % 1024 kilobyte/byte |]
 --
 -- This can also be written @['u'| kilobyte = 1024 byte |]@.
 -- See "Data.UnitsOfMeasure.Convert" for more information about conversions.
