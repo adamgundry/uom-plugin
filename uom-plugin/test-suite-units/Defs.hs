@@ -9,7 +9,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Defs where
 
