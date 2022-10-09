@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RoleAnnotations #-}
@@ -105,7 +107,8 @@ infixr 8 ^:
 
 -- | A @Quantity a u@ is represented identically to a value of
 -- underlying numeric type @a@, but with units @u@.
-newtype Quantity a (u :: Unit) = MkQuantity a
+newtype Quantity a (u :: Unit) where
+    MkQuantity :: forall (u :: Unit) a . a -> Quantity a u
   -- ^ Warning: the 'MkQuantity' constructor allows module invariants
   -- to be violated, so use it with caution!
 type role Quantity representational nominal

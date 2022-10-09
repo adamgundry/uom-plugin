@@ -2,6 +2,7 @@
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
@@ -63,13 +64,21 @@ u = QuasiQuoter
 uExp :: String -> Q Exp
 uExp s
   | Just (ei, s') <- readNumber s = mkLiteral ei =<< parseUnitQ s'
-  | otherwise                     = mkConversion =<< parseUnitQ s
+  | otherwise                     = mkQuantity =<< parseUnitQ s
   where
     mkLiteral (Left  0) Unity = [| zero |]
     mkLiteral (Right 0) Unity = [| MkQuantity 0.0 |]
-    mkLiteral ei        expr  = [| (MkQuantity :: a -> Quantity a $(reifyUnit expr))
-                                                                  $(litE (either integerL rationalL ei)) |]
-    mkConversion expr = [|  MkQuantity :: a -> Quantity a $(reifyUnit expr) |]
+    mkLiteral ei expr = [| $(mkQuantity expr) $(litE (either integerL rationalL ei)) |]
+
+-- | Generate a call to 'MkQuantity' with a fixed unit type.  This uses a type
+-- application if possible, but avoids imposing type applications on code that
+-- does not have it enabled.
+mkQuantity :: UnitExp () String -> Q Exp
+mkQuantity expr = do
+    has_type_applications <- isExtEnabled TypeApplications
+    if has_type_applications
+        then [| MkQuantity @($(reifyUnit expr)) |]
+        else [| MkQuantity :: a -> Quantity a $(reifyUnit expr) |]
 
 -- | Parse an integer or rational literal followed by a unit
 -- expression, and create a pattern match on @'Quantity' 'Integer' u@
