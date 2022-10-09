@@ -48,16 +48,18 @@ import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Defs
 import Data.UnitsOfMeasure.Read
 import Data.UnitsOfMeasure.Show
+import Data.UnitsOfMeasure.Singleton
 
 import Control.Monad (unless)
 import Control.Exception
 import Data.List
 import Data.Ratio ((%))
+import Data.Type.Equality ((:~:)(Refl))
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Defs ()
+import Defs (sSUnit)
 import ErrorTests
 import Z (z)
 import qualified Z (tests)
@@ -350,6 +352,12 @@ tests = testGroup "uom-plugin"
 
     , testCase "1 m /= 1 m/m^2" $
         (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
+    ]
+  , testGroup "testEquivalentSUnit"
+    [ testCase "s' == s'"  $ testEquivalentSUnit (unitSing @U_s) (unitSing @U_s) @?= Just Refl
+    , testCase "s' == s'"  $ testEquivalentSUnit sSUnit sSUnit @?= Just Refl
+    , testCase "s' == s" $ testEquivalentSUnit sSUnit (unitSing @U_s) @?= Nothing
+    , testCase "s == s'" $ testEquivalentSUnit (unitSing @U_s) sSUnit @?= Nothing
     ]
   ]
 

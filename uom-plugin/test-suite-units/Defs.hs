@@ -13,9 +13,11 @@
 module Defs where
 
 import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Defs
+import Data.UnitsOfMeasure.Defs hiding (U_s)
+import Data.UnitsOfMeasure.Singleton
 
 -- Declarations.
+declareBaseUnit "s"
 declareBaseUnit "byte"
 declareDerivedUnit "bps" "byte / s"
 declareConvertibleUnit "kilobyte" 1024 "byte"
@@ -49,3 +51,7 @@ thingy3 :: (x *: x ~ x *: x *: x) => proxy x -> F x -> F One
 thingy3 _ x = x
 
 -}
+
+
+sSUnit :: SUnit (Unpack U_s)
+sSUnit = unitSing

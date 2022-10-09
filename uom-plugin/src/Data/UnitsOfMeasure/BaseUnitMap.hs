@@ -18,11 +18,6 @@ import qualified Data.Map.Strict as Map
 
 import Data.UnitsOfMeasure.Singleton
 
--- | An existential wrapper type: @'Some' p@ is essentially @exists x . p x@.
-data Some p where
-  Some :: p x -> Some p
-
-
 -- | A map from base unit names to the corresponding types.
 newtype BaseUnitMap = MkBaseUnitMap (Map.Map String (Some SBaseUnit))
   deriving (Semigroup, Monoid)

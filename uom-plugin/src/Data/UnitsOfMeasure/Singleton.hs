@@ -30,6 +30,8 @@ module Data.UnitsOfMeasure.Singleton
     , unitVal
     , testEquivalentSUnit
 
+    , Some(..)
+
       -- * Singletons for lists
     , SList(..)
     , KnownList(..)
@@ -78,27 +80,27 @@ instance TestEquality SList where
   testEquality _ _ = Nothing
 
 
--- TODO TODO: testEquivalentSUnit relies on the assumption of distinct unit
--- strings, which is not safe in general.  Instead we should make the plugin
--- sort the types by fingerprint (replacing the dodgy use of cmpTyCon etc), like
--- in mkTyConRepTyConRHS. Then we can have the term-level code implement the
--- following function by sorting based on Typeable fingerprints:
+-- | Test whether two 'SUnit's represent the same units, up to the
+-- equivalence relation.
+--
+-- TODO: this currently uses 'unsafeCoerce', but in principle it should be
+-- possible to avoid it.
+--
+-- This relies on sorting the units based on their fingerprint.  Technically we
+-- can currently get away without assuming the 'Unpack' agrees with this, but we
+-- might want it to, and might want to define:
 --
 -- normaliseSUnit :: SUnit u -> SUnit (Unpack (Pack u))
---
--- It should be possible to observe this by making two unit types with the same
--- name in different modules; testEquivalentSUnit and hence the parser should
--- return an invalid proof that these types are equal.
-
--- | Test whether two 'SUnit's represent the same units, up to the
--- equivalence relation.  TODO: this currently uses 'unsafeCoerce',
--- but in principle it should be possible to avoid it.
---
--- TODO TODO: this is unsafe because it assumes uniqueness of name strings!
 testEquivalentSUnit :: SUnit u -> SUnit v -> Maybe (Pack u :~: Pack v)
 testEquivalentSUnit su sv
-  | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
+  | normaliseSUnit (forgetSUnit' su) == normaliseSUnit (forgetSUnit' sv) = Just (unsafeCoerce Refl)
   | otherwise = Nothing
+
+normaliseSUnit :: UnitSyntax (Some SBaseUnit) -> Map.Map (Some SBaseUnit) Integer
+normaliseSUnit (xs :/ ys) =
+    Map.filter (/= 0)
+        (foldl' (\ m x -> Map.insertWith (+) x (negate 1) m)
+            (foldl' (\ m x -> Map.insertWith (+) x 1 m) Map.empty xs) ys)
 
 -- | Calculate a normal form of a syntactic unit: a map from base unit names to
 -- non-zero integers.
@@ -181,6 +183,15 @@ forgetSList SNil = []
 forgetSList (SCons (SBaseUnit @x) xs) = baseUnitName @x : forgetSList xs
 
 
+-- | Extract the runtime syntactic representation from a singleton unit
+forgetSUnit' :: SUnit u -> UnitSyntax (Some SBaseUnit)
+forgetSUnit' (SUnit xs ys) = forgetSList' xs :/ forgetSList' ys
+
+forgetSList' :: SList xs -> [Some SBaseUnit]
+forgetSList' SNil = []
+forgetSList' (SCons s xs) = Some s : forgetSList' xs
+
+
 -- | A constraint @'KnownUnit' u@ means that @u@ must be a concrete
 -- unit that is statically known but passed at runtime
 type KnownUnit u = (u ~ Pack (Unpack u), KnownUnitSyntax (Unpack u))
@@ -210,3 +221,19 @@ unitSing = unitSyntaxSing @(Unpack u)
 -- | Extract the runtime syntactic representation of a 'KnownUnit'
 unitVal :: forall u . KnownUnit u => UnitSyntax String
 unitVal = forgetSUnit (unitSing @u)
+
+
+
+-- | An existential wrapper type: @'Some' p@ is essentially @exists x . p x@.
+data Some p where
+  Some :: p x -> Some p
+
+
+instance Eq (Some SBaseUnit) where
+  Some (SBaseUnit @x) == Some (SBaseUnit @y) =
+      typeRepFingerprint (typeRep (Proxy @x)) == typeRepFingerprint (typeRep (Proxy @y))
+
+instance Ord (Some SBaseUnit) where
+  compare (Some (SBaseUnit @x)) (Some (SBaseUnit @y)) =
+      compare (typeRepFingerprint (typeRep (Proxy @x)))
+              (typeRepFingerprint (typeRep (Proxy @y)))
