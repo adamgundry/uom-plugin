@@ -7,12 +7,13 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnitUnpacked
   ) where
 
-import GhcApi (Type(..), typeSymbolKind, nilDataCon, consDataCon, tcSplitTyConApp_maybe, coreView, isFamilyTyCon)
+import GhcApi (Type(..), nilDataCon, consDataCon, coreView, tcSplitTyConApp_maybe, isFamilyTyCon)
 import Data.List
 
 import GHC.TcPlugin.API
 import GHC.Core.Type (irrelevantMult)
-import GHC.Tc.Utils.TcType
+import GHC.Core.TyCon (isAlgTyCon)
+import GHC.Tc.Utils.TcType (tcSplitFunTy_maybe)
 
 import Data.UnitsOfMeasure.Plugin.NormalForm
 
@@ -50,13 +51,14 @@ isUnitKind uds ty
 normaliseUnit :: UnitDefs -> Type -> Maybe NormUnit
 normaliseUnit uds ty | Just ty1 <- coreView ty = normaliseUnit uds ty1
 normaliseUnit _   (TyVarTy v)              = pure $ varUnit v
-normaliseUnit uds (TyConApp tc tys)
+normaliseUnit uds ty@(TyConApp tc tys)
   | tc == unitOneTyCon  uds                = pure one
-  | tc == unitBaseTyCon uds, [x]    <- tys = pure $ baseUnit x
+-- | tc == unitBaseTyCon uds, [x]    <- tys = pure $ baseUnit x
   | tc == mulTyCon      uds, [u, v] <- tys = (*:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == divTyCon      uds, [u, v] <- tys = (/:) <$> normaliseUnit uds u <*> normaliseUnit uds v
   | tc == expTyCon      uds, [u, n] <- tys, Just i <- isNumLitTy n = (^:) <$> normaliseUnit uds u <*> pure i
   | isFamilyTyCon tc                       = pure $ famUnit tc tys
+  | isAlgTyCon tc, null tys = pure $ baseUnit ty
 normaliseUnit _ _ = Nothing
 
 
@@ -79,7 +81,7 @@ reifyUnit uds u | null xs && null ys = oneTy
     pow 1 ty = ty
     pow n ty = mkTyConApp (expTyCon uds) [ty, mkNumLitTy n]
 
-    reifyAtom (BaseAtom s)    = mkTyConApp (unitBaseTyCon uds) [s]
+    reifyAtom (BaseAtom s)    = s -- mkTyConApp (unitBaseTyCon uds) [s]
     reifyAtom (VarAtom  v)    = mkTyVarTy  v
     reifyAtom (FamAtom f tys) = mkTyConApp f tys
 
@@ -89,7 +91,7 @@ reifyUnit uds u | null xs && null ys = oneTy
 reifyUnitUnpacked  :: UnitDefs -> [(BaseUnit, Integer)] -> Type
 reifyUnitUnpacked uds xs =
   mkTyConApp (unitSyntaxPromotedDataCon uds)
-             [ typeSymbolKind
+             [ baseUnitKind
              , foldr promoter nil ys
              , foldr promoter nil zs
              ]
@@ -97,7 +99,10 @@ reifyUnitUnpacked uds xs =
     ys = concatMap (\ (s, i) -> if i > 0 then genericReplicate i s       else []) xs
     zs = concatMap (\ (s, i) -> if i < 0 then genericReplicate (abs i) s else []) xs
 
-    nil = mkTyConApp (promoteDataCon nilDataCon) [typeSymbolKind]
+    nil = mkTyConApp (promoteDataCon nilDataCon) [baseUnitKind]
 
-    promoter x t = mkTyConApp cons_tycon [typeSymbolKind, mkStrLitTy x, t]
+    promoter x t = mkTyConApp cons_tycon [baseUnitKind, baseUnitToUnit x, t]
     cons_tycon = promoteDataCon consDataCon
+
+    baseUnitKind = unitKind uds
+    baseUnitToUnit tc = mkTyConApp tc []

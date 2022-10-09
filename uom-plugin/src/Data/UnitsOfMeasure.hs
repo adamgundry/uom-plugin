@@ -55,10 +55,10 @@ module Data.UnitsOfMeasure
     , convert
 
       -- * Pay no attention to that man behind the curtain
-    , MkUnit
     , Pack
     , Unpack
     , KnownUnit
+    , KnownBaseUnit(..)
     ) where
 
 import Data.UnitsOfMeasure.Convert

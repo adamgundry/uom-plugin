@@ -11,7 +11,7 @@ module RationalExamples (dump) where
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Show ()
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs
 import Data.UnitsOfMeasure.Internal (Quantity(..), toRational')
 
 -- A nautical mile.

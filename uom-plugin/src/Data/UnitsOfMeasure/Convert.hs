@@ -12,6 +12,7 @@
 {-# LANGUAGE UndecidableSuperClasses #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+{-# OPTIONS_GHC -ddump-tc-trace -ddump-to-file #-}
 
 -- | Experimental support for conversions between units with the same
 -- dimension, for example feet and metres.  This interface is not
@@ -71,32 +72,31 @@ import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
 import Data.Kind (Type, Constraint)
-import GHC.TypeLits (Symbol)
 
 
 -- | Class to capture the dimensions to which base units belong.  For
 -- a canonical base unit, the class instance can be left empty.
 class IsCanonical (Unpack (CanonicalBaseUnit b))
-    => HasCanonicalBaseUnit (b :: Symbol) where
+    => HasCanonicalBaseUnit (b :: BaseUnit) where
   -- | The canonical base unit for this base unit.  If @b@ is
   -- canonical, then @'CanonicalBaseUnit' b = b@.  Otherwise,
   -- @'CanonicalBaseUnit' b@ must itself be canonical.
   type CanonicalBaseUnit b :: Unit
-  type CanonicalBaseUnit b = Base b
+  type CanonicalBaseUnit b = b
 
   -- | The conversion ratio between this base unit and its canonical
   -- base unit.  If @b@ is canonical then this ratio is @1@.
-  conversionBase :: proxy b -> Quantity Rational (Base b /: CanonicalBaseUnit b)
-  default conversionBase :: (Base b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (Base b /: CanonicalBaseUnit b)
+  conversionBase :: proxy b -> Quantity Rational (b /: CanonicalBaseUnit b)
+  default conversionBase :: (b ~ CanonicalBaseUnit b) => proxy b -> Quantity Rational (b /: CanonicalBaseUnit b)
   conversionBase _ = 1
 
 -- | Convert a unit into its canonical representation, where units are
 -- represented syntactically.
-type ToCBU :: UnitSyntax Symbol -> Unit
+type ToCBU :: UnitSyntax BaseUnit -> Unit
 type family ToCBU u where
   ToCBU (xs :/ ys) = ListToCBU xs /: ListToCBU ys
 
-type ListToCBU :: [Symbol] -> Unit
+type ListToCBU :: [BaseUnit] -> Unit
 type family ListToCBU xs where
   ListToCBU '[]       = One
   ListToCBU (x ': xs) = CanonicalBaseUnit x *: ListToCBU xs
@@ -104,25 +104,25 @@ type family ListToCBU xs where
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit have associated canonical
 -- representations.
-type HasCanonical :: UnitSyntax Symbol -> Constraint
+type HasCanonical :: UnitSyntax BaseUnit -> Constraint
 type family HasCanonical u where
   HasCanonical (xs :/ ys) = (AllHasCanonical xs, AllHasCanonical ys)
 
-type AllHasCanonical :: [Symbol] -> Constraint
+type AllHasCanonical :: [BaseUnit] -> Constraint
 type family AllHasCanonical xs where
   AllHasCanonical '[] = ()
   AllHasCanonical (x ': xs) = (HasCanonicalBaseUnit x, AllHasCanonical xs)
 
 -- | This constraint will be satisfied if all the base units in a
 -- syntactically represented unit are in their canonical form.
-type IsCanonical :: UnitSyntax Symbol -> Constraint
+type IsCanonical :: UnitSyntax BaseUnit -> Constraint
 type family IsCanonical u where
   IsCanonical (xs :/ ys) = (AllIsCanonical xs, AllIsCanonical ys)
 
-type AllIsCanonical :: [Symbol] -> Constraint
+type AllIsCanonical :: [BaseUnit] -> Constraint
 type family AllIsCanonical xs where
   AllIsCanonical '[] = ()
-  AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ Base x, AllIsCanonical xs)
+  AllIsCanonical (x ': xs) = (CanonicalBaseUnit x ~ x, AllIsCanonical xs)
 
 
 conversionRatio :: forall proxy u . Good u

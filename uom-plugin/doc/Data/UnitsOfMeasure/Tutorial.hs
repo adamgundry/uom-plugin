@@ -50,7 +50,7 @@ module Data.UnitsOfMeasure.Tutorial
 import Data.UnitsOfMeasure
 
 -- $setup
--- >>> import Data.UnitsOfMeasure.Defs ()
+-- >>> import Data.UnitsOfMeasure.Defs
 
 -- $intro
 --
@@ -83,15 +83,15 @@ import Data.UnitsOfMeasure
 -- $units
 --
 -- Units of measure, such as kilograms or metres per second, are represented by
--- the abstract kind 'Unit'.  They can be built out of 'One', 'Base',
+-- the abstract kind 'Unit'.  They can be built out of 'One',
 -- ('Data.UnitsOfMeasure.Internal.*:'), ('Data.UnitsOfMeasure.Internal./:') and
 -- ('Data.UnitsOfMeasure.Internal.^:').  Base units are represented as
--- type-level strings (with kind 'Symbol').
+-- empty data types with kind 'Unit'.
 --
 -- >>> :kind One
 -- One :: Unit
--- >>> :kind Base "m" /: Base "s"
--- Base "m" /: Base "s" :: Unit
+-- >>> :kind U_m /: U_s
+-- U_m /: U_s :: Unit
 --
 -- The template Haskell quasiquoter 'u' gives a nice syntax for units (see
 -- module
@@ -102,15 +102,15 @@ import Data.UnitsOfMeasure
 --
 -- >>> :kind! [u| m^2 |]
 -- [u| m^2 |] :: Unit
--- = Base "m" *: Base "m"
+-- = U_m *: U_m
 -- >>> :kind! [u| kg m/s |]
 -- [u| kg m/s |] :: Unit
--- = (Base "kg" *: Base "m") /: Base "s"
+-- = (U_kg *: U_m) /: U_s
 
 -- $decls
 --
 -- Base and derived units need to be declared before use, otherwise you will
--- get unsolved constraints like @'KnownUnit' ('Unpack' ('MkUnit' "m"))@.  When
+-- get scope errors  When
 -- the TH quasiquoter 'u' is used in a declaration context, it creates new base
 -- or derived units.  Alternatively, 'declareBaseUnit' and 'declareDerivedUnit'
 -- can be used as top-level TH declaration splices. Where declaring new units,
@@ -139,11 +139,11 @@ import Data.UnitsOfMeasure
 -- the unit. The most general polymorphic type will be inferred.
 --
 -- >>> :type [u| 1 m |]
--- [u| 1 m |] :: Num a => Quantity a (Base "m")
+-- [u| 1 m |] :: Num a => Quantity a U_m
 -- >>> :type [u| 1.0 m |]
--- [u| 1.0 m |] :: Fractional a => Quantity a (Base "m")
+-- [u| 1.0 m |] :: Fractional a => Quantity a U_m
 -- >>> :type [u| 1 % 1 m |]
--- [u| 1 % 1 m |] :: Fractional a => Quantity a (Base "m")
+-- [u| 1 % 1 m |] :: Fractional a => Quantity a U_m
 --
 -- Adding a full or partial type signature can make the underlying
 -- representational type more concrete.
@@ -151,11 +151,11 @@ import Data.UnitsOfMeasure
 -- >>> :seti -XPartialTypeSignatures -fno-warn-partial-type-signatures
 --
 -- >>> :type [u| 1 m |] :: _ Int _
--- [u| 1 m |] :: _ Int _ :: Quantity Int (Base "m")
+-- [u| 1 m |] :: _ Int _ :: Quantity Int U_m
 -- >>> :type [u| 1 m |] :: _ Double _
--- [u| 1 m |] :: _ Double _ :: Quantity Double (Base "m")
+-- [u| 1 m |] :: _ Double _ :: Quantity Double U_m
 -- >>> :type [u| 1 m |] :: _ Rational _
--- [u| 1 m |] :: _ Rational _ :: Quantity Rational (Base "m")
+-- [u| 1 m |] :: _ Rational _ :: Quantity Rational U_m
 --
 -- Note how the 'u' quasiquoter can be used for the units in the type too. This
 -- is redundant repetition with a literal but is useful when adding type
@@ -298,14 +298,14 @@ import Data.UnitsOfMeasure
 -- >>> 2 * [u| 5 m |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type...Base "m"...with...One...
+-- ... Couldn't match type...One...with...U_m...
 -- ...
 --
 --
 -- >>> [u| 2 m/s |] + [u| 5 m/s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type...Base "m" /: Base "s"...with...One...
+-- ... Couldn't match type...U_m /: U_s...with...One...
 -- ...
 --
 -- Instead, "Data.UnitsOfMeasure" provides more general arithmetic
@@ -323,8 +323,7 @@ import Data.UnitsOfMeasure
 -- >>>  [u| 3 m |] -: [u| 1 s |]
 -- <BLANKLINE>
 -- ...
--- ... Couldn't match type...Base "s"
--- ... with...Base "m"...
+-- ... Couldn't match type...U_s...with...U_m...
 -- ...
 
 -- $polymorphism

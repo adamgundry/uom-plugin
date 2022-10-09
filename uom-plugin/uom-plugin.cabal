@@ -29,6 +29,7 @@ source-repository head
 library
   exposed-modules:
       Data.UnitsOfMeasure
+      Data.UnitsOfMeasure.BaseUnitMap
       Data.UnitsOfMeasure.Convert
       Data.UnitsOfMeasure.Defs
       Data.UnitsOfMeasure.Internal
@@ -66,6 +67,7 @@ test-suite doctest
   main-is: DocTest.hs
   other-modules:
       Data.UnitsOfMeasure
+      Data.UnitsOfMeasure.BaseUnitMap
       Data.UnitsOfMeasure.Convert
       Data.UnitsOfMeasure.Defs
       Data.UnitsOfMeasure.Internal

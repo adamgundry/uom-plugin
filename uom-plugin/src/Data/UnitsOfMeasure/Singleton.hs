@@ -1,8 +1,10 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -17,9 +19,12 @@
 -- units.
 module Data.UnitsOfMeasure.Singleton
     ( -- * Singletons for units
-      SUnit(..)
-    , forgetSUnit
+      SBaseUnit(..)
+    , KnownBaseUnit(..)
+
+    , SUnit(..)
     , KnownUnit(..)
+    , forgetSUnit
     , unitVal
     , testEquivalentSUnit
 
@@ -28,24 +33,34 @@ module Data.UnitsOfMeasure.Singleton
     , KnownList(..)
     ) where
 
-import GHC.TypeLits
 import Data.List (foldl')
 import qualified Data.Map as Map
 import Data.Type.Equality
+import Data.Typeable
 import Unsafe.Coerce
 
 import Data.UnitsOfMeasure.Internal
 
 
+class Typeable x => KnownBaseUnit (x :: BaseUnit) where
+  baseUnitName :: String
+
+-- | Singleton type for individual base units
+data SBaseUnit (x :: BaseUnit) where
+  SBaseUnit :: KnownBaseUnit x => SBaseUnit x
+
 -- | Singleton type for concrete units of measure represented as lists
 -- of base units
-data SUnit (u :: UnitSyntax Symbol) where
+data SUnit (u :: UnitSyntax BaseUnit) where
   SUnit :: SList xs -> SList ys -> SUnit (xs :/ ys)
 
 -- | Singleton type for lists of base units
-data SList (xs :: [Symbol]) where
+data SList (xs :: [BaseUnit]) where
   SNil :: SList '[]
-  SCons :: KnownSymbol x => proxy x -> SList xs -> SList (x ': xs)
+  SCons :: SBaseUnit x -> SList xs -> SList (x ': xs)
+
+instance TestEquality SBaseUnit where
+  testEquality (SBaseUnit @x) (SBaseUnit @y) = eqT @x @y
 
 instance TestEquality SUnit where
   testEquality (SUnit xs ys) (SUnit xs' ys') = case (testEquality xs xs', testEquality ys ys') of
@@ -54,22 +69,16 @@ instance TestEquality SUnit where
 
 instance TestEquality SList where
   testEquality SNil SNil = Just Refl
-  testEquality (SCons px xs) (SCons py ys)
-    | Just Refl <- testEqualitySymbol px py
+  testEquality (SCons x xs) (SCons y ys)
+    | Just Refl <- testEquality x y
     , Just Refl <- testEquality xs ys = Just Refl
   testEquality _ _ = Nothing
-
--- | Annoyingly, base doesn't appear to export enough stuff to make it
--- possible to write a @TestEquality SSymbol@ instance, so we cheat.
-testEqualitySymbol :: forall proxy proxy' x y . (KnownSymbol x, KnownSymbol y)
-                   => proxy x -> proxy' y -> Maybe (x :~: y)
-testEqualitySymbol px py
-  | symbolVal px == symbolVal py = Just (unsafeCoerce Refl)
-  | otherwise                    = Nothing
 
 -- | Test whether two 'SUnit's represent the same units, up to the
 -- equivalence relation.  TODO: this currently uses 'unsafeCoerce',
 -- but in principle it should be possible to avoid it.
+--
+-- TODO TODO: this is unsafe because it assumes uniqueness of name strings!
 testEquivalentSUnit :: SUnit u -> SUnit v -> Maybe (Pack u :~: Pack v)
 testEquivalentSUnit su sv
   | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
@@ -153,12 +162,12 @@ forgetSUnit (SUnit xs ys) = forgetSList xs :/ forgetSList ys
 
 forgetSList :: SList xs -> [String]
 forgetSList SNil = []
-forgetSList (SCons px xs) = symbolVal px : forgetSList xs
+forgetSList (SCons (SBaseUnit @x) xs) = baseUnitName @x : forgetSList xs
 
 
 -- | A constraint @'KnownUnit' u@ means that @u@ must be a concrete
 -- unit that is statically known but passed at runtime
-class KnownUnit (u :: UnitSyntax Symbol) where
+class KnownUnit (u :: UnitSyntax BaseUnit) where
   unitSing :: SUnit u
 
 instance (KnownList xs, KnownList ys) => KnownUnit (xs :/ ys) where
@@ -167,14 +176,14 @@ instance (KnownList xs, KnownList ys) => KnownUnit (xs :/ ys) where
 
 -- | A constraint @'KnownList' xs@ means that @xs@ must be a list of
 -- base units that is statically known but passed at runtime
-class KnownList (xs :: [Symbol]) where
+class KnownList (xs :: [BaseUnit]) where
   listSing :: SList xs
 
 instance KnownList '[] where
   listSing = SNil
 
-instance (KnownSymbol x, KnownList xs) => KnownList (x ': xs) where
-  listSing = SCons (undefined :: proxy x) listSing
+instance (KnownBaseUnit x, KnownList xs) => KnownList (x ': xs) where
+  listSing = SCons SBaseUnit listSing
 
 
 -- | Extract the runtime syntactic representation of a 'KnownUnit'

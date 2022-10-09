@@ -13,7 +13,7 @@
 module Defs where
 
 import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs
 
 -- Declarations.
 declareBaseUnit "byte"

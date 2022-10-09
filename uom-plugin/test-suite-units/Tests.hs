@@ -56,7 +56,7 @@ module Main
 
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Convert
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs
 import Data.UnitsOfMeasure.Show
 
 import Control.Monad (unless)
@@ -74,13 +74,13 @@ import qualified Z (tests)
 
 -- Some basic examples
 
-myMass :: Quantity Double (Base "kg")
+myMass :: Quantity Double U_kg
 myMass = [u| 65 kg |]
 
 gravityOnEarth :: Quantity Double [u| m/s^2 |]
 gravityOnEarth = [u| 9.808 m/(s*s) |]
 
-readMass :: Read a => String -> Quantity a (Base "kg")
+readMass :: Read a => String -> Quantity a U_kg
 readMass = fmap [u| kg |] read
 
 forceOnGround :: Quantity Double [u| N |]
@@ -136,7 +136,7 @@ unit = id
 inverse :: Quantity a (u *: (One /: u)) -> Quantity a One
 inverse = id
 
-inverse2 :: proxy b -> Quantity a (Base b /: Base b) -> Quantity a One
+inverse2 :: proxy b -> Quantity a (b /: b) -> Quantity a One
 inverse2 _ = id
 
 
@@ -182,7 +182,7 @@ patternSplice _          _                 = False
 tricky
     :: forall a u . Num a
     => Quantity a u
-    -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
+    -> (Quantity a (u *: U_m), Quantity a (u *: U_kg))
 tricky x =
     let h :: Quantity a v -> Quantity a (u *: v)
         h = (x *:)
@@ -257,29 +257,29 @@ tests = testGroup "uom-plugin"
     ]
   , testGroup "Literal 1 (*:) Quantity _ u"
     [ testCase "_ = Double"
-        $ 1 *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Double U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ 1 *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Int U_m)) @?= [u| 1 m |]
     , testCase "_ = Integer"
-        $ 1 *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Integer U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, 1 *: [u| 1 m |]"
-        $ 1 *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, mk (1 % 1) *: [u| 1 m |]"
-        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, 1 *: [u| 1 % 1 m |]"
-        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, mk (1 % 1) *: [u| 1 % 1 m |]"
-        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     ]
   , testGroup "(1 :: Quantity _ One) (*:) Quantity _ u"
     [ testCase "_ = Double"
-        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int U_m)) @?= [u| 1 m |]
     , testCase "_ = Integer"
-        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     ]
   , testGroup "errors when a /= b, (1 :: Quantity a One) (*:) Quantity b u"
     [ testGroup "b = Double"
@@ -328,7 +328,7 @@ tests = testGroup "uom-plugin"
     , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
-    , testCase "a^(x + y) ~ a^x a^y"  $ exponentDoesn'tDistribute undefined `throws` matchErrors "Base \"m\" ^: (x + y)" "(Base \"m\" ^: x) *: (Base \"m\" ^: y)" "Double" "(MkUnit \"m\" ^: (x + y))"
+    , testCase "a^(x + y) ~ a^x a^y"  $ exponentDoesn'tDistribute undefined `throws` matchErrors "U_m ^: (x + y)" "(U_m ^: x) *: (U_m ^: y)" "Double" "(U_m ^: (x + y))"
     ]
   , testGroup "read . show"
     [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]

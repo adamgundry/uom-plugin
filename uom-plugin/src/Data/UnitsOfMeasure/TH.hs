@@ -23,6 +23,7 @@ import Language.Haskell.TH.Quote
 
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Convert
+import Data.UnitsOfMeasure.Singleton
 
 -- | The 'u' quasiquoter may be used to create units or quantities;
 -- its meaning depends on the context:
@@ -92,7 +93,7 @@ parseUnitQ s = case parseUnit universalSymbolTable s of
 -- | Convert a unit expression into the corresponding type.
 reifyUnit :: UnitExp () String -> Q Type
 reifyUnit Unity        = [t| One |]
-reifyUnit (Unit _ s)   = [t| MkUnit $(litT (strTyLit s))            |]
+reifyUnit (Unit _ s)   = conT (toUnitName s)
 reifyUnit (u `Mult` v) = [t| $(reifyUnit u) *: $(reifyUnit v)       |]
 reifyUnit (u `Div`  v) = [t| $(reifyUnit u) /: $(reifyUnit v)       |]
 reifyUnit (u `Pow`  n) | n >= 0    = [t| $(reifyUnit u) ^: $(litT (numTyLit n)) |]
@@ -140,18 +141,46 @@ parseUnitDecs = go
 -- | Given a unit name and an optional definition, create an
 -- appropriate instance of the 'MkUnit' type family.
 declareUnit :: String -> UnitDecl -> Q [Dec]
-declareUnit s ud = case ud of
-  BaseUnit           -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
-                            instance HasCanonicalBaseUnit $(litT (strTyLit s))
-                          |]
-  DefinedUnit u      -> [d| type instance MkUnit $(litT (strTyLit s)) = $(reifyUnit u) |]
-  ConversionUnit _ (Unit Nothing s') | s == s'
-                     -> reportError ("cannot define cyclic convertible unit: " ++ s) >> return []
-  ConversionUnit r u -> [d| type instance MkUnit $(litT (strTyLit s)) = Base $(litT (strTyLit s))
-                            instance HasCanonicalBaseUnit $(litT (strTyLit s)) where
-                              type CanonicalBaseUnit $(litT (strTyLit s)) = $(reifyUnit u)
-                              conversionBase _ = MkQuantity $(litE (rationalL (recip r)))
-                          |]
+declareUnit s ud = do
+    unitType <- [t| Unit |]
+    sequence $ case ud of
+        BaseUnit           -> [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
+                                   , instanceD (pure []) [t| HasCanonicalBaseUnit $(conT (toUnitName s)) |] []
+                                   , instanceD (pure []) [t| KnownBaseUnit $(conT (toUnitName s)) |]
+                                       [ valD (varP 'baseUnitName) (normalB (stringE s)) []
+                                       ]
+                                   ]
+        DefinedUnit u      -> [ tySynD (toUnitName s) [] (unitExpToType u) ]
+        ConversionUnit _ (Unit Nothing s') | s == s'
+                           -> [ do reportError ("cannot define cyclic convertible unit: " ++ s)
+                                   dataD (pure []) (toUnitName s) [] (Just unitType) [] []  ]
+        ConversionUnit r u ->
+            [ dataD (pure []) (toUnitName s) [] (Just unitType) [] []
+            , instanceD (pure []) [t| HasCanonicalBaseUnit $(conT (toUnitName s)) |]
+                     [ tySynInstD (tySynEqn Nothing [t| CanonicalBaseUnit $(conT (toUnitName s)) |] (unitExpToType u)
+                                  )
+                     , funD 'conversionBase [clause [ [p| _ |] ] (normalB [e| MkQuantity (1/r) |]) [] ]
+                     ]
+            , instanceD (pure []) [t| KnownBaseUnit $(conT (toUnitName s)) |]
+                                       [ valD (varP 'baseUnitName) (normalB (stringE s)) []
+                                       ]
+            ]
+
+toUnitName :: String -> Name
+toUnitName s = mkName $ "U_" ++ s
+
+unitExpToType :: UnitExp () String -> Q Type
+unitExpToType Unity = [t| One |]
+unitExpToType (Unit _ u) = conT (toUnitName u)
+unitExpToType (Mult u v) = [t| $(unitExpToType u) *: $(unitExpToType v) |]
+unitExpToType (Div u v) = [t| $(unitExpToType u) /: $(unitExpToType v) |]
+unitExpToType (Pow u n)
+  | n >= 0    = [t| $(unitExpToType u) ^: $(natToType n) |]
+  | otherwise = [t| One /: ($(unitExpToType u) ^: $(natToType (abs n))) |]
+
+natToType :: Integer -> Q Type -- TODO Natural
+natToType = litT . numTyLit
+
 
 -- | Declare a canonical base unit of the given name, which must not
 -- contain any spaces, e.g.
@@ -160,8 +189,8 @@ declareUnit s ud = case ud of
 --
 -- produces
 --
--- > type instance MkUnit "m" = Base "m"
--- > instance HasCanonicalBaseUnit "m"
+-- > data U_m :: Unit
+-- > instance HasCanonicalBaseUnit U_m
 --
 -- This can also be written @['u'| m |]@.
 declareBaseUnit :: String -> Q [Dec]
@@ -174,7 +203,7 @@ declareBaseUnit s = declareUnit s BaseUnit
 --
 -- produces
 --
--- > type instance MkUnit "N" = Base "kg" *: Base "m" /: Base "s" ^: 2
+-- > type U_N = U_kg *: U_m /: U_s ^: 2
 --
 -- This can also be written @['u'| N = kg m / s^2 |]@.
 declareDerivedUnit :: String -> String -> Q [Dec]
@@ -189,9 +218,9 @@ declareDerivedUnit s d = case parseUnit universalSymbolTable d of
 --
 -- produces
 --
--- > type instance MkUnit "kilobyte" = Base "kilobyte"
--- > instance HasCanonicalBaseUnit "kilobyte" where
--- >   type CanonicalBaseUnit "kilobyte" = Base "byte"
+-- > data U_kilobyte :: Unit
+-- > instance HasCanonicalBaseUnit U_kilobyte where
+-- >   type CanonicalBaseUnit U_kilobyte = U_byte
 -- >   conversionBase _ = [u| 1 % 1024 kilobyte/byte |]
 --
 -- This can also be written @['u'| kilobyte = 1024 byte |]@.

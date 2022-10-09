@@ -18,7 +18,7 @@ import Test.Tasty.HUnit
 
 import Data.UnitsOfMeasure (Quantity, u)
 import Data.UnitsOfMeasure.Convert (Convertible, convert)
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs (U_m, U_km)
 
 
 -- Inferring this type used to lead to unit equations with occur-check
