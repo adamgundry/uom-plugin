@@ -6,6 +6,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -41,8 +42,10 @@ module Main
     ) where
 
 import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.BaseUnitMap
 import Data.UnitsOfMeasure.Convert
 import Data.UnitsOfMeasure.Defs
+import Data.UnitsOfMeasure.Read
 import Data.UnitsOfMeasure.Show
 
 import Control.Monad (unless)
@@ -322,14 +325,14 @@ tests = testGroup "uom-plugin"
     , testCase "0"       $ read (show [u| 1       |]) @?= [u| 1       |]
     ]
   , testGroup "read normalisation"
-    [ testCase "1 m/m"       $ read "[u| 1 m/m |]"       @?= [u| 1 |]
+    [ -- The following fails as 'm' isn't a base unit in the RHS
+      -- testCase "1 m/m"       $ read "[u| 1 m/m |]"       @?= [u| 1 |]
+      testCase "1 m/m" $ readWithUnit' @One (singletonBaseUnitMap @U_m) "1 m/m" @?= Right [u| 1 |]
     , testCase "-0.3 m s^-1" $ read "[u| -0.3 m s^-1 |]" @?= [u| -0.3 m/s |]
     , testCase "42 s m s"    $ read "[u| 42 s m s |]"    @?= [u| 42 m s^2 |]
     ]
    , testGroup "read normalisation with annotations"
-     [ testCase "1 m/m"
-         $ (read "[u| 1 m/m |]" :: _ Integer _) @?= [u| 1 |]
-     , testCase "-0.3 m s^-1"
+     [ testCase "-0.3 m s^-1"
          $ (read "[u| -0.3 m s^-1 |]" :: _ Double _) @?= [u| -0.3 m/s |]
      , testCase "42 s m s"
          $ (read "[u| 42 s m s |]" :: _ Integer _)  @?= [u| 42 m s^2 |]

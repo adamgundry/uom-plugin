@@ -18,6 +18,7 @@ module Data.UnitsOfMeasure.Read
    ( readQuantity
    , readUnit
    , readWithUnit
+   , readWithUnit'
    , QuantityWithUnit(..)
    ) where
 
@@ -40,18 +41,30 @@ instance (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a) => Read (Quantity a
   readsPrec i (' ':s) = readsPrec i s
   readsPrec _ ('[':'u':'|':s)
    | (t, '|':']':r) <- break (== '|') s
-   , Right v <- readWithUnit @(Unpack u) t = [(v, r)]
+   , Right v <- readWithUnit @u t = [(v, r)]
   readsPrec _ _ = []
 
 
--- | Parse a quantity and check that it has the expected units.
-readWithUnit :: forall u a . (KnownUnit u, Read a)
-             => String -> Either String (Quantity a (Pack u))
-readWithUnit s = do
-  Some (QuantityWithUnit (q :: Quantity a _) v) <- readQuantity (unitToBaseUnitMap (unitSing @u)) s
-  case testEquivalentSUnit (unitSing :: SUnit u) v of
-    Just Refl -> Right q
-    Nothing   -> Left ("wrong units: got " ++ show (forgetSUnit v))
+-- | Parse a quantity and check that it has the expected units.  Only base units
+-- mentioned in the expected unit may be mentioned; other base units will lead
+-- to a parse failure.
+readWithUnit :: forall u a . (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a)
+             => String -> Either String (Quantity a u)
+readWithUnit = readWithUnit' (unitToBaseUnitMap (unitSing @(Unpack u)))
+
+-- | Parse a quantity and check that it has the expected units.  This variant
+-- allows the available base units to be specified.  The base units in the map
+-- must be a superset of 'unitToBaseUnitMap' for the expected units.
+readWithUnit' :: forall u a . (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a)
+             => BaseUnitMap -> String -> Either String (Quantity a u)
+readWithUnit' base_units s = do
+    Some (QuantityWithUnit (q :: Quantity a _) v) <- readQuantity base_units s
+    case testEquivalentSUnit u v of
+        Just Refl -> Right q
+        Nothing   -> Left ("wrong units: expected " ++ show (forgetSUnit u)
+                            ++ " but got " ++ show (forgetSUnit v))
+  where
+    u = unitSing @(Unpack u)
 
 -- | Parse a quantity along with its units.
 readQuantity :: Read a => BaseUnitMap -> String -> Either String (Some (QuantityWithUnit a))
