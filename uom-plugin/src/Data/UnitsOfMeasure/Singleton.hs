@@ -65,7 +65,7 @@ data SList (xs :: [BaseUnit]) where
   SCons :: SBaseUnit x -> SList xs -> SList (x ': xs)
 
 instance TestEquality SBaseUnit where
-  testEquality (SBaseUnit @x) (SBaseUnit @y) = eqT @x @y
+  testEquality (SBaseUnit :: SBaseUnit x) (SBaseUnit :: SBaseUnit y) = eqT @x @y
 
 instance TestEquality SUnit where
   testEquality (SUnit xs ys) (SUnit xs' ys') = case (testEquality xs xs', testEquality ys ys') of
@@ -180,7 +180,7 @@ forgetSUnit (SUnit xs ys) = List.sort (forgetSList xs) :/ List.sort (forgetSList
 
 forgetSList :: SList xs -> [String]
 forgetSList SNil = []
-forgetSList (SCons (SBaseUnit @x) xs) = baseUnitName @x : forgetSList xs
+forgetSList (SCons (SBaseUnit :: SBaseUnit x) xs) = baseUnitName @x : forgetSList xs
 
 
 -- | Extract the runtime syntactic representation from a singleton unit
@@ -230,10 +230,10 @@ data Some p where
 
 
 instance Eq (Some SBaseUnit) where
-  Some (SBaseUnit @x) == Some (SBaseUnit @y) =
+  Some (SBaseUnit :: SBaseUnit x) == Some (SBaseUnit :: SBaseUnit y) =
       typeRepFingerprint (typeRep (Proxy @x)) == typeRepFingerprint (typeRep (Proxy @y))
 
 instance Ord (Some SBaseUnit) where
-  compare (Some (SBaseUnit @x)) (Some (SBaseUnit @y)) =
+  compare (Some (SBaseUnit :: SBaseUnit x)) (Some (SBaseUnit :: SBaseUnit y)) =
       compare (typeRepFingerprint (typeRep (Proxy @x)))
               (typeRepFingerprint (typeRep (Proxy @y)))

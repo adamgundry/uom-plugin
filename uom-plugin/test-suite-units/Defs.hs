@@ -54,4 +54,4 @@ thingy3 _ x = x
 
 
 sSUnit :: SUnit (Unpack U_s)
-sSUnit = unitSing
+sSUnit = unitSing @U_s

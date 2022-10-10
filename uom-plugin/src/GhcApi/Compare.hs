@@ -26,7 +26,9 @@ cmpTyCon x y = compare (fingerprintTyCon x) (fingerprintTyCon y)
 
 cmpType :: Type -> Type -> Ordering
 cmpType (TyConApp tc1 []) (TyConApp tc2 []) = cmpTyCon tc1 tc2
+#if __GLASGOW_HASKELL__ > 900
 cmpType (LitTy x) (LitTy y) = cmpTyLit x y
+#endif
 cmpType t1 t2 = nonDetCmpType t1 t2
 
 cmpTypes :: [Type] -> [Type] -> Ordering
