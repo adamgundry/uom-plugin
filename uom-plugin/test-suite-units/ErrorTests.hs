@@ -45,45 +45,34 @@ given1 :: ((One *: a) ~ (a *: One)) => Quantity Double a -> Quantity Double [u|k
 given1 = id
 
 given1_errors :: [[String]]
-given1_errors = [ [ "Could not deduce (a ~ U_kg)"
-                  , "from the context ((One *: a) ~ (a *: One))" ]
-                , [ "Could not deduce (U_kg ~ a)"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: a ~ U_kg"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: U_kg ~ a"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                ]
+given1_errors = couldn'tDeduceErrors "a" "U_kg" "One *: a" "a *: One"
 
+couldn'tDeduceErrors :: [Char] -> [Char] -> [Char] -> [Char] -> [[[Char]]]
+couldn'tDeduceErrors w x y z =
+#if __GLASGOW_HASKELL__ >= 904
+    [ [ "Could not deduce (" ++ w ++ " ~ " ++ x ++ ")"
+      , "from the context: (" ++ y ++ ") ~ (" ++ z ++ ")"
+      ]
+    ]
+#else
+    [ [ "Could not deduce: " ++ w ++ " ~ " ++ x
+      , "from the context: (" ++ y ++ ") ~ (" ++ z ++ ")"
+      ]
+    ]
+#endif
 
 given2 :: ((One *: a) ~ (b *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given2 = id
 
 given2_errors :: [[String]]
-given2_errors = [ [ "Could not deduce (a ~ U_kg)"
-                  , "from the context ((One *: a) ~ (b *: One))" ]
-                , [ "Could not deduce (U_kg ~ a)"
-                  , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: a ~ U_kg"
-                  , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: U_kg ~ a"
-                  , "from the context: (One *: a) ~ (b *: One)" ]
-                ]
+given2_errors = couldn'tDeduceErrors "a" "U_kg" "One *: a" "b *: One"
 
 
 given3 :: ((a ^: 2) ~ (b ^: 3)) => Quantity Integer b -> Quantity Integer a
 given3 _ = [u| 3 s |]
 
 given3_errors :: [[String]]
-given3_errors = [ [ "Could not deduce (a ~ U_s)"
-                  , "from the context ((a ^: 2) ~ (b ^: 3))" ]
-                , [ "Could not deduce (U_s ~ a)"
-                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
-                , [ "Could not deduce: a ~ U_s"
-                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
-                , [ "Could not deduce: U_s ~ a"
-                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
-                ]
+given3_errors = couldn'tDeduceErrors "a" "U_s" "a ^: 2" "b ^: 3"
 
 op_a1 :: Quantity Double [u| m |]
 op_a1 = (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Double U_m))
