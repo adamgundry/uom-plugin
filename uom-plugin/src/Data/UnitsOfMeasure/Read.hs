@@ -1,9 +1,12 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-partial-type-signatures #-}
@@ -15,17 +18,16 @@ module Data.UnitsOfMeasure.Read
    ( readQuantity
    , readUnit
    , readWithUnit
-   , Some(..)
+   , readWithUnit'
    , QuantityWithUnit(..)
    ) where
 
 import Control.Monad (join)
-import GHC.TypeLits
 import Data.List (genericReplicate)
-import Data.Proxy
 import Data.Type.Equality ((:~:)(..))
 import Text.Parse.Units (parseUnit, universalSymbolTable, UnitExp(..))
 
+import Data.UnitsOfMeasure.BaseUnitMap
 import Data.UnitsOfMeasure.Internal
 import Data.UnitsOfMeasure.Singleton
 
@@ -34,48 +36,62 @@ import Data.UnitsOfMeasure.Singleton
 data QuantityWithUnit a u where
   QuantityWithUnit :: Quantity a (Pack u) -> SUnit u -> QuantityWithUnit a u
 
--- | An existential wrapper type: @'Some' p@ is essentially @exists x . p x@.
-data Some p where
-  Some :: p x -> Some p
 
-instance (KnownUnit (Unpack u), u ~ Pack (Unpack u), Read a) => Read (Quantity a u) where
+instance (KnownUnit u, Read a) => Read (Quantity a u) where
   readsPrec i (' ':s) = readsPrec i s
   readsPrec _ ('[':'u':'|':s)
    | (t, '|':']':r) <- break (== '|') s
-   , Right v <- readWithUnit (Proxy :: Proxy (Unpack u)) t = [(v, r)]
+   , Right v <- readWithUnit @u t = [(v, r)]
   readsPrec _ _ = []
 
--- | Parse a quantity and check that it has the expected units.
-readWithUnit :: forall proxy a u . (Read a, KnownUnit u)
-             => proxy u -> String -> Either String (Quantity a (Pack u))
-readWithUnit _ s = do
-  Some (QuantityWithUnit (q :: Quantity a _) v) <- readQuantity s
-  case testEquivalentSUnit (unitSing :: SUnit u) v of
-    Just Refl -> Right q
-    Nothing   -> Left ("wrong units: got " ++ show (forgetSUnit v))
+
+-- | Parse a quantity and check that it has the expected units.  Only base units
+-- mentioned in the expected unit may be mentioned; other base units will lead
+-- to a parse failure.
+readWithUnit :: forall u a . (KnownUnit u, Read a)
+             => String -> Either String (Quantity a u)
+readWithUnit = readWithUnit' (unitToBaseUnitMap (unitSing @u))
+
+-- | Parse a quantity and check that it has the expected units.  This variant
+-- allows the available base units to be specified.  The base units in the map
+-- must be a superset of 'unitToBaseUnitMap' for the expected units.
+readWithUnit' :: forall u a . (KnownUnit u, Read a)
+             => BaseUnitMap -> String -> Either String (Quantity a u)
+readWithUnit' base_units s = do
+    Some (QuantityWithUnit (q :: Quantity a _) v) <- readQuantity base_units s
+    case testEquivalentSUnit u v of
+        Just Refl -> Right q
+        Nothing   -> Left ("wrong units: expected " ++ show (forgetSUnit u)
+                            ++ " but got " ++ show (forgetSUnit v))
+  where
+    u = unitSing @u
 
 -- | Parse a quantity along with its units.
-readQuantity :: Read a => String -> Either String (Some (QuantityWithUnit a))
-readQuantity s = case reads s of
-                   [(n, s')] -> do Some u <- readUnit s'
-                                   return $ Some (QuantityWithUnit (MkQuantity n) u)
-                   _         -> Left "reads: no parse"
+readQuantity :: Read a => BaseUnitMap -> String -> Either String (Some (QuantityWithUnit a))
+readQuantity base_units s = case reads s of
+    [(n, s')] -> do Some u <- readUnit base_units s'
+                    return $ Some (QuantityWithUnit (MkQuantity n) u)
+    _         -> Left "reads: no parse"
 
 -- | Parse a unit.
-readUnit :: String -> Either String (Some SUnit)
-readUnit s = expToSomeUnit <$> parseUnit universalSymbolTable s
+readUnit :: BaseUnitMap -> String -> Either String (Some SUnit)
+readUnit base_units s = expToSomeUnit base_units =<< parseUnit universalSymbolTable s
 
-expToSomeUnit :: UnitExp () String -> Some SUnit
-expToSomeUnit = unitSyntaxToSomeUnit . expToUnitSyntax
+expToSomeUnit :: BaseUnitMap -> UnitExp () String -> Either String (Some SUnit)
+expToSomeUnit base_units = unitSyntaxToSomeUnit base_units . expToUnitSyntax
 
-unitSyntaxToSomeUnit :: UnitSyntax String -> Some SUnit
-unitSyntaxToSomeUnit (xs :/ ys) = case (someListVal xs, someListVal ys) of
-  (Some xs', Some ys') -> Some (SUnit xs' ys')
+unitSyntaxToSomeUnit :: BaseUnitMap -> UnitSyntax String -> Either String (Some SUnit)
+unitSyntaxToSomeUnit base_units (xs :/ ys) = do
+    Some xs' <- someListVal base_units xs
+    Some ys' <- someListVal base_units ys
+    pure $ Some (SUnit xs' ys')
 
-someListVal :: [String] -> Some SList
-someListVal [] = Some SNil
-someListVal (x:xs) = case (someSymbolVal x, someListVal xs) of
-                       (SomeSymbol x', Some xs') -> Some (SCons x' xs')
+someListVal :: BaseUnitMap -> [String] -> Either String (Some SList)
+someListVal _          []     = pure $ Some SNil
+someListVal base_units (x:xs) = do
+    Some x'@SBaseUnit{} <- maybe (Left ("unknown unit: " ++ x)) pure $ lookupBaseUnitMap x base_units
+    Some xs' <- someListVal base_units xs
+    pure $ Some (SCons x' xs')
 
 expToUnitSyntax :: UnitExp () String -> UnitSyntax String
 expToUnitSyntax Unity = [] :/ []

@@ -1,8 +1,10 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -17,35 +19,53 @@
 -- units.
 module Data.UnitsOfMeasure.Singleton
     ( -- * Singletons for units
-      SUnit(..)
+      SBaseUnit(..)
+    , KnownBaseUnit(..)
+
+    , SUnit(..)
+    , KnownUnit
+    , KnownUnitSyntax(..)
     , forgetSUnit
-    , KnownUnit(..)
+    , unitSing
     , unitVal
     , testEquivalentSUnit
+
+    , Some(..)
 
       -- * Singletons for lists
     , SList(..)
     , KnownList(..)
     ) where
 
-import GHC.TypeLits
 import Data.List (foldl')
+import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Type.Equality
+import Data.Typeable
 import Unsafe.Coerce
 
 import Data.UnitsOfMeasure.Internal
 
 
+class Typeable x => KnownBaseUnit (x :: BaseUnit) where
+  baseUnitName :: String
+
+-- | Singleton type for individual base units
+data SBaseUnit (x :: BaseUnit) where
+  SBaseUnit :: KnownBaseUnit x => SBaseUnit x
+
 -- | Singleton type for concrete units of measure represented as lists
 -- of base units
-data SUnit (u :: UnitSyntax Symbol) where
+data SUnit (u :: UnitSyntax BaseUnit) where
   SUnit :: SList xs -> SList ys -> SUnit (xs :/ ys)
 
 -- | Singleton type for lists of base units
-data SList (xs :: [Symbol]) where
+data SList (xs :: [BaseUnit]) where
   SNil :: SList '[]
-  SCons :: KnownSymbol x => proxy x -> SList xs -> SList (x ': xs)
+  SCons :: SBaseUnit x -> SList xs -> SList (x ': xs)
+
+instance TestEquality SBaseUnit where
+  testEquality (SBaseUnit :: SBaseUnit x) (SBaseUnit :: SBaseUnit y) = eqT @x @y
 
 instance TestEquality SUnit where
   testEquality (SUnit xs ys) (SUnit xs' ys') = case (testEquality xs xs', testEquality ys ys') of
@@ -54,26 +74,33 @@ instance TestEquality SUnit where
 
 instance TestEquality SList where
   testEquality SNil SNil = Just Refl
-  testEquality (SCons px xs) (SCons py ys)
-    | Just Refl <- testEqualitySymbol px py
+  testEquality (SCons x xs) (SCons y ys)
+    | Just Refl <- testEquality x y
     , Just Refl <- testEquality xs ys = Just Refl
   testEquality _ _ = Nothing
 
--- | Annoyingly, base doesn't appear to export enough stuff to make it
--- possible to write a @TestEquality SSymbol@ instance, so we cheat.
-testEqualitySymbol :: forall proxy proxy' x y . (KnownSymbol x, KnownSymbol y)
-                   => proxy x -> proxy' y -> Maybe (x :~: y)
-testEqualitySymbol px py
-  | symbolVal px == symbolVal py = Just (unsafeCoerce Refl)
-  | otherwise                    = Nothing
 
 -- | Test whether two 'SUnit's represent the same units, up to the
--- equivalence relation.  TODO: this currently uses 'unsafeCoerce',
--- but in principle it should be possible to avoid it.
+-- equivalence relation.
+--
+-- TODO: this currently uses 'unsafeCoerce', but in principle it should be
+-- possible to avoid it.
+--
+-- This relies on sorting the units based on their fingerprint.  Technically we
+-- can currently get away without assuming the 'Unpack' agrees with this, but we
+-- might want it to, and might want to define:
+--
+-- normaliseSUnit :: SUnit u -> SUnit (Unpack (Pack u))
 testEquivalentSUnit :: SUnit u -> SUnit v -> Maybe (Pack u :~: Pack v)
 testEquivalentSUnit su sv
-  | normaliseUnitSyntax (forgetSUnit su) == normaliseUnitSyntax (forgetSUnit sv) = Just (unsafeCoerce Refl)
+  | normaliseSUnit (forgetSUnit' su) == normaliseSUnit (forgetSUnit' sv) = Just (unsafeCoerce Refl)
   | otherwise = Nothing
+
+normaliseSUnit :: UnitSyntax (Some SBaseUnit) -> Map.Map (Some SBaseUnit) Integer
+normaliseSUnit (xs :/ ys) =
+    Map.filter (/= 0)
+        (foldl' (\ m x -> Map.insertWith (+) x (negate 1) m)
+            (foldl' (\ m x -> Map.insertWith (+) x 1 m) Map.empty xs) ys)
 
 -- | Calculate a normal form of a syntactic unit: a map from base unit names to
 -- non-zero integers.
@@ -149,34 +176,64 @@ normaliseUnitSyntax (xs :/ ys) =
 
 -- | Extract the runtime syntactic representation from a singleton unit
 forgetSUnit :: SUnit u -> UnitSyntax String
-forgetSUnit (SUnit xs ys) = forgetSList xs :/ forgetSList ys
+forgetSUnit (SUnit xs ys) = List.sort (forgetSList xs) :/ List.sort (forgetSList ys)
 
 forgetSList :: SList xs -> [String]
 forgetSList SNil = []
-forgetSList (SCons px xs) = symbolVal px : forgetSList xs
+forgetSList (SCons (SBaseUnit :: SBaseUnit x) xs) = baseUnitName @x : forgetSList xs
+
+
+-- | Extract the runtime syntactic representation from a singleton unit
+forgetSUnit' :: SUnit u -> UnitSyntax (Some SBaseUnit)
+forgetSUnit' (SUnit xs ys) = forgetSList' xs :/ forgetSList' ys
+
+forgetSList' :: SList xs -> [Some SBaseUnit]
+forgetSList' SNil = []
+forgetSList' (SCons s xs) = Some s : forgetSList' xs
 
 
 -- | A constraint @'KnownUnit' u@ means that @u@ must be a concrete
 -- unit that is statically known but passed at runtime
-class KnownUnit (u :: UnitSyntax Symbol) where
-  unitSing :: SUnit u
+type KnownUnit u = (u ~ Pack (Unpack u), KnownUnitSyntax (Unpack u))
 
-instance (KnownList xs, KnownList ys) => KnownUnit (xs :/ ys) where
-  unitSing = SUnit listSing listSing
+class KnownUnitSyntax (u :: UnitSyntax BaseUnit) where
+  unitSyntaxSing :: SUnit u
+
+instance (KnownList xs, KnownList ys) => KnownUnitSyntax (xs :/ ys) where
+  unitSyntaxSing = SUnit listSing listSing
 
 
 -- | A constraint @'KnownList' xs@ means that @xs@ must be a list of
 -- base units that is statically known but passed at runtime
-class KnownList (xs :: [Symbol]) where
+class KnownList (xs :: [BaseUnit]) where
   listSing :: SList xs
 
 instance KnownList '[] where
   listSing = SNil
 
-instance (KnownSymbol x, KnownList xs) => KnownList (x ': xs) where
-  listSing = SCons (undefined :: proxy x) listSing
+instance (KnownBaseUnit x, KnownList xs) => KnownList (x ': xs) where
+  listSing = SCons SBaseUnit listSing
 
+
+unitSing :: forall u . KnownUnit u => SUnit (Unpack u)
+unitSing = unitSyntaxSing @(Unpack u)
 
 -- | Extract the runtime syntactic representation of a 'KnownUnit'
-unitVal :: forall proxy u . KnownUnit u => proxy u -> UnitSyntax String
-unitVal _ = forgetSUnit (unitSing :: SUnit u)
+unitVal :: forall u . KnownUnit u => UnitSyntax String
+unitVal = forgetSUnit (unitSing @u)
+
+
+
+-- | An existential wrapper type: @'Some' p@ is essentially @exists x . p x@.
+data Some p where
+  Some :: p x -> Some p
+
+
+instance Eq (Some SBaseUnit) where
+  Some (SBaseUnit :: SBaseUnit x) == Some (SBaseUnit :: SBaseUnit y) =
+      typeRepFingerprint (typeRep (Proxy @x)) == typeRepFingerprint (typeRep (Proxy @y))
+
+instance Ord (Some SBaseUnit) where
+  compare (Some (SBaseUnit :: SBaseUnit x)) (Some (SBaseUnit :: SBaseUnit y)) =
+      compare (typeRepFingerprint (typeRep (Proxy @x)))
+              (typeRepFingerprint (typeRep (Proxy @y)))

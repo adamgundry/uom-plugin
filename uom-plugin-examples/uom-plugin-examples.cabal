@@ -1,6 +1,6 @@
 cabal-version: 1.12
 name:           uom-plugin-examples
-version:        0.4.0.0
+version:        0.5.0.0
 synopsis:       Examples of the use of uom-plugin
 description:    This package provides examples of the use of uom-plugin
 category:       Type System

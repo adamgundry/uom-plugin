@@ -12,14 +12,15 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi (TcCoercion, ctEvPred, ctEvTerm, typeKind, heqDataCon, evDFunApp, dataConName, dataConWrapId, occName, occNameFS, tyConDataCons, (<+>), isWanted, isGivenCt, isGiven, UnivCoProvenance(PluginProv), mkPrimEqPred, Type(TyConApp), heqTyCon)
+import GhcApi
 
 import qualified GHC.Plugins as Plugins
 import GHC.TcPlugin.API as PluginAPI
 
-import Data.Either
+import Data.Either ( partitionEithers )
 
 import Data.UnitsOfMeasure.Plugin.Convert
+import Data.UnitsOfMeasure.Plugin.Lookup
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
 
@@ -29,7 +30,7 @@ plugin :: Plugins.Plugin
 plugin =
     Plugins.defaultPlugin
         { Plugins.tcPlugin = const $ Just $ PluginAPI.mkTcPlugin uomPlugin
-        , Plugins.pluginRecompile = const $ pure Plugins.NoForceRecompile
+        , Plugins.pluginRecompile = Plugins.purePlugin
         }
 
 uomPlugin :: PluginAPI.TcPlugin
@@ -45,14 +46,14 @@ uomPlugin =
 
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
 unitsOfMeasureSolver uds givens []      = do
-    PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplifying givens" $ ppr givens
+    PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplifying givens" $ ppr givens
     let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) givens
     let unit_givens = filter is_useful unit_givens0
     case unit_givens of
       []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
         sr <- simplifyUnits uds $ map snd unit_givens
-        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens only" $ ppr sr
+        PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified givens only" $ ppr sr
         case sr of
           -- TODO: givens simplification is currently disabled, because if we emit a given
           -- constraint like x[sk] ~ Base "kg" then GHC will "simplify" all occurrences
@@ -95,7 +96,7 @@ unitsOfMeasureSolver uds givens wanteds = do
       (_:_) -> do
         let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds) givens
         sr <- simplifyUnits uds unit_givens
-        PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
+        PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified givens" $ ppr sr
         -- TODO: it is somewhat questionable to simplify the givens again
         -- here. In principle we should be able to simplify them at the
         -- simplify-givens stage, turn them into a substitution, and have GHC
@@ -103,7 +104,7 @@ unitsOfMeasureSolver uds givens wanteds = do
         case sr of
           Impossible eq _ -> reportContradiction uds eq
           Simplified ss   -> do sr' <- simplifyUnits uds $ map (substsUnitEquality (simplifySubst ss)) unit_wanteds
-                                PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified wanteds" $ ppr sr'
+                                PluginAPI.tcPluginTrace "[UOM] unitsOfMeasureSolver simplified wanteds" $ ppr sr'
                                 case sr' of
                                   Impossible _eq _ -> return $ PluginAPI.TcPluginOk [] [] -- Don't report a contradiction, see #22
                                   Simplified ss'  -> PluginAPI.TcPluginOk [ (evMagic uds ct, ct) | eq <- simplifySolved ss', let ct = fromUnitEquality eq ]
@@ -171,55 +172,43 @@ unitsOfMeasureRewrite
     PluginAPI.UniqFM
         TyCon
         ([Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult)
-unitsOfMeasureRewrite uds = PluginAPI.listToUFM [(unpackTyCon uds, unpackRewriter uds)]
+unitsOfMeasureRewrite uds =
+    PluginAPI.listToUFM
+        [ (unpackTyCon uds, unpackRewriter uds)
+        , (packTyCon uds, packRewriter uds)
+        ]
 
 unpackRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM PluginAPI.Rewrite PluginAPI.TcPluginRewriteResult
 unpackRewriter uds _givens [ty] = do
   case maybeConstant =<< normaliseUnit uds ty of
-    Nothing -> do PluginAPI.tcPluginTrace "unpackRewriter: no rewrite" (ppr ty)
+    Nothing -> do PluginAPI.tcPluginTrace "[UOM] unpackRewriter: no rewrite" (ppr ty)
                   pure PluginAPI.TcPluginNoRewrite
-    Just u  -> do PluginAPI.tcPluginTrace "unpackRewriter: rewrite" (ppr ty <+> ppr u)
+    Just u  -> do PluginAPI.tcPluginTrace "[UOM] unpackRewriter: rewrite" (ppr ty <+> ppr u)
                   pure $ let reduct = reifyUnitUnpacked uds u
                          in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (unpackTyCon uds) [ty]) reduct
                             in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
 unpackRewriter _ _ tys = do
-    PluginAPI.tcPluginTrace "unpackRewriter: wrong number of arguments?" (ppr tys)
+    PluginAPI.tcPluginTrace "[UOM] unpackRewriter: wrong number of arguments?" (ppr tys)
     pure PluginAPI.TcPluginNoRewrite
 
--- TODO: the following is nonsense
-lookupModule' :: PluginAPI.MonadTcPlugin m => PluginAPI.ModuleName -> p -> m PluginAPI.Module
-lookupModule' modname _pkg = do
-  r <- PluginAPI.findImportedModule modname PluginAPI.NoPkgQual --  (PluginAPI.OtherPkg pkg)
-  case r of
-    PluginAPI.Found _ md -> pure md
-    _ -> do r' <- PluginAPI.findImportedModule modname PluginAPI.NoPkgQual
-            case r' of
-              PluginAPI.Found _ md -> pure md
-              _ -> error "lookupModule: not Found"
 
-
-lookupUnitDefs :: PluginAPI.TcPluginM PluginAPI.Init UnitDefs
-lookupUnitDefs = do
-    md <- lookupModule' myModule myPackage
-    u <- look md "Unit"
-    b <- look md "Base"
-    o <- look md "One"
-    m <- look md "*:"
-    d <- look md "/:"
-    e <- look md "^:"
-    x <- look md "Unpack"
-    i <- look md "UnitSyntax"
-    c <- look md "~~"
-    return $ UnitDefs u b o m d e x i (getDataCon i ":/") c
-  where
-    getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
-                       [d] -> promoteDataCon d
-                       _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
-
-    look md s = PluginAPI.tcLookupTyCon =<< PluginAPI.lookupOrig md (mkTcOcc s)
-    myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
-    myPackage = fsLit "uom-plugin"
-
+-- | We can rewrite occurrences of @Pack (Unpack a)@ to @a@, even if it is not
+-- ground.  The reverse direction is not sound because @Unpack (Pack u)@ has the
+-- effect of sorting/normalising the unit.
+packRewriter :: UnitDefs -> [Ct] -> [Type] -> PluginAPI.TcPluginM Rewrite TcPluginRewriteResult
+packRewriter uds _givens [ty]
+  | Just (tc, [a]) <- splitTyConApp_maybe ty
+  , tc == unpackTyCon uds
+  = do PluginAPI.tcPluginTrace "[UOM] packRewriter: rewrite" (ppr ty <+> ppr a)
+       pure $ let reduct = a
+              in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (packTyCon uds) [ty]) reduct
+                 in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
+  | otherwise = do
+    PluginAPI.tcPluginTrace "[UOM] packRewriter: no rewrite" (ppr ty)
+    pure PluginAPI.TcPluginNoRewrite
+packRewriter _ _ tys = do
+    PluginAPI.tcPluginTrace "[UOM] packRewriter: wrong number of arguments?" (ppr tys)
+    pure PluginAPI.TcPluginNoRewrite
 
 -- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
 -- bogus evidence of type @t1 ~ t2@.

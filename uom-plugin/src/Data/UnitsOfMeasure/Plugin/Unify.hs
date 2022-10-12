@@ -71,14 +71,14 @@ instance Outputable UnifyResult where
 -- substitution.  The 'Ct' is the equality between the non-normalised
 -- (and perhaps less substituted) unit type expressions.
 unifyUnits :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
-unifyUnits uds (UnitEquality ct u0 v0) = do PluginAPI.tcPluginTrace "unifyUnits" (ppr u0 $$ ppr v0)
+unifyUnits uds (UnitEquality ct u0 v0) = do PluginAPI.tcPluginTrace "[UOM] unifyUnits" (ppr u0 $$ ppr v0)
                                             unifyOne uds ct [] [] [] (u0 /: v0)
 
 unifyOne :: UnitDefs -> Ct -> [TyVar] -> TySubst -> TySubst -> NormUnit -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
 unifyOne uds ct tvs subst unsubst u
       | isOne u           = return $ Win tvs subst unsubst
       | isConstant u      = return   Lose
-      | otherwise         = {- tcPluginTrace "unifyOne" (ppr u) >> -} go [] (ascending u)
+      | otherwise         = PluginAPI.tcPluginTrace "[UOM] unifyOne" (ppr u) >> go [] (ascending u)
 
       where
         go :: [(Atom, Integer)] -> [(Atom, Integer)] -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
@@ -175,13 +175,13 @@ instance Outputable SimplifyResult where
   ppr (Impossible eq eqs) = text "Impossible" <+> ppr eq <+> ppr eqs
 
 simplifyUnits :: UnitDefs -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
-simplifyUnits uds eqs0 = PluginAPI.tcPluginTrace "simplifyUnits" (ppr eqs0) >> simples initialState eqs0
+simplifyUnits uds eqs0 = PluginAPI.tcPluginTrace "[UOM] simplifyUnits" (ppr eqs0) >> simples initialState eqs0
   where
     simples :: SimplifyState -> [UnitEquality] -> PluginAPI.TcPluginM PluginAPI.Solve SimplifyResult
     simples ss [] = return $ Simplified ss
     simples ss (eq:eqs) = do
         ur <- unifyUnits uds (substsUnitEquality (simplifySubst ss) eq)
-        PluginAPI.tcPluginTrace "unifyUnits result" (ppr ur)
+        PluginAPI.tcPluginTrace "[UOM] unifyUnits result" (ppr ur)
         case ur of
           Win  tvs subst unsubst -> let (ss', xs) = win eq tvs subst unsubst ss
                                     in simples ss' (xs ++ eqs)

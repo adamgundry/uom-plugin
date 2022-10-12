@@ -37,6 +37,7 @@ import Prelude hiding ((<>))
 import GhcApi (elemVarSet, tyCoVarsOfType, tyCoVarsOfTypes, text, (<>))
 import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon, thenCmp)
 
+import GHC.Core.TyCon (isAlgTyCon)
 import GHC.TcPlugin.API
 
 import qualified Data.Foldable as Foldable
@@ -44,8 +45,8 @@ import qualified Data.Map as Map
 import Data.List ( sortOn )
 import Data.Maybe
 
--- | Base units are just represented as strings, for simplicity
-type BaseUnit = FastString
+-- | Base units are nullary type constructors
+type BaseUnit = TyCon
 
 -- | An atom in the normal form is either a base unit, a variable or a
 -- stuck type family application (but not one of the built-in type
@@ -149,8 +150,13 @@ isConstant = all isBaseLiteral . Map.keys . _NormUnit
 maybeConstant :: NormUnit -> Maybe [(BaseUnit, Integer)]
 maybeConstant = mapM getBase . Map.toList . _NormUnit
   where
-    getBase (BaseAtom ty, i) = (, i) <$> isStrLitTy ty
+    getBase (BaseAtom ty, i) = (, i) <$> isBaseUnitType ty
     getBase _                = Nothing
+
+isBaseUnitType :: Type -> Maybe BaseUnit
+isBaseUnitType ty = case splitTyConApp_maybe ty of
+                      Just (tc, []) | isAlgTyCon tc -> Just tc
+                      _ -> Nothing
 
 -- | Test whether an atom is a base unit (but not necessarily a
 -- *literal*, e.g. it could be @Base b@ for some variable @b@)
@@ -159,8 +165,9 @@ isBase (BaseAtom _) = True
 isBase _            = False
 
 -- | Test whether an atom is a literal base unit
+-- TODO: don't need both now?
 isBaseLiteral :: Atom -> Bool
-isBaseLiteral (BaseAtom ty) = isJust $ isStrLitTy ty
+isBaseLiteral (BaseAtom ty) = isJust $ isBaseUnitType ty
 isBaseLiteral _             = False
 
 -- | Test whether all exponents in a unit are divisble by an integer

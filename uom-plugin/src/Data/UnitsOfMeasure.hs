@@ -11,6 +11,7 @@
 module Data.UnitsOfMeasure
     ( -- * Type-level units of measure
       Unit
+    , UnitKind
     , type Base
     , type One
     , type (*:)
@@ -53,12 +54,14 @@ module Data.UnitsOfMeasure
 
       -- * Automatic unit conversions
     , convert
+    , integralConvert
 
       -- * Pay no attention to that man behind the curtain
-    , MkUnit
+    , type (~~)
     , Pack
     , Unpack
     , KnownUnit
+    , KnownBaseUnit(..)
     ) where
 
 import Data.UnitsOfMeasure.Convert

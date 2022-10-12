@@ -3,31 +3,19 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
--- WARNING: It would be a lot of work to add type annotations to avoid type-default
--- warnings and what is more this leads to type checking failures;
---
--- {-# LANGUAGE PartialTypeSignatures #-}
---
---   , testGroup "read normalisation"
---     [ testCase "1 m/m"
---         $ (read "[u| 1 m/m |]" :: _ Integer _) @?= [u| 1 |]
---     , testCase "-0.3 m s^-1"
---         $ (read "[u| -0.3 m s^-1 |]" :: _ Double _) @?= [u| -0.3 m/s |]
---     , testCase "42 s m s"
---         $ (read "[u| 42 s m s |]" :: _ Integer _)  @?= [u| 42 m s^2 |]
---     ]
---
--- > cabal new-repl uom-plugin:units
--- solveSimpleWanteds: too many iterations (limit = 4)
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Main
     ( main
@@ -43,7 +31,7 @@ module Main
     , inverse
     , inverse2
     , f
-    , g
+    , wurble
     , givens
     , givens2
     , givens3
@@ -52,35 +40,40 @@ module Main
     , patternSplice
     , pow
     , dimensionless
+    , from_dimensionless
     ) where
 
 import Data.UnitsOfMeasure
+import Data.UnitsOfMeasure.BaseUnitMap
 import Data.UnitsOfMeasure.Convert
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs
+import Data.UnitsOfMeasure.Read
 import Data.UnitsOfMeasure.Show
+import Data.UnitsOfMeasure.Singleton
 
 import Control.Monad (unless)
 import Control.Exception
 import Data.List
 import Data.Ratio ((%))
+import Data.Type.Equality ((:~:)(Refl))
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Defs ()
+import Defs (sSUnit)
 import ErrorTests
 import Z (z)
 import qualified Z (tests)
 
 -- Some basic examples
 
-myMass :: Quantity Double (Base "kg")
+myMass :: Quantity Double U_kg
 myMass = [u| 65 kg |]
 
 gravityOnEarth :: Quantity Double [u| m/s^2 |]
 gravityOnEarth = [u| 9.808 m/(s*s) |]
 
-readMass :: Read a => String -> Quantity a (Base "kg")
+readMass :: Read a => String -> Quantity a U_kg
 readMass = fmap [u| kg |] read
 
 forceOnGround :: Quantity Double [u| N |]
@@ -136,7 +129,7 @@ unit = id
 inverse :: Quantity a (u *: (One /: u)) -> Quantity a One
 inverse = id
 
-inverse2 :: proxy b -> Quantity a (Base b /: Base b) -> Quantity a One
+inverse2 :: proxy b -> Quantity a (b /: b) -> Quantity a One
 inverse2 _ = id
 
 
@@ -147,8 +140,8 @@ f :: (One /: (w ^: 2)) ~ (One /: [u| kg^2 |])  => Quantity a w -> Quantity a [u|
 f = id
 
 -- u ~ v * w, v^2 ~ v  =>  u ~ w
-g :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
-g = id
+wurble :: (u ~ (v *: w), (v ^: 2) ~ v) => Quantity a u -> Quantity a w
+wurble = id
 
 -- a*a ~ 1  =>  a ~ 1
 givens :: ((a *: a) ~ One) => Quantity Double a -> Quantity Double One
@@ -182,11 +175,11 @@ patternSplice _          _                 = False
 tricky
     :: forall a u . Num a
     => Quantity a u
-    -> (Quantity a (u *: Base "m"), Quantity a (u *: Base "kg"))
+    -> (Quantity a (u *: U_m), Quantity a (u *: U_kg))
 tricky x =
-    let h :: Quantity a v -> Quantity a (u *: v)
-        h = (x *:)
-    in (h [u| 3 m |], h [u| 5 kg |])
+    let k :: Quantity a v -> Quantity a (u *: v)
+        k = (x *:)
+    in (k [u| 3 m |], k [u| 5 kg |])
 
 
 -- Test that basic constraints involving exponentiation work
@@ -196,8 +189,19 @@ pow = id
 
 -- This declares a synonym for One
 [u| dimensionless = 1 |]
-dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
-dimensionless = id
+from_dimensionless :: Quantity a [u|dimensionless|] -> Quantity a [u|1|]
+from_dimensionless = id
+
+
+-- Test that Pack reduces when applied to Unpack of a variable
+_pack_to_unpack :: f (Pack (Unpack a)) -> f a
+_pack_to_unpack = id
+
+
+-- Test that integralConvert can infer its result type
+ten_km_in_m  = integralConvert (10 *: km)
+ten_km_in_m' = integralConvert [u| 10 km |]
+
 
 
 -- Runtime testsuite
@@ -210,11 +214,7 @@ tests = testGroup "uom-plugin"
   [ testGroup "Get the underlying value with unQuantity"
     [ testCase "unQuantity 3 m"                $ unQuantity [u| 3 m |]            @?= 3
     , testCase "unQuantity 3 s^2"              $ unQuantity [u| 3 s^2 |]          @?= 3
-#if __GLASGOW_HASKELL__ > 802
-    -- TODO: Find out why unQuantity (3 m s^-1) fails with ghc-8.0.2.
-    -- solveSimpleWanteds: too many iterations (limit = 4)
     , testCase "unQuantity 3 m s^-1"           $ unQuantity [u| 3 m s^-1 |]       @?= 3
-#endif
     , testCase "unQuantity 3.0 kg m^2 / m s^2" $ unQuantity [u| 3.0 kg m / s^2 |] @?= 3
     , testCase "unQuantity 1"                  $ unQuantity (mk 1)                @?= 1
     , testCase "unQuantity 1 (1/s)"            $ unQuantity [u| 1 (1/s) |]        @?= 1
@@ -227,11 +227,7 @@ tests = testGroup "uom-plugin"
     [ testCase "m 3"                           $ [u| m |] 3           @?= [u| 3 m |]
     , testCase "m <$> [3..5]"                  $ [u| m |] <$> [3..5]  @?= [[u| 3 m |],[u| 4 m |],[u| 5 m |]]
     , testCase "m/s 3"                         $ [u| m/s |] 3         @?= [u| 3 m/s |]
-#if __GLASGOW_HASKELL__ > 802
-    -- TODO: Find out why (m s^-1 3) fails with ghc-8.0.2.
-    -- solveSimpleWanteds: too many iterations (limit = 4)
     , testCase "m s^-1 3"                      $ [u| m s^-1 |] 3      @?= [u| 3 m s^-1 |]
-#endif
     , testCase "s^2 3"                         $ [u| s^2 |] 3         @?= [u| 3 s^2 |]
     , testCase "1 $ 3"                         $ [u|dimensionless|] 3 @?= [u| 3 |]
     , testCase "fmap [u| kg |] read $ \"3\""   $ readMass "3"         @?= [u| 3 kg |]
@@ -257,29 +253,29 @@ tests = testGroup "uom-plugin"
     ]
   , testGroup "Literal 1 (*:) Quantity _ u"
     [ testCase "_ = Double"
-        $ 1 *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Double U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ 1 *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Int U_m)) @?= [u| 1 m |]
     , testCase "_ = Integer"
-        $ 1 *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Integer U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, 1 *: [u| 1 m |]"
-        $ 1 *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, mk (1 % 1) *: [u| 1 m |]"
-        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ mk (1 % 1) *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, 1 *: [u| 1 % 1 m |]"
-        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ 1 *: ([u| 1 % 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     , testCase "_ = Rational, mk (1 % 1) *: [u| 1 % 1 m |]"
-        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ mk (1 % 1) *: ([u| 1 % 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     ]
   , testGroup "(1 :: Quantity _ One) (*:) Quantity _ u"
     [ testCase "_ = Double"
-        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Double U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Int One) *: ([u| 1 m |] :: (Quantity Int U_m)) @?= [u| 1 m |]
     , testCase "_ = Integer"
-        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Integer U_m)) @?= [u| 1 m |]
     , testCase "_ = Int"
-        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational (Base "m"))) @?= [u| 1 m |]
+        $ (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Rational U_m)) @?= [u| 1 m |]
     ]
   , testGroup "errors when a /= b, (1 :: Quantity a One) (*:) Quantity b u"
     [ testGroup "b = Double"
@@ -309,17 +305,24 @@ tests = testGroup "uom-plugin"
     , testCase "forceOnGround"  $ showQuantity forceOnGround  @?= "637.52 kg m / s^2"
     ]
   , testGroup "convert"
-    [ testCase "10m in ft"     $ convert [u| 10m |]   @?= [u| 32.8 ft |]
-    , testCase "5 km^2 in m^2" $ convert [u| 5km^2 |] @?= [u| 5000000 m m |]
-    , testCase "ratio"         $ show (ratio [u| ft |] [u| m |]) @?= "[u| 3.28 ft / m |]"
+    [ testCase "10m in ft"     $ convert @Rational [u| 10m |]   @?= [u| 164 % 5 ft |]
+    , testCase "10m in ft"     $ convert @Double   [u| 10m |]   @?= [u| 32.800000000000004 ft |]
+    , testCase "5 km^2 in m^2" $ convert @Rational [u| 5km^2 |] @?= [u| 5000000 m m |]
+    , testCase "ratio"         $ show (ratio @Rational @[u| ft |] @[u| m |]) @?= "[u| 82 % 25 ft / m |]"
     , testCase "100l in m^3"   $ convert [u| 100l |]   @?= [u| 0.1 m^3 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
     , testCase "1l/m in m^2"   $ convert [u| 1l/m |]   @?= [u| 0.001 m^2 |]
-    , testCase "5l in ft^3"    $ convert [u| 5l   |]   @?= [u| 0.17643776 ft^3 |]
-    , testCase "2000000l^2 in ft^3 m^3" $ convert [u| 2000000l^2 |] @?= [u| 70.575104 ft^3 m^3 |]
+    , testCase "5l in ft^3"    $ convert @Rational [u| 5l   |]   @?= [u| 0.17643776 ft^3 |]
+    , testCase "2000000l^2 in ft^3 m^3" $ convert @Rational [u| 2000000l^2 |] @?= [u| 70.575104 ft^3 m^3 |]
     , testCase "42 rad/s in s^-1" $ convert [u| 42 rad/s |] @?= [u| 42 s^-1 |]
     , testCase "2.4 l/h in m" $ convert [u| 2.4 l/ha |] @?= [u| 2.4e-7 m |]
     , testCase "1 m^4 in l m" $ convert [u| 1 m^4 |] @?= [u| 1000 l m |]
+    ]
+  , testGroup "integralConvert"
+    [ testCase "3km in m" $ integralConvert [u| 3 km |] @?= [u| 3000 m |]
+    , testCase "3km^2 in m^2" $ integralConvert [u| 3 km^2 |] @?= [u| 3000000 m^2 |]
+    , testCase "24h in s" $ integralConvert [u| 24 h |] @?= [u| 86400 s |]
+    , testCase "10km in m"  $ ten_km_in_m @?= ten_km_in_m'
     ]
   , Z.tests
   , testGroup "errors"
@@ -328,7 +331,7 @@ tests = testGroup "uom-plugin"
     , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors
-    , testCase "a^(x + y) ~ a^x a^y"  $ exponentDoesn'tDistribute undefined `throws` matchErrors "Base \"m\" ^: (x + y)" "(Base \"m\" ^: x) *: (Base \"m\" ^: y)" "Double" "(MkUnit \"m\" ^: (x + y))"
+    , testCase "a^(x + y) ~ a^x a^y"  $ exponentDoesn'tDistribute undefined `throws` matchErrors "U_m ^: (x + y)" "(U_m ^: x) *: (U_m ^: y)" "Double" "(U_m ^: (x + y))"
     ]
   , testGroup "read . show"
     [ testCase "3 m"     $ read (show [u| 3 m     |]) @?= [u| 3 m     |]
@@ -336,16 +339,30 @@ tests = testGroup "uom-plugin"
     , testCase "0"       $ read (show [u| 1       |]) @?= [u| 1       |]
     ]
   , testGroup "read normalisation"
-    [ testCase "1 m/m"       $ read "[u| 1 m/m |]"       @?= [u| 1 |]
+    [ -- The following fails as 'm' isn't a base unit in the RHS
+      -- testCase "1 m/m"       $ read "[u| 1 m/m |]"       @?= [u| 1 |]
+      testCase "1 m/m" $ readWithUnit' @One (singletonBaseUnitMap @U_m) "1 m/m" @?= Right [u| 1 |]
     , testCase "-0.3 m s^-1" $ read "[u| -0.3 m s^-1 |]" @?= [u| -0.3 m/s |]
     , testCase "42 s m s"    $ read "[u| 42 s m s |]"    @?= [u| 42 m s^2 |]
     ]
+   , testGroup "read normalisation with annotations"
+     [ testCase "-0.3 m s^-1"
+         $ (read "[u| -0.3 m s^-1 |]" :: _ Double _) @?= [u| -0.3 m/s |]
+     , testCase "42 s m s"
+         $ (read "[u| 42 s m s |]" :: _ Integer _)  @?= [u| 42 m s^2 |]
+     ]
   , testGroup "read equality (avoid false equivalences)"
     [ testCase "1 m/m^2 /= 1 m" $
         (read "[u| 1 m/m^2 |]" :: Quantity Double [u| m |]) `throws` noParse
 
     , testCase "1 m /= 1 m/m^2" $
         (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
+    ]
+  , testGroup "testEquivalentSUnit"
+    [ testCase "s' == s'"  $ testEquivalentSUnit (unitSing @U_s) (unitSing @U_s) @?= Just Refl
+    , testCase "s' == s'"  $ testEquivalentSUnit sSUnit sSUnit @?= Just Refl
+    , testCase "s' == s" $ testEquivalentSUnit sSUnit (unitSing @U_s) @?= Nothing
+    , testCase "s == s'" $ testEquivalentSUnit (unitSing @U_s) sSUnit @?= Nothing
     ]
   ]
 
