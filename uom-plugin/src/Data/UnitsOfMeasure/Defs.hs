@@ -4,15 +4,12 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 
 -- | This module exports some example definitions of base and derived
 -- units, for demonstration purposes.  In the future, this is likely
 -- to change or be moved to a separate package.
-module Data.UnitsOfMeasure.Defs
-    ( MkUnit
-    ) where
+module Data.UnitsOfMeasure.Defs where
 
 import Data.UnitsOfMeasure
 
@@ -55,4 +52,6 @@ import Data.UnitsOfMeasure
 [u| ft = 100 % 328 m
   , in = 0.0254 m
   , mi = 1609.344 m
-  , mph = mi/h |]
+  |]
+
+[u| mph = mi/h |]

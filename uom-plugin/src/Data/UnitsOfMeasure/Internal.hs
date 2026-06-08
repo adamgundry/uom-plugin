@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RoleAnnotations #-}
@@ -15,6 +17,8 @@
 module Data.UnitsOfMeasure.Internal
     ( -- * Type-level units of measure
       Unit
+    , UnitKind
+    , BaseUnit
     , type One
     , type Base
     , type (*:)
@@ -55,16 +59,24 @@ module Data.UnitsOfMeasure.Internal
 
       -- * Internal
     , type (~~)
-    , MkUnit
     ) where
 
-import Control.DeepSeq
-import Foreign.Storable
-import GHC.Exts (Constraint)
+import Control.DeepSeq (NFData)
+import Data.Kind (Constraint, Type)
+import Foreign.Storable (Storable)
 import GHC.TypeLits (Symbol, Nat, type (-))
 
--- | (Kind) Units of measure
-data Unit
+-- | Kind tag for 'Unit'
+data UnitKind
+
+-- | (Kind) Units of measure.
+--
+-- This should be regarded as an opaque kind, but it is defined as a type
+-- synonym for a kind ending in 'Type' so that new base units can be defined as
+-- empty data types.
+type Unit = UnitKind -> Type
+
+type BaseUnit = Unit
 
 -- | Dimensionless unit (identity element)
 type family One :: Unit where
@@ -95,7 +107,8 @@ infixr 8 ^:
 
 -- | A @Quantity a u@ is represented identically to a value of
 -- underlying numeric type @a@, but with units @u@.
-newtype Quantity a (u :: Unit) = MkQuantity a
+newtype Quantity a (u :: Unit) where
+    MkQuantity :: forall (u :: Unit) a . a -> Quantity a u
   -- ^ Warning: the 'MkQuantity' constructor allows module invariants
   -- to be violated, so use it with caution!
 type role Quantity representational nominal
@@ -220,15 +233,15 @@ data UnitSyntax s = [s] :/ [s]
 -- inverse of 'Unpack' up to the equational theory of units, but it is
 -- not a right inverse (because there are multiple list
 -- representations of the same unit).
-type Pack :: UnitSyntax Symbol -> Unit
+type Pack :: UnitSyntax BaseUnit -> Unit
 type family Pack u where
   Pack (xs :/ ys) = Prod xs /: Prod ys
 
 -- | Take the product of a list of base units.
-type Prod :: [Symbol] -> Unit
+type Prod :: [BaseUnit] -> Unit
 type family Prod xs where
   Prod '[]       = One
-  Prod (x ': xs) = Base x *: Prod xs
+  Prod (x ': xs) = x *: Prod xs
 
 -- | Unpack a unit as a syntactic representation, where the order of
 -- units is deterministic.  For example:
@@ -242,7 +255,7 @@ type family Prod xs where
 -- it does not allow the structure of the unit to be observed.  The
 -- reduction behaviour is implemented by the plugin, because we cannot
 -- define it otherwise.
-type Unpack :: Unit -> UnitSyntax Symbol
+type Unpack :: Unit -> UnitSyntax BaseUnit
 type family Unpack u where
 
 
@@ -253,13 +266,3 @@ type (~~) :: Unit -> Unit -> Constraint
 type family u ~~ v where
 
 infix 4 ~~
-
-
--- | This type family is used for translating unit names (as
--- type-level strings) into units.  It will be 'Base' for base units
--- or expand the definition for derived units.
---
--- The instances displayed by Haddock are available only if
--- "Data.UnitsOfMeasure.Defs" is imported.
-type MkUnit :: Symbol -> Unit
-type family MkUnit s

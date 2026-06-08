@@ -11,6 +11,7 @@ import GHC.Data.FastString as X (FastString(..), fsLit)
 import GHC as X (mkModuleName)
 import GHC.Types.Name as X (mkSysTvName)
 import GHC.Types.Name.Occurrence as X (occName, occNameFS, mkTcOcc)
+import GHC.Types.PkgQual as X (PkgQual(NoPkgQual))
 import GHC.Utils.Outputable as X (Outputable(..), (<>), (<+>), ($$), text)
 import GHC.Driver.Plugins as X (Plugin(..), defaultPlugin)
 
@@ -31,7 +32,7 @@ import GHC.Tc.Plugin as X
     )
 -- import GHC.Tc.Types as X (TcPlugin(..), TcPluginResult(..))
 import GHC.Tc.Types.Constraint as X
-    ( Ct(..), CtLoc
+    ( Ct(..)
     , ctLoc, ctEvidence, ctEvPred, ctPred, ctEvExpr, ctEvTerm
     , isGiven, isWanted, isGivenCt
     , mkNonCanonical
@@ -50,7 +51,6 @@ import GHC.Core.TyCo.Rep as X
 #endif
     )
 
-import GHC.Core.Coercion as X (mkPrimEqPred)
 import GHC.Core.Predicate as X
     ( EqRel(..)
     , Pred(..)
@@ -64,7 +64,6 @@ import GHC.Core.Type as X
     , isNumLitTy, isStrLitTy
     , coreView
     , mkStrLitTy
-    , nonDetCmpType, nonDetCmpTypes, nonDetCmpTc
     , mkAppTy
     )
 
@@ -85,3 +84,5 @@ import GHC.Types.Var as X
 import GHC.Types.Var.Set as X (TyCoVarSet, elemVarSet)
 
 import GHC.Driver.Plugins as X (PluginRecompile(..))
+
+import GHC.TcPlugin.API as X (CtLoc, nonDetCmpType, mkEqPredRole)

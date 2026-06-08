@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
@@ -10,6 +11,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -30,23 +32,23 @@ import Data.UnitsOfMeasure.Singleton
 
 import Data.List (group)
 
-instance (Show a, KnownUnit (Unpack u)) => Show (Quantity a u) where
+instance (Show a, KnownUnit u) => Show (Quantity a u) where
   show x = "[u| " ++ showQuantity x ++ " |]"
 
 -- | Render a quantity nicely, followed by its units:
 --
 -- >>> showQuantity (1 /: [u| 0.1 s / m kg |])
 -- "10.0 kg m / s"
-showQuantity :: forall a u. (Show a, KnownUnit (Unpack u)) => Quantity a u -> String
+showQuantity :: forall a u. (Show a, KnownUnit u) => Quantity a u -> String
 showQuantity (MkQuantity x) = show x ++ if s == "1" then "" else ' ':s
-  where s = showUnit (undefined :: proxy u)
+  where s = showUnit @u
 
 -- | Render a unit nicely:
 --
--- >>> showUnit (undefined :: proxy [u| 1 / s |])
+-- >>> showUnit @[u| 1 / s |]
 -- "s^-1"
-showUnit :: forall proxy u . KnownUnit (Unpack u) => proxy u -> String
-showUnit _ = showUnitBits (unitVal (undefined :: proxy' (Unpack u)))
+showUnit :: forall u . KnownUnit u => String
+showUnit = showUnitBits (unitVal @u)
 
 showUnitBits :: UnitSyntax String -> String
 showUnitBits ([] :/ []) = "1"

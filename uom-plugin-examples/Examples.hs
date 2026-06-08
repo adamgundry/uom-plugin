@@ -10,7 +10,6 @@
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
@@ -24,7 +23,7 @@ import qualified RationalExamples as RE
 -- We could make some base units and derived units like this ...
 -- [u| ft = 0.3048 m, kg, m, s, km = 1000 m, N = kg * m/s^2 |]
 -- Pull in those units instead from Data.UnitsOfMeasure.Defs.
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs
 
 -- An integer constant quantity with units
 myMass = [u| 65 kg |]

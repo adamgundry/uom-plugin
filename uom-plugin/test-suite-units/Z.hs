@@ -18,14 +18,14 @@ import Test.Tasty.HUnit
 
 import Data.UnitsOfMeasure (Quantity, u)
 import Data.UnitsOfMeasure.Convert (Convertible, convert)
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs (U_m, U_km)
 
 
 -- Inferring this type used to lead to unit equations with occur-check
 -- failures, because it involves things like Pack (Unpack u) ~ u
 -- The type signature is intentionally left off here to check that the
 -- compiler can infer it.
--- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible u v)
+-- z :: forall a (u :: Unit) (v :: Unit). (Fractional a, Convertible a u v)
 --   => Quantity a u
 --   -> Quantity a v
 {-# ANN z "HLint: ignore Eta reduce" #-}
@@ -40,7 +40,7 @@ newtype B a = B a
 -- 9.2 and later because they do not flatten, but is broken in 9.0 because of
 -- flattening. For now we skip testing it in 9.0.  In principle we should be
 -- able to fix it by having simplify-givens do substitution.
-instance (Convertible u [u| m |], q ~ Quantity Double u) => Show (A q) where
+instance (Convertible Double u [u| m |], q ~ Quantity Double u) => Show (A q) where
     show (A x) = show y
         where
             y :: Quantity Double [u| m |]

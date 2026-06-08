@@ -3,19 +3,21 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Defs where
 
 import Data.UnitsOfMeasure
-import Data.UnitsOfMeasure.Defs ()
+import Data.UnitsOfMeasure.Defs hiding (U_s)
+import Data.UnitsOfMeasure.Singleton
 
 -- Declarations.
+declareBaseUnit "s"
 declareBaseUnit "byte"
 declareDerivedUnit "bps" "byte / s"
 declareConvertibleUnit "kilobyte" 1024 "byte"
@@ -23,8 +25,8 @@ declareConvertibleUnit "squiggle" 2 "m/s"
 
 -- This declares a dimensionless unit that requires explicit conversion.
 [u| dime = 1 1 |]
-dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
-dime = convert
+from_dime :: Fractional a => Quantity a [u|dime|] -> Quantity a [u|1|]
+from_dime = convert
 
 
 try :: Quantity Double [u| ft^3 m^3 |]
@@ -49,3 +51,7 @@ thingy3 :: (x *: x ~ x *: x *: x) => proxy x -> F x -> F One
 thingy3 _ x = x
 
 -}
+
+
+sSUnit :: SUnit (Unpack U_s)
+sSUnit = unitSing @U_s
