@@ -328,6 +328,7 @@ tests = testGroup "uom-plugin"
   , testGroup "errors"
     [ testCase "s/m ~ m/s"            $ mismatch1 `throws` mismatch1_errors
     , testCase "m + s"                $ mismatch2 `throws` mismatch2_errors
+    , testCase "m + km"               $ mismatch3 `throws` mismatch3_errors
     , testCase "a ~ a  =>  a ~ kg"    $ given1 undefined `throws` given1_errors
     , testCase "a ~ b  =>  a ~ kg"    $ given2 undefined `throws` given2_errors
     , testCase "a^2 ~ b^3  =>  a ~ s" $ given3 undefined `throws` given3_errors

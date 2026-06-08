@@ -40,6 +40,12 @@ couldn'tMatchErrors t1 t2 =
     , [ "Couldn't match type: " ++ t2, "with: " ++ t1 ]
     ]
 
+-- TODO: this doesn't throw an exception?
+mismatch3 :: Quantity Int u
+mismatch3 = (2 *: m) +: (3 *: km)
+
+mismatch3_errors :: [[String]]
+mismatch3_errors = [["Could not deduce: (u0 ~~ (One *: U_m), u0 ~~ (One *: U_km))"]]
 
 given1 :: ((One *: a) ~ (a *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given1 = id
