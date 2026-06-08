@@ -16,7 +16,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
 
 import GhcApi (text, (<+>), ($$), typeKind, ctEvPred, isGiven, mkSysTvName)
 
-import GHC.TcPlugin.API as PluginAPI
+import GHC.TcPlugin.API as PluginAPI (TyVar, Ct, Outputable(..), TcPluginM, TcPluginStage(..), Pred(..), EqRel(..), tcPluginTrace, isTouchableTcPluginM, matchFam, reductionReducedType, ctEvidence, fsLit, mkTyVar, classifyPredType, splitTyConApp_maybe)
 import qualified GHC.TcPlugin.API.Internal as PluginAPI.Internal
 
 import qualified GHC.Tc.Utils.Monad as GHC

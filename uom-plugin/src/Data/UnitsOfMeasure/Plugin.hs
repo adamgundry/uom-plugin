@@ -12,7 +12,7 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi
+import GhcApi hiding (isWanted, isGiven, evDFunApp, evCast)
 
 import qualified GHC.Plugins as Plugins
 import GHC.TcPlugin.API as PluginAPI
@@ -39,7 +39,8 @@ uomPlugin =
         { PluginAPI.tcPluginInit    = lookupUnitDefs
         , PluginAPI.tcPluginSolve   = unitsOfMeasureSolver
         , PluginAPI.tcPluginRewrite = unitsOfMeasureRewrite
-        , PluginAPI.tcPluginStop    = const $ return ()
+        , PluginAPI.tcPluginPostTc = \ _ -> pure ()
+        , PluginAPI.tcPluginShutdown = \ _ -> pure ()
         }
 
 
@@ -118,8 +119,8 @@ reportContradiction uds eq = PluginAPI.TcPluginContradiction . pure <$> fromUnit
 fromUnitEqualityForContradiction :: UnitDefs -> UnitEquality -> PluginAPI.TcPluginM PluginAPI.Solve Ct
 fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq _ _ -> return ct
-    _ | isGivenCt ct -> PluginAPI.mkNonCanonical <$> PluginAPI.newGiven  (ctLoc ct) (mkPrimEqPred u' v') (evTermToExpr (mkFunnyEqEvidence (ctPred ct) u' v'))
-      | otherwise    -> PluginAPI.mkNonCanonical <$> PluginAPI.newWanted (ctLoc ct) (mkPrimEqPred u' v')
+    _ | isGivenCt ct -> PluginAPI.mkNonCanonical <$> PluginAPI.newGiven  (ctLoc ct) (mkEqPredRole Nominal u' v') (mkFunnyEqEvidence (ctPred ct) u' v')
+      | otherwise    -> PluginAPI.mkNonCanonical <$> PluginAPI.newWanted (ctLoc ct) (mkEqPredRole Nominal u' v')
   where
     u' = reifyUnit uds u
     v' = reifyUnit uds v
@@ -127,10 +128,10 @@ fromUnitEqualityForContradiction uds (UnitEquality ct u v) = case classifyPredTy
 
 substItemToCt :: UnitDefs -> SubstItem -> PluginAPI.TcPluginM PluginAPI.Solve Ct
 substItemToCt uds si
-      | isGiven (ctEvidence ct) = PluginAPI.mkNonCanonical <$> PluginAPI.newGiven loc prd (evByFiatExpr "units" ty1 ty2)
+      | isGiven (ctEvidence ct) = PluginAPI.mkNonCanonical <$> PluginAPI.newGiven loc prd (evByFiat "units" ty1 ty2)
       | otherwise               = PluginAPI.mkNonCanonical <$> PluginAPI.newWanted loc prd
       where
-        prd  = mkPrimEqPred ty1 ty2
+        prd  = mkEqPredRole Nominal ty1 ty2
         ty1  = mkTyVarTy (siVar si)
         ty2  = reifyUnit uds (siUnit si)
         ct   = siCt si
@@ -185,7 +186,7 @@ unpackRewriter uds _givens [ty] = do
                   pure PluginAPI.TcPluginNoRewrite
     Just u  -> do PluginAPI.tcPluginTrace "[UOM] unpackRewriter: rewrite" (ppr ty <+> ppr u)
                   pure $ let reduct = reifyUnitUnpacked uds u
-                         in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (unpackTyCon uds) [ty]) reduct
+                         in let co = PluginAPI.mkPluginUnivCo "units" Nominal [{-AMG TODO: cos-}] (mkTyConApp (unpackTyCon uds) [ty]) reduct
                             in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
 unpackRewriter _ _ tys = do
     PluginAPI.tcPluginTrace "[UOM] unpackRewriter: wrong number of arguments?" (ppr tys)
@@ -201,7 +202,7 @@ packRewriter uds _givens [ty]
   , tc == unpackTyCon uds
   = do PluginAPI.tcPluginTrace "[UOM] packRewriter: rewrite" (ppr ty <+> ppr a)
        pure $ let reduct = a
-              in let co = PluginAPI.mkPluginUnivCo "units" Nominal (mkTyConApp (packTyCon uds) [ty]) reduct
+              in let co = PluginAPI.mkPluginUnivCo "units" Nominal [{-AMG TODO: cos-}] (mkTyConApp (packTyCon uds) [ty]) reduct
                  in PluginAPI.TcPluginRewriteTo (PluginAPI.Reduction co reduct) []
   | otherwise = do
     PluginAPI.tcPluginTrace "[UOM] packRewriter: no rewrite" (ppr ty)
@@ -214,10 +215,10 @@ packRewriter _ _ tys = do
 -- bogus evidence of type @t1 ~ t2@.
 mkFunnyEqEvidence :: Type -> Type -> Type -> EvTerm
 mkFunnyEqEvidence t t1 t2 =
-    castFrom `evCast'` castTo
+    EvExpr $ castFrom `evCast` castTo
     where
-        castFrom :: EvTerm
-        castFrom = evDFunApp funId tys terms
+        castFrom :: EvExpr
+        castFrom = PluginAPI.evDFunApp funId tys terms
             where
                 funId :: Id
                 funId = dataConWrapId heqDataCon
@@ -230,7 +231,7 @@ mkFunnyEqEvidence t t1 t2 =
 
         castTo :: TcCoercion
         castTo =
-            mkUnivCo from Representational tySource t
+            mkUnivCo from [{-AMG TODO: cos-}] Representational tySource t
             where
                 from :: UnivCoProvenance
                 from = PluginProv "units"
@@ -253,14 +254,11 @@ evMagic uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     _                    -> error "evMagic"
 
 evByFiat :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvTerm
-evByFiat s t1 t2 = PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2
+evByFiat s t1 t2 = PluginAPI.mkPluginUnivEvTerm s Nominal [{-AMG TODO: cos-}] t1 t2
 
 evByFiatExpr :: String -> PluginAPI.TcType -> PluginAPI.TcType -> EvExpr
-evByFiatExpr s t1 t2 = evTermToExpr $ PluginAPI.mkPluginUnivEvTerm s Nominal t1 t2
+evByFiatExpr s t1 t2 = evTermToExpr $ PluginAPI.mkPluginUnivEvTerm s Nominal [{-AMG TODO: cos-}] t1 t2
 
 evTermToExpr :: EvTerm -> EvExpr
 evTermToExpr (EvExpr e) = e
 evTermToExpr _ = error "evTermToExpr"
-
-evCast' :: EvTerm -> TcCoercion -> EvTerm
-evCast' = evCast . evTermToExpr

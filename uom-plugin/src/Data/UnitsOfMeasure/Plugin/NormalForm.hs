@@ -77,7 +77,7 @@ instance Outputable Atom where
 newtype NormUnit = NormUnit { _NormUnit :: Map.Map Atom Integer }
 
 instance Outputable NormUnit where
-    ppr = ppr . Map.map show . _NormUnit
+    ppr = ppr . _NormUnit
 
 
 -- | The group identity, representing the dimensionless unit

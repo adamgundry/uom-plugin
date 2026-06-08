@@ -8,14 +8,17 @@ module GhcApi.Compare
   ) where
 
 import GhcApi
+    ( Type(LitTy, TyConApp), nonDetCmpType, cmpTyLit )
 
 import GHC.Utils.Fingerprint(Fingerprint(..), fingerprintString, fingerprintFingerprints)
-import GHC.Utils.Misc (thenCmp)
 
 import GHC.Types.Name
 import GHC.Core.TyCon
 import GHC.Unit.Module
 
+
+thenCmp :: Ordering -> Ordering -> Ordering
+thenCmp = (<>)
 
 -- TODO: all this is deeply dodgy!  These comparison functions are
 -- non-deterministic, so we may end up getting different results on different

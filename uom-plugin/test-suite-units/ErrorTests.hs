@@ -15,6 +15,8 @@
 
 module ErrorTests where
 
+import Data.Ratio (Ratio) -- for nicer errors
+
 import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Defs
 
@@ -36,6 +38,8 @@ couldn'tMatchErrors :: String -> String -> [[String]]
 couldn'tMatchErrors t1 t2 =
     [ [ "Couldn't match type ‘" ++ t1 ++ "’", "with ‘" ++ t2 ++ "’" ]
     , [ "Couldn't match type ‘" ++ t2 ++ "’", "with ‘" ++ t1 ++ "’" ]
+    , [ "Couldn't match type ‘" ++ t1 ++ "’ with ‘" ++ t2 ++ "’" ]
+    , [ "Couldn't match type ‘" ++ t2 ++ "’ with ‘" ++ t1 ++ "’" ]
     , [ "Couldn't match type: " ++ t1, "with: " ++ t2 ]
     , [ "Couldn't match type: " ++ t2, "with: " ++ t1 ]
     ]
@@ -55,17 +59,10 @@ given1_errors = couldn'tDeduceErrors "a" "U_kg" "One *: a" "a *: One"
 
 couldn'tDeduceErrors :: [Char] -> [Char] -> [Char] -> [Char] -> [[[Char]]]
 couldn'tDeduceErrors w x y z =
-#if __GLASGOW_HASKELL__ >= 904
-    [ [ "Could not deduce (" ++ w ++ " ~ " ++ x ++ ")"
+    [ [ "Could not deduce ‘" ++ w ++ " ~ " ++ x ++ "’"
       , "from the context: (" ++ y ++ ") ~ (" ++ z ++ ")"
       ]
     ]
-#else
-    [ [ "Could not deduce: " ++ w ++ " ~ " ++ x
-      , "from the context: (" ++ y ++ ") ~ (" ++ z ++ ")"
-      ]
-    ]
-#endif
 
 given2 :: ((One *: a) ~ (b *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given2 = id
@@ -87,7 +84,7 @@ op_a2 :: Quantity Double [u| m |]
 op_a2 = (1 :: Quantity Integer One) *: ([u| 1 m |] :: (Quantity Double U_m))
 
 op_a3 :: Quantity Double [u| m |]
-op_a3 = (1 :: Quantity Rational One) *: ([u| 1 m |] :: (Quantity Double U_m))
+op_a3 = (1 :: Quantity (Ratio Integer) One) *: ([u| 1 m |] :: (Quantity Double U_m))
 
 op_b1 :: Quantity Int [u| m |]
 op_b1 = (1 :: Quantity Double One) *: ([u| 1 m |] :: (Quantity Int U_m))
@@ -121,8 +118,11 @@ opErrors a b c = matchErrors a b c "One" ++ matchErrors a b c "U_m"
 
 matchErrors :: String -> String -> String -> String -> [[String]]
 matchErrors a b c d_ =
-#if __GLASGOW_HASKELL__ >= 900
-  [ [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
+  [ [ "Couldn't match type: " ++ b
+    , "with: " ++ a
+    , "Actual: Quantity " ++ c ++ " " ++ d_
+    ]
+  , [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
     , "Actual: Quantity " ++ c ++ " " ++ d_
     ]
   , [ "Couldn't match type ‘" ++ a ++ "’ with ‘" ++ b ++ "’"
@@ -134,16 +134,7 @@ matchErrors a b c d_ =
   , [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
     , "Actual: Quantity " ++ c ++ " " ++ d_
     ]
-  , [ "Couldn't match type: " ++ a, "with: " ++ b
-    , "Actual: Quantity " ++ c ++ " " ++ d_
-    ]
   ]
-#else
-  [ [ "Couldn't match type ‘" ++ b ++ "’ with ‘" ++ a ++ "’"
-    ]
-  ]
-#endif
-
 
 exponentDoesn'tDistribute :: Quantity Double ([u| m |] ^: (x + y)) -> Quantity Double (([u| m |] ^: x) *: [u| m |] ^: y)
 exponentDoesn'tDistribute x = x

@@ -5,7 +5,7 @@ module Data.UnitsOfMeasure.Plugin.Lookup
   ( lookupUnitDefs
   ) where
 
-import GhcApi (occNameFS, occName, tyConDataCons, dataConName)
+import GhcApi (occNameFS, occName, dataConName, PkgQual(NoPkgQual))
 
 import GHC.TcPlugin.API
 

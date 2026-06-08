@@ -37,7 +37,6 @@ module Data.UnitsOfMeasure.Singleton
     , KnownList(..)
     ) where
 
-import Data.List (foldl')
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Type.Equality

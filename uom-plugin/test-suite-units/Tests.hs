@@ -281,22 +281,22 @@ tests = testGroup "uom-plugin"
     [ testGroup "b = Double"
       [ testCase "a = Int" $ op_a1 `throws` opErrors "Double" "Int" "Int"
       , testCase "a = Integer" $ op_a2 `throws` opErrors "Double" "Integer" "Integer"
-      , testCase "a = Rational" $ op_a3 `throws` opErrors "Double" "GHC.Real.Ratio Integer" "Rational"
+      , testCase "a = Rational" $ op_a3 `throws` opErrors "Double" "Ratio Integer" "Double"
       ]
     , testGroup "b = Int"
       [ testCase "a = Double" $ op_b1 `throws` opErrors "Int" "Double" "Double"
       , testCase "a = Integer" $ op_b2 `throws` opErrors "Int" "Integer" "Integer"
-      , testCase "a = Rational" $ op_b3 `throws` opErrors "Int" "GHC.Real.Ratio Integer" "Rational"
+      , testCase "a = Rational" $ op_b3 `throws` opErrors "Int" "Ratio Integer" "Rational"
       ]
     , testGroup "b = Integer"
       [ testCase "a = Double" $ op_c1 `throws` opErrors "Integer" "Double" "Double"
       , testCase "a = Int" $ op_c2 `throws` opErrors "Integer" "Int" "Int"
-      , testCase "a = Rational" $ op_c3 `throws` opErrors "Integer" "GHC.Real.Ratio Integer" "Rational"
+      , testCase "a = Rational" $ op_c3 `throws` opErrors "Integer" "Ratio Integer" "Rational"
       ]
     , testGroup "b = Rational"
-      [ testCase "a = Double" $ op_d1 `throws` opErrors "GHC.Real.Ratio Integer" "Double" "Double"
-      , testCase "a = Int" $ op_d2 `throws` opErrors "GHC.Real.Ratio Integer" "Int" "Int"
-      , testCase "a = Integer" $ op_d3 `throws` opErrors "GHC.Real.Ratio Integer" "Integer" "Integer"
+      [ testCase "a = Double" $ op_d1 `throws` opErrors "Ratio Integer" "Double" "Double"
+      , testCase "a = Int" $ op_d2 `throws` opErrors "Ratio Integer" "Int" "Int"
+      , testCase "a = Integer" $ op_d3 `throws` opErrors "Ratio Integer" "Integer" "Integer"
       ]
     ]
   , testGroup "showQuantity"
@@ -370,7 +370,7 @@ tests = testGroup "uom-plugin"
 -- | Assert that evaluation of the first argument (to WHNF) will throw
 -- an exception whose string representation contains one of the given
 -- lists of substrings.
-throws :: a -> [[String]] -> Assertion
+throws :: HasCallStack => a -> [[String]] -> Assertion
 throws v xs =
     (evaluate v >> assertFailure "No exception!") `catch` \ (e :: SomeException) ->
         unless (any (all (`isInfixOf` show e)) xs) $
