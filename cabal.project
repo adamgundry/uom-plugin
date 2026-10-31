@@ -1,6 +1,5 @@
 packages: uom-plugin/*, uom-plugin-examples/*, uom-plugin-tutorial/*
 tests: True
-with-compiler: ghc-9.2.2
 optimization: False
 
 package uom-plugin
