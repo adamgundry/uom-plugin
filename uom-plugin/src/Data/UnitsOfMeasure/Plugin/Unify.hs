@@ -17,10 +17,6 @@ module Data.UnitsOfMeasure.Plugin.Unify
 import GhcApi (text, (<+>), ($$), typeKind, ctEvPred, isGiven, mkSysTvName)
 
 import GHC.TcPlugin.API as PluginAPI
-import qualified GHC.TcPlugin.API.Internal as PluginAPI.Internal
-
-import qualified GHC.Tc.Utils.Monad as GHC
-import qualified GHC.Tc.Utils.TcMType as GHC
 
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
@@ -105,11 +101,12 @@ unifyOne uds ct tvs subst unsubst u
 
         given_mode = isGiven (ctEvidence ct)
 
-        newUnitVar | given_mode = PluginAPI.Internal.unsafeLiftTcM $ newSkolemTyVar $ unitKind uds
-                   | otherwise  = PluginAPI.Internal.unsafeLiftTcM $ GHC.newFlexiTyVar  $ unitKind uds
+        newUnitVar | given_mode = newSkolemTyVar $ unitKind uds
+                   | otherwise  = PluginAPI.newFlexiTyVar $ unitKind uds
 
+        newSkolemTyVar :: Kind -> PluginAPI.TcPluginM PluginAPI.Solve TyVar
         newSkolemTyVar kind = do
-            x <- GHC.newUnique
+            x <- PluginAPI.newUnique
             let name = mkSysTvName x (fsLit "beta")
             return $ PluginAPI.mkTyVar name kind -- mkTcTyVar name kind vanillaSkolemTv
 
