@@ -35,7 +35,7 @@ module Data.UnitsOfMeasure.Plugin.NormalForm
 
 import Prelude hiding ((<>))
 import GhcApi (elemVarSet, tyCoVarsOfType, tyCoVarsOfTypes, text, (<>))
-import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon, thenCmp)
+import GhcApi.Compare (cmpType, cmpTypes, cmpTyCon)
 
 import GHC.TcPlugin.API
 
@@ -43,6 +43,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import Data.List ( sortOn )
 import Data.Maybe
+import qualified Data.Semigroup as S
 
 -- | Base units are just represented as strings, for simplicity
 type BaseUnit = FastString
@@ -62,7 +63,7 @@ instance Ord Atom where
   compare (VarAtom  _)    (BaseAtom _)      = GT
   compare (VarAtom  a)    (VarAtom  b)      = compare a b
   compare (VarAtom  _)    (FamAtom _ _)     = LT
-  compare (FamAtom f tys) (FamAtom f' tys') = cmpTyCon f f' `thenCmp` cmpTypes tys tys'
+  compare (FamAtom f tys) (FamAtom f' tys') = cmpTyCon f f' S.<> cmpTypes tys tys'
   compare (FamAtom _ _)   _                 = GT
 
 instance Outputable Atom where
@@ -76,7 +77,7 @@ instance Outputable Atom where
 newtype NormUnit = NormUnit { _NormUnit :: Map.Map Atom Integer }
 
 instance Outputable NormUnit where
-    ppr = ppr . Map.map show . _NormUnit
+    ppr = ppr . _NormUnit
 
 
 -- | The group identity, representing the dimensionless unit
