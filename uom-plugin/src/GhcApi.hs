@@ -6,8 +6,6 @@ module GhcApi
     ) where
 
 import GHC.Types.Name as X (mkSysTvName)
-import GHC.Types.Name.Occurrence as X (occName, occNameFS)
-import GHC.Core.DataCon as X (dataConName)
 import GHC.Utils.Outputable as X ((<>), (<+>), ($$), text)
 
 import GHC.Tc.Utils.TcType as X (tcSplitTyConApp_maybe)

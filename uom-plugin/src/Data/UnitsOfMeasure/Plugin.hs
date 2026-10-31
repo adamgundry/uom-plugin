@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 -- | This module defines a typechecker plugin that solves equations
 -- involving units of measure.  To use it, add
@@ -12,14 +13,16 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi ((<+>), Type(TyConApp), dataConName, occName, occNameFS)
+import GhcApi ((<+>), Type(TyConApp))
 import GHC.Builtins (heqTyCon, heqDataCon)
 
 import qualified GHC.Plugins as Plugins
 import GHC.TcPlugin.API as PluginAPI
 
 import Data.Either
+import qualified Language.Haskell.TH as TH
 
+import qualified Data.UnitsOfMeasure.Internal as Internal
 import Data.UnitsOfMeasure.Plugin.Convert
 import Data.UnitsOfMeasure.Plugin.NormalForm
 import Data.UnitsOfMeasure.Plugin.Unify
@@ -189,39 +192,22 @@ unpackRewriter _ _ tys = do
     PluginAPI.tcPluginTrace "unpackRewriter: wrong number of arguments?" (ppr tys)
     pure PluginAPI.TcPluginNoRewrite
 
--- TODO: the following is nonsense
-lookupModule' :: PluginAPI.MonadTcPlugin m => PluginAPI.ModuleName -> p -> m PluginAPI.Module
-lookupModule' modname _pkg = do
-  r <- PluginAPI.findImportedModule modname Plugins.NoPkgQual --  (PluginAPI.OtherPkg pkg)
-  case r of
-    PluginAPI.Found _ md -> pure md
-    _ -> do r' <- PluginAPI.findImportedModule modname Plugins.NoPkgQual
-            case r' of
-              PluginAPI.Found _ md -> pure md
-              _ -> error "lookupModule: not Found"
-
-
 lookupUnitDefs :: PluginAPI.TcPluginM PluginAPI.Init UnitDefs
 lookupUnitDefs = do
-    md <- lookupModule' myModule myPackage
-    u <- look md "Unit"
-    b <- look md "Base"
-    o <- look md "One"
-    m <- look md "*:"
-    d <- look md "/:"
-    e <- look md "^:"
-    x <- look md "Unpack"
-    i <- look md "UnitSyntax"
-    c <- look md "~~"
-    return $ UnitDefs u b o m d e x i (getDataCon i ":/") c
+    u <- look ''Internal.Unit
+    b <- look ''Internal.Base
+    o <- look ''Internal.One
+    m <- look ''(Internal.*:)
+    d <- look ''(Internal./:)
+    e <- look ''(Internal.^:)
+    x <- look ''Internal.Unpack
+    i <- look ''Internal.UnitSyntax
+    c <- look ''(Internal.~~)
+    s <- promoteDataCon <$> (PluginAPI.tcLookupDataCon =<< PluginAPI.lookupTHName '(Internal.:/))
+    return $ UnitDefs u b o m d e x i s c
   where
-    getDataCon u s = case [ dc | dc <- tyConDataCons u, occNameFS (occName (dataConName dc)) == fsLit s ] of
-                       [d] -> promoteDataCon d
-                       _   -> error $ "lookupUnitDefs/getDataCon: missing " ++ s
-
-    look md s = PluginAPI.tcLookupTyCon =<< PluginAPI.lookupOrig md (mkTcOcc s)
-    myModule  = mkModuleName "Data.UnitsOfMeasure.Internal"
-    myPackage = fsLit "uom-plugin"
+    look :: TH.Name -> PluginAPI.TcPluginM PluginAPI.Init TyCon
+    look nm = PluginAPI.tcLookupTyCon =<< PluginAPI.lookupTHName nm
 
 
 -- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing
