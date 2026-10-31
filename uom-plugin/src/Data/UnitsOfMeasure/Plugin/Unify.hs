@@ -14,7 +14,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , initialState
   ) where
 
-import GhcApi (text, (<+>), ($$), typeKind, ctEvPred, isGiven, mkSysTvName)
+import GhcApi (text, (<+>), ($$), mkSysTvName)
 
 import GHC.TcPlugin.API as PluginAPI
 

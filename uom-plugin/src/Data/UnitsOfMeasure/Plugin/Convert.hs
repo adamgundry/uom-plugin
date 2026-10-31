@@ -7,7 +7,8 @@ module Data.UnitsOfMeasure.Plugin.Convert
   , reifyUnitUnpacked
   ) where
 
-import GhcApi (Type(..), typeSymbolKind, nilDataCon, consDataCon, tcSplitTyConApp_maybe, coreView, isFamilyTyCon)
+import GhcApi (Type(..), tcSplitTyConApp_maybe, coreView, isFamilyTyCon)
+import GHC.Builtins (typeSymbolKind, nilDataCon, consDataCon)
 import Data.List
 
 import GHC.TcPlugin.API

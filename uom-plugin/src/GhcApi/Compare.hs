@@ -9,6 +9,7 @@ module GhcApi.Compare
 import qualified Data.Semigroup as S
 
 import GhcApi
+import GHC.TcPlugin.API (TyCon, nonDetCmpType)
 
 -- TODO: all this is deeply dodgy!  These comparison functions are
 -- non-deterministic, so we may end up getting different results on different
