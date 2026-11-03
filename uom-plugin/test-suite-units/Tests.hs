@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -70,6 +71,7 @@ import Test.Tasty.HUnit
 import Defs ()
 import ErrorTests
 import KindCasts ()
+import NoPlugin (Quantities, square, squareDouble, twice, twiceDouble)
 import Z (z)
 import qualified Z (tests)
 
@@ -347,6 +349,12 @@ tests = testGroup "uom-plugin"
 
     , testCase "1 m /= 1 m/m^2" $
         (read "[u| 1 m |]" :: Quantity Double [u| m/m^2 |]) `throws` noParse
+    ]
+  , testGroup "Generic code with and without units"
+    [ testCase "square 3"   $ squareDouble @?= 9
+    , testCase "square 3 m" $ square @(Quantities Double) @[u| m |] [u| 3 m |] @?= [u| 9 m^2 |]
+    , testCase "twice 3"    $ twiceDouble @?= 6
+    , testCase "twice 3 m"  $ twice @(Quantities Double) @[u| m |] [u| 3 m |] @?= [u| 6 m |]
     ]
   ]
 

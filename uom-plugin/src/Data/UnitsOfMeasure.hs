@@ -10,9 +10,8 @@
 -- | See "Data.UnitsOfMeasure.Tutorial" for how to use this module.
 module Data.UnitsOfMeasure
     ( -- * Type-level units of measure
-      Unit
+      Unit(One)
     , type Base
-    , type One
     , type (*:)
     , type (/:)
     , type (^:)

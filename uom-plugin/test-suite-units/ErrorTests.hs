@@ -46,40 +46,30 @@ couldn'tMatchErrors t1 t2 =
     ]
 
 
+-- The given reduces to a ~ a, by the equations of '*:'.
 given1 :: ((One *: a) ~ (a *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given1 = id
 
 given1_errors :: [[String]]
-given1_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
-                  , "from the context ((One *: a) ~ (a *: One))" ]
-                , [ "Could not deduce (Base \"kg\" ~ a)"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: a ~ Base \"kg\""
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: Base \"kg\" ~ a"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce ‘a ~ Base \"kg\"’"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce ‘Base \"kg\" ~ a’"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                ]
+given1_errors = couldn'tMatchErrors "a" "Base \"kg\""
 
 
+-- The given reduces to a ~ b, by the equations of '*:'.
 given2 :: ((One *: a) ~ (b *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given2 = id
 
 given2_errors :: [[String]]
-given2_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
+given2_errors = [ [ "Could not deduce (b ~ Base \"kg\")"
                   , "from the context ((One *: a) ~ (b *: One))" ]
-                , [ "Could not deduce (Base \"kg\" ~ a)"
+                , [ "Could not deduce (Base \"kg\" ~ b)"
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: a ~ Base \"kg\""
+                , [ "Could not deduce: b ~ Base \"kg\""
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: Base \"kg\" ~ a"
+                , [ "Could not deduce: Base \"kg\" ~ b"
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce ‘a ~ Base \"kg\"’"
+                , [ "Could not deduce ‘b ~ Base \"kg\"’"
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce ‘Base \"kg\" ~ a’"
+                , [ "Could not deduce ‘Base \"kg\" ~ b’"
                   , "from the context: (One *: a) ~ (b *: One)" ]
                 ]
 

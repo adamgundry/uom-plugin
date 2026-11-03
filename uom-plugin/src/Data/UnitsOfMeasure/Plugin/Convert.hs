@@ -21,8 +21,8 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 -- "Data.UnitsOfMeasure", as loaded inside GHC.
 data UnitDefs = UnitDefs
     { unitKindCon   :: TyCon -- ^ The 'Unit' type constructor, to be promoted to a kind
-    , unitBaseTyCon :: TyCon -- ^ The 'Base' data constructor of 'Unit', promoted to a type constructor
-    , unitOneTyCon  :: TyCon -- ^ The 'One'  type family
+    , unitBaseTyCon :: TyCon -- ^ The 'Base' type family
+    , unitOneTyCon  :: TyCon -- ^ The 'One' data constructor of 'Unit', promoted to a type constructor
     , mulTyCon      :: TyCon -- ^ The '(*:)' type family
     , divTyCon      :: TyCon -- ^ The '(/:)' type family
     , expTyCon      :: TyCon -- ^ The '(^:)' type family

@@ -173,6 +173,7 @@ src/Data/UnitsOfMeasure/Defs.hs:19:4: warning:
                      Co env: []]
 -}
 
+-- TODO: also rewrite applications of '(*:)', '(/:)' and '(^:)' to normal form.
 unitsOfMeasureRewrite
   :: UnitDefs ->
     PluginAPI.UniqFM
@@ -198,18 +199,21 @@ lookupUnitDefs :: PluginAPI.TcPluginM PluginAPI.Init UnitDefs
 lookupUnitDefs = do
     u <- look ''Internal.Unit
     b <- look ''Internal.Base
-    o <- look ''Internal.One
+    o <- lookPromoted 'Internal.One
     m <- look ''(Internal.*:)
     d <- look ''(Internal./:)
     e <- look ''(Internal.^:)
     x <- look ''Internal.Unpack
     i <- look ''Internal.UnitSyntax
     c <- look ''(Internal.~~)
-    s <- promoteDataCon <$> (PluginAPI.tcLookupDataCon =<< PluginAPI.lookupTHName '(Internal.:/))
+    s <- lookPromoted '(Internal.:/)
     return $ UnitDefs u b o m d e x i s c
   where
     look :: TH.Name -> PluginAPI.TcPluginM PluginAPI.Init TyCon
     look nm = PluginAPI.tcLookupTyCon =<< PluginAPI.lookupTHName nm
+
+    lookPromoted :: TH.Name -> PluginAPI.TcPluginM PluginAPI.Init TyCon
+    lookPromoted nm = promoteDataCon <$> (PluginAPI.tcLookupDataCon =<< PluginAPI.lookupTHName nm)
 
 
 -- | Make up evidence for a fake equality constraint @t1 ~~ t2@ by coercing

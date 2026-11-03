@@ -113,6 +113,7 @@ test-suite units
       Defs
       ErrorTests
       KindCasts
+      NoPlugin
       Z
   hs-source-dirs:
       test-suite-units
