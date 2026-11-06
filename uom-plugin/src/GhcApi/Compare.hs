@@ -4,19 +4,19 @@ module GhcApi.Compare
   ( cmpType
   , cmpTypes
   , cmpTyCon
-  , thenCmp
   ) where
 
-import GhcApi
+import qualified Data.Semigroup as S
 
-import GHC.Utils.Misc (thenCmp)
+import GhcApi
+import GHC.TcPlugin.API (TyCon, nonDetCmpType)
 
 -- TODO: all this is deeply dodgy!  These comparison functions are
 -- non-deterministic, so we may end up getting different results on different
 -- runs.  Really we should replace them with deterministic versions.
 
 cmpTyCon :: TyCon -> TyCon -> Ordering
-cmpTyCon = nonDetCmpTc
+cmpTyCon tc1 tc2 = getUnique tc1 `nonDetCmpUnique` getUnique tc2
 
 cmpType :: Type -> Type -> Ordering
 #if __GLASGOW_HASKELL__ > 900
@@ -28,6 +28,6 @@ cmpType = nonDetCmpType
 
 cmpTypes :: [Type] -> [Type] -> Ordering
 cmpTypes [] [] = EQ
-cmpTypes (t1:ts1) (t2:ts2) = cmpType t1 t2 `thenCmp` cmpTypes ts1 ts2
+cmpTypes (t1:ts1) (t2:ts2) = cmpType t1 t2 S.<> cmpTypes ts1 ts2
 cmpTypes [] _ = LT
 cmpTypes _ [] = GT

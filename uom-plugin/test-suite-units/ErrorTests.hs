@@ -8,6 +8,7 @@
 
 {-# OPTIONS_GHC -fdefer-type-errors #-}
 {-# OPTIONS_GHC -fplugin Data.UnitsOfMeasure.Plugin #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 #if __GLASGOW_HASKELL__ > 710
 {-# OPTIONS_GHC -fno-warn-deferred-type-errors #-}
@@ -19,6 +20,10 @@ import Data.UnitsOfMeasure
 import Data.UnitsOfMeasure.Defs ()
 
 import GHC.TypeLits
+
+-- Ensure 'Ratio' is in scope to avoid module qualification appearing in
+-- error messages.
+import Data.Ratio (Ratio)
 
 mismatch1 :: Quantity Double [u| s/m |]
 mismatch1 = [u| 3 m/s |]
@@ -41,32 +46,30 @@ couldn'tMatchErrors t1 t2 =
     ]
 
 
+-- The given reduces to a ~ a, by the equations of '*:'.
 given1 :: ((One *: a) ~ (a *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given1 = id
 
 given1_errors :: [[String]]
-given1_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
-                  , "from the context ((One *: a) ~ (a *: One))" ]
-                , [ "Could not deduce (Base \"kg\" ~ a)"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: a ~ Base \"kg\""
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                , [ "Could not deduce: Base \"kg\" ~ a"
-                  , "from the context: (One *: a) ~ (a *: One)" ]
-                ]
+given1_errors = couldn'tMatchErrors "a" "Base \"kg\""
 
 
+-- The given reduces to a ~ b, by the equations of '*:'.
 given2 :: ((One *: a) ~ (b *: One)) => Quantity Double a -> Quantity Double [u|kg|]
 given2 = id
 
 given2_errors :: [[String]]
-given2_errors = [ [ "Could not deduce (a ~ Base \"kg\")"
+given2_errors = [ [ "Could not deduce (b ~ Base \"kg\")"
                   , "from the context ((One *: a) ~ (b *: One))" ]
-                , [ "Could not deduce (Base \"kg\" ~ a)"
+                , [ "Could not deduce (Base \"kg\" ~ b)"
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: a ~ Base \"kg\""
+                , [ "Could not deduce: b ~ Base \"kg\""
                   , "from the context: (One *: a) ~ (b *: One)" ]
-                , [ "Could not deduce: Base \"kg\" ~ a"
+                , [ "Could not deduce: Base \"kg\" ~ b"
+                  , "from the context: (One *: a) ~ (b *: One)" ]
+                , [ "Could not deduce ‘b ~ Base \"kg\"’"
+                  , "from the context: (One *: a) ~ (b *: One)" ]
+                , [ "Could not deduce ‘Base \"kg\" ~ b’"
                   , "from the context: (One *: a) ~ (b *: One)" ]
                 ]
 
@@ -82,6 +85,10 @@ given3_errors = [ [ "Could not deduce (a ~ Base \"s\")"
                 , [ "Could not deduce: a ~ Base \"s\""
                   , "from the context: (a ^: 2) ~ (b ^: 3)" ]
                 , [ "Could not deduce: Base \"s\" ~ a"
+                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
+                , [ "Could not deduce ‘a ~ Base \"s\"’"
+                  , "from the context: (a ^: 2) ~ (b ^: 3)" ]
+                , [ "Could not deduce ‘Base \"s\" ~ a’"
                   , "from the context: (a ^: 2) ~ (b ^: 3)" ]
                 ]
 
@@ -140,6 +147,9 @@ matchErrors a b c d =
     , "Actual: Quantity " ++ c ++ " " ++ d
     ]
   , [ "Couldn't match type: " ++ a, "with: " ++ b
+    , "Actual: Quantity " ++ c ++ " " ++ d
+    ]
+  , [ "Couldn't match type: " ++ b, "with: " ++ a
     , "Actual: Quantity " ++ c ++ " " ++ d
     ]
   ]

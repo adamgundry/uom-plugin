@@ -50,11 +50,11 @@ library
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors
   build-depends:
       base >=4.9.1.0 && <5
-    , containers >=0.5 && <0.7
-    , deepseq >=1.3 && <1.5
-    , ghc >=9.0.1 && <9.5
-    , ghc-tcplugin-api >=0.8.3.0 && <0.9
-    , template-haskell >=2.9 && <2.20
+    , containers >=0.5 && <0.9
+    , deepseq >=1.3 && <1.6
+    , ghc >=9.0.1 && <10.3
+    , ghc-tcplugin-api >=0.20.1.0 && <0.21
+    , template-haskell >=2.9 && <2.26
     , units-parser >=0.1 && <0.2
   default-language: Haskell2010
 
@@ -86,7 +86,7 @@ test-suite doctest
       QuickCheck
     , base >=4.9.1.0 && <5
     , containers >=0.5
-    , deepseq >=1.3 && <1.5
+    , deepseq >=1.3 && <1.6
     , doctest
     , ghc
     , ghc-tcplugin-api
@@ -112,6 +112,8 @@ test-suite units
   other-modules:
       Defs
       ErrorTests
+      KindCasts
+      NoPlugin
       Z
   hs-source-dirs:
       test-suite-units

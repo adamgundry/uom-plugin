@@ -14,8 +14,7 @@
 -- "Data.UnitsOfMeasure" instead.
 module Data.UnitsOfMeasure.Internal
     ( -- * Type-level units of measure
-      Unit
-    , type One
+      Unit(One)
     , type Base
     , type (*:)
     , type (/:)
@@ -58,28 +57,44 @@ module Data.UnitsOfMeasure.Internal
     , MkUnit
     ) where
 
-import Control.DeepSeq
+import Control.DeepSeq (NFData)
 import Foreign.Storable
 import GHC.Exts (Constraint)
 import GHC.TypeLits (Symbol, Nat, type (-))
 
 -- | (Kind) Units of measure
+--
+-- 'One' is a data constructor, so a type class instance can be given
+-- specifically for dimensionless quantities, @Quantity a One@.
 data Unit
-
--- | Dimensionless unit (identity element)
-type family One :: Unit where
+  = One -- ^ Dimensionless unit (identity element)
 
 -- | Base unit
 type Base :: Symbol -> Unit
 type family Base b where
 
 -- | Multiplication for units of measure
+--
+-- Do not add instances for this type family.
 type (*:) :: Unit -> Unit -> Unit
-type family u *: v where
+type family u *: v
+
+-- Add some simple facts so that one doesn't need the plugin when dealing
+-- only with trivial units.
+--
+-- Deliberately not a closed type family, because the plugin adds its own
+-- equations, and since 10.0 GHC reasons by looking at all equations of a
+-- type family.
+type instance One *: v = v
+type instance u *: One = u
 
 -- | Division for units of measure
+--
+-- Do not add instances for this type family.
 type (/:) :: Unit -> Unit -> Unit
-type family u /: v where
+type family u /: v
+type instance u /: One = u
+type instance u /: u = One
 
 -- | Exponentiation (to a positive power) for units of measure;
 -- negative exponents are not yet supported (they require an Integer kind)
