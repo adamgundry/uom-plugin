@@ -51,7 +51,8 @@ uomPlugin =
 unitsOfMeasureSolver :: UnitDefs -> [Ct] -> [Ct] -> PluginAPI.TcPluginM PluginAPI.Solve PluginAPI.TcPluginSolveResult
 unitsOfMeasureSolver uds givens []      = do
     PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplifying givens" $ ppr givens
-    let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds) givens
+    famInstEnvs <- PluginAPI.getFamInstEnvs
+    let (unit_givens0 , _) = partitionEithers $ zipWith foo givens $ map (toUnitEquality uds famInstEnvs) givens
     let unit_givens = filter is_useful unit_givens0
     case unit_givens of
       []    -> return $ PluginAPI.TcPluginOk [] []
@@ -94,11 +95,12 @@ unitsOfMeasureSolver uds givens []      = do
     is_useful (_, ue) = isUsefulUnitEquality ue
 
 unitsOfMeasureSolver uds givens wanteds = do
-    let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds) wanteds
+    famInstEnvs <- PluginAPI.getFamInstEnvs
+    let (unit_wanteds, _) = partitionEithers $ map (toUnitEquality uds famInstEnvs) wanteds
     case unit_wanteds of
       []    -> return $ PluginAPI.TcPluginOk [] []
       (_:_) -> do
-        let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds) givens
+        let (unit_givens , _) = partitionEithers $ map (toUnitEquality uds famInstEnvs) givens
         sr <- simplifyUnits uds unit_givens
         PluginAPI.tcPluginTrace "unitsOfMeasureSolver simplified givens" $ ppr sr
         -- TODO: it is somewhat questionable to simplify the givens again

@@ -39,3 +39,5 @@ import GHC.Types.Unique as X
     )
 
 import GHC.Types.Var.Set as X (elemVarSet, unionVarSet)
+
+import GHC.Core.FamInstEnv as X (FamInstEnvs, normaliseType)

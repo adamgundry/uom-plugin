@@ -1,13 +1,15 @@
+{-# LANGUAGE CPP #-}
+
 module Data.UnitsOfMeasure.Plugin.Convert
   ( UnitDefs(..)
   , unitKind
-  , isUnitKind
+  , unitKindCoercion
   , normaliseUnit
   , reifyUnit
   , reifyUnitUnpacked
   ) where
 
-import GhcApi (Type(..), tcSplitTyConApp_maybe, coreView, isFamilyTyCon, MCoercion(MRefl), MCoercionN, coToMCo, mkTransMCo, mkCastTyMCo)
+import GhcApi (Type(..), tcSplitTyConApp_maybe, coreView, isFamilyTyCon, MCoercion(MRefl), MCoercionN, coToMCo, mkTransMCo, mkCastTyMCo, FamInstEnvs, normaliseType)
 import GHC.Builtins (typeSymbolKind, nilDataCon, consDataCon)
 import Data.List
 
@@ -38,6 +40,18 @@ unitKind uds = TyConApp (unitKindCon uds) []
 isUnitKind :: UnitDefs -> Kind -> Bool
 isUnitKind uds ty | Just (tc, _) <- tcSplitTyConApp_maybe ty = tc == unitKindCon uds
                   | otherwise                                = False
+
+-- | If the kind reduces to 'Unit', return a coercion from the kind to 'Unit'.
+unitKindCoercion :: UnitDefs -> FamInstEnvs -> Kind -> Maybe MCoercionN
+unitKindCoercion uds famInstEnvs kind
+  | isUnitKind uds reduced = Just (coToMCo co)
+  | otherwise              = Nothing
+  where
+#if MIN_VERSION_ghc(9,4,0)
+    Reduction co reduced = normaliseType famInstEnvs Nominal kind
+#else
+    (co, reduced) = normaliseType famInstEnvs Nominal kind
+#endif
 
 
 -- | Try to convert a type to a unit normal form.

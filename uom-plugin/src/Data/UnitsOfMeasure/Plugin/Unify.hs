@@ -14,7 +14,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , initialState
   ) where
 
-import GhcApi (text, (<+>), ($$), mkSysTvName, MCoercion(MRefl), MCoercionN, mkCastTyMCo)
+import GhcApi (text, (<+>), ($$), mkSysTvName, MCoercion(MRefl), MCoercionN, mkCastTyMCo, FamInstEnvs)
 
 import GHC.TcPlugin.API as PluginAPI
 
@@ -119,11 +119,13 @@ instance Outputable UnitEquality where
   ppr (UnitEquality ct u v) = text "UnitEquality" $$ ppr ct $$ ppr u $$ ppr v
 
 -- Extract the unit equality constraints
-toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
-toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
+toUnitEquality :: UnitDefs -> FamInstEnvs -> Ct -> Either UnitEquality Ct
+toUnitEquality uds famInstEnvs ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq t1 t2
-      | Just u1 <- normaliseUnit uds t1
-      , Just u2 <- normaliseUnit uds t2 -> Left (UnitEquality ct u1 u2)
+      | Just co1 <- unitKindCoercion uds famInstEnvs (typeKind t1)
+      , Just co2 <- unitKindCoercion uds famInstEnvs (typeKind t2)
+      , Just u1 <- normaliseUnit uds (t1 `mkCastTyMCo` co1)
+      , Just u2 <- normaliseUnit uds (t2 `mkCastTyMCo` co2) -> Left (UnitEquality ct u1 u2)
     IrredPred t
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
       , tc == equivTyCon uds
