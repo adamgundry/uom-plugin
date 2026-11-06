@@ -13,7 +13,7 @@ module Data.UnitsOfMeasure.Plugin
   ( plugin
   ) where
 
-import GhcApi ((<+>), Type(TyConApp))
+import GhcApi ((<+>), Type(TyConApp), mkCastTyMCo, mkSymMCo)
 import GHC.Builtins (heqTyCon, heqDataCon)
 
 import qualified GHC.Plugins as Plugins
@@ -136,7 +136,7 @@ substItemToCt uds si
       where
         prd  = mkEqPredRole Nominal ty1 ty2
         ty1  = mkTyVarTy (siVar si)
-        ty2  = reifyUnit uds (siUnit si)
+        ty2  = reifyUnit uds (siUnit si) `mkCastTyMCo` mkSymMCo (siKindCo si)
         ct   = siCt si
         loc  = ctLoc ct
 

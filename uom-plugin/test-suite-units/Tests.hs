@@ -69,6 +69,7 @@ import Test.Tasty.HUnit
 
 import Defs ()
 import ErrorTests
+import KindCasts ()
 import Z (z)
 import qualified Z (tests)
 

@@ -14,7 +14,7 @@ module Data.UnitsOfMeasure.Plugin.Unify
   , initialState
   ) where
 
-import GhcApi (text, (<+>), ($$), mkSysTvName)
+import GhcApi (text, (<+>), ($$), mkSysTvName, MCoercion(MRefl), MCoercionN, mkCastTyMCo)
 
 import GHC.TcPlugin.API as PluginAPI
 
@@ -27,9 +27,10 @@ import Data.UnitsOfMeasure.Plugin.NormalForm
 -- made, for use when turning the substitution back into constraints.
 type TySubst = [SubstItem]
 
-data SubstItem = SubstItem { siVar     :: TyVar
+data SubstItem = SubstItem { siVar     :: TyVar      -- ^ @v@
+                           , siKindCo  :: MCoercionN -- ^ @co :: typeKind v ~# Unit@
                            , siUnit    :: NormUnit
-                           , siCt     ::  Ct
+                           , siCt      :: Ct
                            }
 
 instance Outputable SubstItem where
@@ -79,21 +80,21 @@ unifyOne uds ct tvs subst unsubst u
       where
         go :: [(Atom, Integer)] -> [(Atom, Integer)] -> PluginAPI.TcPluginM PluginAPI.Solve UnifyResult
         go _  []                       = return $ Draw tvs subst unsubst
-        go ls (at@(VarAtom a, i) : xs) = do
+        go ls (at@(VarAtom a a_co, i) : xs) = do
             tch <- if given_mode then return True else PluginAPI.isTouchableTcPluginM a
             let r = divideExponents (-i) $ leftover a u
             case () of
                 () | tch && divisible i u -> return $ if occurs a r then Draw tvs subst unsubst
-                                                                    else Win tvs (extendSubst (SubstItem a r ct) subst) unsubst
+                                                                    else Win tvs (extendSubst (SubstItem a a_co r ct) subst) unsubst
                    | tch && not (all (isBase . fst) xs) -> do beta <- newUnitVar
-                                                              let subst'   = extendSubst (SubstItem a    (varUnit beta *: r) ct) subst
-                                                                  unsubst' = extendSubst (SubstItem beta (varUnit a    /: r) ct) unsubst
-                                                              unifyOne uds ct (beta:tvs) subst' unsubst' $ substUnit a (varUnit beta *: r) u
+                                                              let subst'   = extendSubst (SubstItem a    a_co  (varUnit beta MRefl *: r) ct) subst
+                                                                  unsubst' = extendSubst (SubstItem beta MRefl (varUnit a    a_co  /: r) ct) unsubst
+                                                              unifyOne uds ct (beta:tvs) subst' unsubst' $ substUnit a (varUnit beta MRefl *: r) u
                    | otherwise            -> go (at:ls) xs
 
-        go ls (at@(FamAtom f tys, i) : xs) = do
+        go ls (at@(FamAtom f tys f_co, i) : xs) = do
           mb <- PluginAPI.matchFam f tys
-          case normaliseUnit uds . PluginAPI.reductionReducedType =<< mb of
+          case normaliseUnit uds . (`mkCastTyMCo` f_co) . PluginAPI.reductionReducedType =<< mb of
             Just v  -> unifyOne uds ct tvs subst unsubst $ mkNormUnit (ls ++ xs) *: v ^: i
             Nothing -> go (at:ls) xs
         go ls (at@(BaseAtom  _, _) : xs) = go (at:ls) xs
@@ -121,8 +122,7 @@ instance Outputable UnitEquality where
 toUnitEquality :: UnitDefs -> Ct -> Either UnitEquality Ct
 toUnitEquality uds ct = case classifyPredType $ ctEvPred $ ctEvidence ct of
     EqPred NomEq t1 t2
-      | isUnitKind uds (typeKind t1) || isUnitKind uds (typeKind t1)
-      , Just u1 <- normaliseUnit uds t1
+      | Just u1 <- normaliseUnit uds t1
       , Just u2 <- normaliseUnit uds t2 -> Left (UnitEquality ct u1 u2)
     IrredPred t
       | Just (tc, [t1,t2]) <- splitTyConApp_maybe t
